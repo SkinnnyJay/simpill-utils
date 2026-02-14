@@ -1,10 +1,7 @@
 import { AppError, ERROR_CODES } from "@simpill/errors.utils";
 import { err, ok, type Result } from "./result";
 
-/**
- * Options for customizing error when all results in raceOk fail.
- * @typeParam E - Error type collected from failed results
- */
+/** Options for customizing error when all results in raceOk fail. */
 export interface RaceOkOptions<E> {
   /** Custom mapper from collected errors to AppError; defaults to AppError with errorMessage/errorCode */
   mapError?: (errors: E[]) => AppError;
@@ -24,13 +21,7 @@ const defaultMapError = <E>(
   return new AppError(message, { code, cause, meta: { errorCount: errors.length } });
 };
 
-/**
- * Resolve with the first Ok result from the array of Result promises; if all fail, returns Err.
- * @param results - Non-empty array of promises that resolve to Result<T, E>
- * @param options - Optional mapError, errorMessage, errorCode for the aggregated error
- * @returns Promise of Result<T, AppError>: Ok(first success) or Err(mapped from all failures)
- * @throws Never throws; empty array yields Err(AppError) with BAD_REQUEST
- */
+/** First Ok result from Result promises, or Err(mapped from failures); empty array yields Err(BAD_REQUEST). */
 export async function raceOk<T, E>(
   results: Array<Promise<Result<T, E>>>,
   options: RaceOkOptions<E> = {}

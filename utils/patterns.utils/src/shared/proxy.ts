@@ -5,12 +5,7 @@ export type MethodProxyHooks<T extends Record<string, (...args: unknown[]) => un
   error?: (method: keyof T, args: unknown[], error: unknown) => void;
 };
 
-/**
- * Proxy pattern: intercept method calls with hooks.
- * @param target - Object whose methods are wrapped
- * @param hooks - Optional before, after, error callbacks
- * @returns Proxy that forwards to target and invokes hooks
- */
+/** Intercept method calls with optional before/after/error hooks. */
 export function createMethodProxy<T extends Record<string, (...args: unknown[]) => unknown>>(
   target: T,
   hooks: MethodProxyHooks<T>

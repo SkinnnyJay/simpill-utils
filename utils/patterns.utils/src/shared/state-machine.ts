@@ -22,14 +22,7 @@ export type StateMachine<S extends string, E extends string, C> = {
   transition: (event: E, context?: C) => S;
 };
 
-/**
- * State pattern: typed finite state machine with transition map.
- * @param initialState - Starting state
- * @param transitions - Map of state -> event -> next state or function
- * @param options - allowUnknown, errorMessage, onTransition
- * @returns StateMachine with getState, can, transition
- * @throws Error when transition is missing and allowUnknown is false
- */
+/** Typed finite state machine with transition map; throws if transition missing and allowUnknown false. */
 export function createStateMachine<S extends string, E extends string, C = undefined>(
   initialState: S,
   transitions: StateTransitions<S, E, C>,

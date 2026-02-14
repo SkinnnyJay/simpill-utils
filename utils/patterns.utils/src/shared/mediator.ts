@@ -10,10 +10,7 @@ export type Mediator<TEvents extends Record<string, unknown>> = {
   listenerCount: <K extends keyof TEvents>(event: K) => number;
 };
 
-/**
- * Mediator pattern: typed event hub for decoupled communication.
- * @returns Mediator with on, off, emit, clear, listenerCount
- */
+/** Typed event hub with on, off, emit, clear, listenerCount. */
 export function createMediator<TEvents extends Record<string, unknown>>(): Mediator<TEvents> {
   const handlers = new Map<keyof TEvents, Set<MediatorHandler<unknown>>>();
 

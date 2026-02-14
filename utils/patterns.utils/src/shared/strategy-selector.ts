@@ -1,13 +1,7 @@
 /** Map of strategy keys to (input) => output functions. */
 export type StrategyMap<K extends string, I, O> = Record<K, (input: I) => O>;
 
-/**
- * Returns a function that runs the strategy for the given key.
- * @param strategies - Map of key to strategy function
- * @param options - defaultKey used when key is missing
- * @returns (key, input) => output; uses defaultKey if key missing, else throws
- * @throws Error when key is unknown and no defaultKey
- */
+/** Returns (key, input) => output; uses defaultKey if key missing, else throws. */
 export function strategySelector<K extends string, I, O>(
   strategies: StrategyMap<K, I, O>,
   options?: { defaultKey?: K }
@@ -21,12 +15,7 @@ export function strategySelector<K extends string, I, O>(
   };
 }
 
-/**
- * Like strategySelector but returns undefined for unknown keys instead of throwing.
- * @param strategies - Map of key to strategy function
- * @param options - defaultKey used when key is missing
- * @returns (key, input) => output or undefined
- */
+/** Like strategySelector but returns undefined for unknown keys instead of throwing. */
 export function strategySelectorOptional<K extends string, I, O>(
   strategies: StrategyMap<K, I, O>,
   options?: { defaultKey?: K }

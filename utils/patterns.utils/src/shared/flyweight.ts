@@ -5,12 +5,7 @@ export type FlyweightFactory<K, V> = {
   size: () => number;
 };
 
-/**
- * Flyweight pattern: share instances by key; same key returns same instance.
- * @param keyToId - Maps key to cache id string
- * @param create - Creates a new instance for a key when not cached
- * @returns FlyweightFactory with get, clear, size
- */
+/** Share instances by key; same key returns same instance (get, clear, size). */
 export function createFlyweightFactory<K, V>(
   keyToId: (key: K) => string,
   create: (key: K) => V

@@ -11,10 +11,7 @@ export type Observable<T> = {
   getObserverCount: () => number;
 };
 
-/**
- * Observer pattern: simple observable with subscribe/unsubscribe.
- * @returns Observable with subscribe, next, clear, getObserverCount
- */
+/** Simple observable with subscribe, next, clear, getObserverCount. */
 export function createObservable<T>(): Observable<T> {
   const observers = new Set<Observer<T>>();
 

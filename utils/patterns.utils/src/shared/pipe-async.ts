@@ -1,8 +1,4 @@
-/**
- * Compose async functions into a pipeline; each receives the previous result. Short-circuits on first rejection.
- * @param fns - One or more (x) => Promise<y>; first gets input, rest get prior result
- * @returns (x) => Promise of final result
- */
+/** Compose async functions; each receives previous result; short-circuits on first rejection. */
 export function pipeAsync<T0, T1>(f0: (x: T0) => Promise<T1>): (x: T0) => Promise<T1>;
 export function pipeAsync<T0, T1, T2>(
   f0: (x: T0) => Promise<T1>,

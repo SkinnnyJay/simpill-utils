@@ -5,11 +5,7 @@ export type Builder<T> = {
   build: () => T;
 };
 
-/**
- * Builder pattern: compose an object via chainable setters.
- * @param initial - Initial state (shallow-copied)
- * @returns Builder with set, merge, build
- */
+/** Chainable builder from initial state; set, merge, build. */
 export function createBuilder<T extends Record<string, unknown>>(initial: T): Builder<T> {
   let state: T = { ...initial };
 
