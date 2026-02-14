@@ -1,0 +1,64 @@
+name: "nextjs.utils CI"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "utils/nextjs.utils/**"
+      - "utils/zod.utils/**"
+      - "utils/errors.utils/**"
+      - "utils/request-context.utils/**"
+      - ".github/workflows/nextjs-utils-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "utils/nextjs.utils/**"
+      - "utils/zod.utils/**"
+      - "utils/errors.utils/**"
+      - "utils/request-context.utils/**"
+      - ".github/workflows/nextjs-utils-ci.yml"
+
+defaults:
+  run:
+    working-directory: utils/nextjs.utils
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: "utils/nextjs.utils/package-lock.json"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Run type check
+        run: npx tsc --noEmit
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          directory: utils/nextjs.utils/coverage
+          flags: nextjs-utils
