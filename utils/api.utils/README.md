@@ -147,7 +147,7 @@ This package is a **lightweight typed API** with Zod schemas and a fluent route 
 
 - **OpenAPI generation** — No spec generation; use **zod-to-openapi** or hand-maintain a spec and keep it in sync.
 - **File upload** — Client sends JSON; for multipart/binary use a custom **fetcher** or fetch outside the client.
-- **Framework adapters** — No Express/Fastify bindings; use **api.handlers()** and wire routes yourself (pass **url**, **method**, **headers**, **body** into the handler).
+- **Framework adapters** — No Express/Fastify bindings; use **api.handlers()** and wire routes yourself (pass **url**, **method**, **headers**, **body** into the handler). Handler context **headers** are typed as **Record<string, string>**; if your request has headers with array or non-string values, normalize to strings before passing to handlers.
 
 ### When to use
 

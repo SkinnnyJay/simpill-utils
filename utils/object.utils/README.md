@@ -96,6 +96,8 @@ hasPath(obj, "a.b");               // true
 setByPath(obj, "a.b.d", 2);        // mutates obj
 ```
 
+There is no **deleteByPath**. To remove a key at a path, use **getByPath(obj, parentPath)** to get the parent object, then `delete parent[key]` for the last segment, or implement a small helper that splits the path and mutates the parent.
+
 **Singleton:** `createSingleton(factory, key)` stores instances on **globalThis** (one map per process). For process isolation this is fine; in tests call **resetSingleton(key)** or **resetAllSingletons()** to avoid leaking state between tests.
 
 ### Pick / Omit

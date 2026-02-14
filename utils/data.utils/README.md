@@ -10,7 +10,7 @@
   Data utilities: validate, prepare, lifecycle, extend, config.
 </p>
 
-**Features:** Type-safe · Node & Edge · Tree-shakeable
+**Features:** Type-safe · Node & Edge · Tree-shakeable. The API groups helpers under a **dot prefix** (e.g. `data.extend`, `data.validate`, `data.prepare`, `data.lifecycle`); import the functions you need from the main entry or `/shared`.
 
 <p align="center">
   <a href="#installation">Installation</a> •

@@ -57,12 +57,14 @@ const config = await readFileJson<{ port: number }>("./data/config.json");
 
 ## Features
 
+Read and write APIs live in the same module; if the file grows, consider splitting into read vs write. For now:
+
 | Feature | Description |
 |---------|-------------|
 | **readFileUtf8** / **writeFileUtf8** | UTF-8 string read/write |
 | **readFileJson** / **writeFileJson** | JSON with optional typing |
 | **readFileAsync** / **writeFileAsync** | Generic encoding; omit encoding for Buffer, or pass encoding for string |
-| **Sync variants** | readFileUtf8Sync, writeFileUtf8Sync, readFileJsonSync, writeFileJsonSync, readFileSync, writeFileSync, ensureDirSync |
+| **Sync variants** | readFileUtf8Sync, writeFileUtf8Sync, readFileJsonSync, writeFileJsonSync, readFileSync, writeFileSync, ensureDirSync. Use **async** variants in hot paths (e.g. request handlers) to avoid blocking the event loop. |
 | **Path helpers** | basename, dirname, extname, isAbsolutePath, joinPath, normalizePath, resolvePath (server) |
 | **ensureDir** | Recursive directory creation; write helpers call it for the parent of the file path |
 | **Server only** | Node.js file system access |

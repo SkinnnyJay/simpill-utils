@@ -63,7 +63,7 @@ console.log(getMetadata<string>(KEY, store)); // "value"
 
 - **createMetadataStore**() → MetadataStore — new Map-backed store (key → value). Not per-target; one map per store.
 - **globalMetadataStore** — single process-level store. Shared by all callers; prefer **createMetadataStore()** for scoped or per-module state.
-- **getMetadata**&lt;T&gt;(key, store?) → T | undefined — when store is omitted, uses globalMetadataStore.
+- **getMetadata**&lt;T&gt;(key, store?) → T | undefined — when store is omitted, uses globalMetadataStore. The store’s **get** uses a type assertion for **T**; the value is not runtime-validated. Ensure the same **T** (or compatible type) was used when **set** was called.
 - **setMetadata**&lt;T&gt;(key, value, store?) → void
 - **MetadataStore**: get, set, **has**(key), **delete**(key) — use the store directly for has/delete; getMetadata/setMetadata don’t wrap them.
 - **MetadataKey** = symbol | string

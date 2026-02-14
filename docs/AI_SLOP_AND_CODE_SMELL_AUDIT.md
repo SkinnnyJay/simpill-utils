@@ -424,6 +424,8 @@ Scan of all packages under `utils/` for AI slop indicators, junior-level mistake
 | time.utils interval-manager.ts | File comment trimmed to one line. |
 | zod.utils request-schemas.ts | File comment trimmed to one line. |
 | zod.utils schema-builders.ts | File comment and optionalWithDefault, nullableWithDefault, stringField, numberField, booleanField JSDoc trimmed to one-liners. |
+| patterns.utils (composite, facade, command, chain-of-responsibility, adapter, strategy-selector, race-ok, state-machine) | JSDoc trimmed to one-liners in all listed files (#90 optional trim). |
+| patterns.utils (proxy, observer, mediator, decorator, builder, flyweight, pipe-async) | JSDoc trimmed to one-liners. |
 | buildHandlerContext Zod casts | JSDoc on buildHandlerContext: "Build request context from route and request; schema casts for Zod .parse() live here." |
 
 **Remediation complete.** All tracked audit items have been addressed. Optional low-impact trim elsewhere can be done ad hoc.
