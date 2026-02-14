@@ -1,3 +1,5 @@
+import { ENV_BOOLEAN_PARSING } from "@simpill/protocols.utils";
+
 /** Shared constants for environment variable utilities. */
 
 export const NODE_ENV = {
@@ -9,14 +11,16 @@ export const NODE_ENV = {
 
 export type NodeEnvValue = (typeof NODE_ENV)[keyof typeof NODE_ENV];
 
+/** Canonical boolean truthy (from @simpill/protocols.utils). */
 export const BOOLEAN_TRUTHY = {
-  TRUE: "true",
-  ONE: "1",
+  TRUE: ENV_BOOLEAN_PARSING.TRUTHY[0],
+  ONE: ENV_BOOLEAN_PARSING.TRUTHY[1],
 } as const;
 
+/** Canonical boolean falsy (from @simpill/protocols.utils). */
 export const BOOLEAN_FALSY = {
-  FALSE: "false",
-  ZERO: "0",
+  FALSE: ENV_BOOLEAN_PARSING.FALSY[0],
+  ZERO: ENV_BOOLEAN_PARSING.FALSY[1],
 } as const;
 
 export const DEFAULT_ENV_PATHS = [".env.local", ".env"] as const;

@@ -1,5 +1,5 @@
 import { BOOLEAN_FALSY, BOOLEAN_TRUTHY, ENV_PARSE_TYPE } from "./constants";
-import { EnvParseError } from "./errors";
+import { EnvParseError, EnvValidationError } from "./errors";
 
 export function parseNumberEnvValue(rawValue: string, defaultValue: number): number {
   if (rawValue === "") {
@@ -48,4 +48,46 @@ export function parseBooleanEnvValueStrict(key: string, rawValue: string): boole
     return false;
   }
   throw new EnvParseError(key, rawValue, ENV_PARSE_TYPE.BOOLEAN);
+}
+
+/**
+ * Parse env value as one of the allowed strings (case-sensitive by default).
+ * Returns default when raw is empty or not in allowed list.
+ */
+export function parseEnvEnum<T extends string>(
+  rawValue: string,
+  allowed: readonly T[],
+  defaultValue: T,
+  options?: { caseInsensitive?: boolean },
+): T {
+  if (rawValue === "") {
+    return defaultValue;
+  }
+  const match = allowed.find(
+    (a) => (options?.caseInsensitive ? a.toLowerCase() : a) === (options?.caseInsensitive ? rawValue.toLowerCase() : rawValue),
+  );
+  return match ?? defaultValue;
+}
+
+/** @throws {EnvValidationError} If raw is empty or not in allowed list */
+export function parseEnvEnumStrict<T extends string>(
+  key: string,
+  rawValue: string,
+  allowed: readonly T[],
+  options?: { caseInsensitive?: boolean },
+): T {
+  if (rawValue === "") {
+    throw new EnvValidationError(key, rawValue, "value is required");
+  }
+  const match = allowed.find(
+    (a) => (options?.caseInsensitive ? a.toLowerCase() : a) === (options?.caseInsensitive ? rawValue.toLowerCase() : rawValue),
+  );
+  if (match === undefined) {
+    throw new EnvValidationError(
+      key,
+      rawValue,
+      `must be one of: ${allowed.join(", ")}`,
+    );
+  }
+  return match;
 }

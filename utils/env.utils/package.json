@@ -1,7 +1,7 @@
 {
   "name": "@simpill/env.utils",
   "version": "1.0.0",
-  "description": "Type-safe environment variable utilities for Node.js and Edge Runtime",
+  "description": "Lightweight, type-safe environment variable utilities for Node.js and Edge Runtime.",
   "repository": {
     "type": "git",
     "url": "https://github.com/SkinnnyJay/@simpill/env.utils.git",
@@ -42,6 +42,8 @@
   "scripts": {
     "clean": "rm -rf dist coverage .jest-cache node_modules/.cache",
     "build": "tsc",
+    "dev": "npm run build",
+    "dev:watch": "tsc --watch",
     "prepublishOnly": "npm run build",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -53,19 +55,20 @@
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
+    "publish": "npm publish",
     "verify": "./scripts/check.sh",
     "prepare": "./scripts/install-hooks.sh",
     "setup:hooks": "./scripts/install-hooks.sh",
     "all": "./scripts/build-all.sh"
   },
   "keywords": [
-    "environment",
-    "env",
-    "variables",
-    "dotenvx",
-    "edge-runtime",
     "typescript",
-    "type-safe"
+    "type-safe",
+    "env",
+    "dotenv",
+    "node",
+    "edge-runtime",
+    "config"
   ],
   "author": "@SkinnnyJay",
   "license": "ISC",
@@ -85,6 +88,7 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
-    "@dotenvx/dotenvx": "^1.51.4"
+    "@dotenvx/dotenvx": "^1.51.4",
+    "@simpill/protocols.utils": "file:../protocols.utils"
   }
 }

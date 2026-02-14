@@ -53,6 +53,11 @@ describe("Env static methods", () => {
       expect(Env.getRequired("TEST_STRING")).toBe("value");
     });
 
+    it("should get required string via getRequiredString alias", () => {
+      expect(Env.getRequiredString("TEST_STRING")).toBe("value");
+      expect(() => Env.getRequiredString("MISSING_REQ")).toThrow();
+    });
+
     it("should throw for missing required string", () => {
       expect(() => Env.getRequired("NON_EXISTENT")).toThrow();
     });
@@ -71,6 +76,14 @@ describe("Env static methods", () => {
 
     it("should throw for missing required boolean", () => {
       expect(() => Env.getRequiredBoolean("NON_EXISTENT")).toThrow();
+    });
+  });
+
+  describe("encryption helpers", () => {
+    it("should report isEncrypted and getDecrypted", () => {
+      expect(Env.isEncrypted("TEST_STRING")).toBe(false);
+      expect(Env.getDecrypted("TEST_STRING")).toBe("value");
+      expect(Env.hasPrivateKey()).toBe(false);
     });
   });
 

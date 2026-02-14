@@ -7,6 +7,12 @@
 </p>
 
 <p align="center">
+  Get type-safe environment variables for Node and Edge without runtime surprises.
+</p>
+
+**Features:** Type-safe · Node.js & Edge Runtime · Lightweight · Tree-shakeable (subpath exports: `/client`, `/server`, `/shared`)
+
+<p align="center">
   <a href="#the-choice">The Choice</a> •
   <a href="#installation">Installation</a> •
   <a href="#quick-start">Quick Start</a> •
@@ -164,6 +170,48 @@ const maxRetries = getEdgeNumber("MAX_RETRIES", 3);
 const enableCache = getEdgeBoolean("ENABLE_CACHE", true);
 ```
 
+**Edge caveats:** In Next.js, Cloudflare Workers, or Vercel Edge, `process.env` is often inlined at build time. Use the client helpers (`getEdgeString`, etc.) and ensure required variables are listed in your framework config (e.g. Next.js `env` in `next.config.js`) so they are available. Server-only features (`.env` file loading, encryption) are not available on the client/edge entrypoint.
+
+### Schema-style validation
+
+For whole-env validation in one place, define a spec and resolve it with the existing getters (or use **zod** / **joi** for full schema validation):
+
+```typescript
+import { Env } from "@simpill/env.utils";
+
+function loadConfig() {
+  return {
+    PORT: Env.getNumber("PORT", 3000),
+    NODE_ENV: Env.getEnum("NODE_ENV", ["development", "production", "test"], "development"),
+    API_KEY: Env.getRequired("API_KEY"),
+  };
+}
+const config = loadConfig();
+```
+
+Shared types `EnvSpec` and `EnvSpecEntry` (`@simpill/env.utils/shared`) describe spec shapes; use `parseNumberEnvValueStrict` / `parseBooleanEnvValueStrict` for strict parsing without defaults.
+
+### Strict parsing
+
+Use **strict** parsers when you want missing or invalid values to throw instead of falling back to a default:
+
+- `Env.getRequiredNumber("PORT")` — throws `MissingEnvError` if unset, `EnvParseError` if not a number
+- `Env.getRequiredBoolean("DEBUG")` — throws if unset or not a valid boolean
+- From `@simpill/env.utils/shared`: `parseNumberEnvValueStrict(key, rawValue)`, `parseBooleanEnvValueStrict(key, rawValue)`, `parseEnvEnumStrict(key, rawValue, allowed)`
+
+### Enum validation
+
+```typescript
+const logLevel = Env.getEnum("LOG_LEVEL", ["debug", "info", "warn", "error"], "info");
+const env = Env.getRequiredEnum("NODE_ENV", ["development", "production", "test"]);
+// Optional: { caseInsensitive: true } for case-insensitive matching
+```
+
+### Array and object parsing
+
+- **Arrays:** `Env.getArray("ALLOWED_HOSTS")` — comma-separated, trimmed; optional separator (default `","`). `Env.getArray("PORTS", [], ":")` for colon-separated.
+- **JSON:** `Env.getJson("CONFIG")` and `Env.getRequiredJson("CONFIG")` — parse JSON; invalid JSON throws when required or no default.
+
 ### Boolean Parsing That Actually Works
 
 ```typescript
@@ -236,6 +284,23 @@ Env.bootstrap({
 3. **Later .env files** (when `overload: true`)
 4. **Earlier .env files** (lowest)
 
+### Caching
+
+`EnvManager` stores parsed values in in-memory `envCache` and `rawCache` with **no max size or TTL**. For typical usage (bootstrap once, read many times) this is fine. For long-running processes that frequently call `refresh()` or create many manager instances, be aware the caches grow with the number of keys loaded.
+
+### Variable expansion (interpolation)
+
+This package does not expand `VAR_2=${VAR_1}` style references inside `.env` values. For that, use [dotenv-expand](https://github.com/motdotla/dotenv-expand) (or similar) before or alongside loading; load expanded env into `process.env` and then use `Env` getters as usual.
+
+### Dynamic mode and when to use it
+
+**Dynamic mode** (`EnvManager.getInstance({ dynamic: true })`) reads from `process.env` on every access and **bypasses the in-memory cache**—values are not cached. Use it when:
+
+- You need to reflect env changes without restarting (e.g. long-running dev watchers).
+- You are in a serverless/cold-start environment and already load env at startup; dynamic is optional and usually not required.
+
+For typical long-running Node servers, the default (cached after bootstrap) is preferred. Call `Env.refresh()` to reload from disk when you need to pick up file changes without dynamic mode.
+
 ### Dynamic Mode
 
 ```typescript
@@ -284,6 +349,30 @@ if (Env.hasPrivateKey()) {
   // Private key is configured
 }
 ```
+
+**Encryption failure handling:** If a value is prefixed with `encrypted:` but decryption fails (missing key, wrong key, or corrupted value), `Env.getDecrypted("KEY")` throws `EnvDecryptError`. Guard with `Env.isEncrypted("KEY")` and `Env.hasPrivateKey()` and handle errors in startup or health checks:
+
+```typescript
+try {
+  const secret = Env.getDecrypted("API_SECRET");
+} catch (e) {
+  if (e instanceof EnvDecryptError) {
+    console.error("Decryption failed:", e.reason);
+  }
+  throw e;
+}
+```
+
+---
+
+## CI and required keys
+
+To enforce required env keys in CI, run your app (or a small script) that calls `Env.getRequired("KEY")` for each required variable; the process will exit on first missing key. Alternatively use a dedicated tool (e.g. [dotenv-vault](https://www.dotenv.org/docs/ci) or framework-specific env checks) to validate presence before deploy.
+
+### What we don't provide
+
+- **Schema validation (Zod/Joi)** — No integration with Zod or Joi. Use type-safe getters (`getNumber`, `getBoolean`, etc.) and validate with a schema library separately if you need full schema validation.
+- **Variable expansion** — No `VAR_2=${VAR_1}` interpolation inside `.env` values; use [dotenv-expand](https://github.com/motdotla/dotenv-expand) (or similar) before loading, then use Env getters on the expanded `process.env`.
 
 ---
 
@@ -422,6 +511,13 @@ npm run test:coverage # Coverage report
 npm run build        # Build
 npm run verify       # All checks
 ```
+
+## Documentation
+
+- **Examples:** [examples/](./examples/) — see [Examples](#examples) section for run commands and table.
+- **Monorepo:** [CONTRIBUTING](https://github.com/SkinnnyJay/@simpill/blob/main/CONTRIBUTING.md) for creating and maintaining packages.
+- **README standard:** [Package README standard](https://github.com/SkinnnyJay/@simpill/blob/main/docs/PACKAGE_README_STANDARD.md).
+- **Maintainers:** [AGENTS.md](./AGENTS.md), [CLAUDE.md](./CLAUDE.md).
 
 ---
 

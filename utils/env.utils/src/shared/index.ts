@@ -24,9 +24,12 @@ export {
   EnvValidationError,
   MissingEnvError,
 } from "./errors";
+export type { EnvSpec, EnvSpecEntry } from "./env-schema";
 export {
   parseBooleanEnvValue,
   parseBooleanEnvValueStrict,
   parseNumberEnvValue,
   parseNumberEnvValueStrict,
+  parseEnvEnum,
+  parseEnvEnumStrict,
 } from "./parse-helpers";

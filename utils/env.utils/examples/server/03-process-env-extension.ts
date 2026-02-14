@@ -22,22 +22,24 @@ EnvManager.bootstrap();
 
 console.log("=== Extended process.env ===\n");
 
-// Now process.env has type-safe getters!
-// Note: TypeScript may not recognize these without declaration merging
+// process.env getters are added at runtime. TypeScript does not know about them
+// unless you use declaration merging (see process-env.d.ts in the package).
+// Prefer: import { Env } from "@simpill/env.utils"; Env.getString("APP_NAME", "default");
+// so you get full type support without @ts-expect-error.
 
-// @ts-expect-error - Methods are added at runtime
+// @ts-expect-error - Methods added at runtime; use Env class or extend ProcessEnv in env.d.ts to remove
 const appName = process.env.getString("APP_NAME", "default");
 console.log(`App Name: ${appName}`);
 
-// @ts-expect-error - Methods are added at runtime
+// @ts-expect-error - Methods added at runtime; use Env class or extend ProcessEnv in env.d.ts to remove
 const port = process.env.getNumber("PORT", 3000);
 console.log(`Port: ${port}`);
 
-// @ts-expect-error - Methods are added at runtime
+// @ts-expect-error - Methods added at runtime; use Env class or extend ProcessEnv in env.d.ts to remove
 const debug = process.env.getBoolean("DEBUG_MODE", false);
 console.log(`Debug: ${debug}`);
 
-// @ts-expect-error - Methods are added at runtime
+// @ts-expect-error - Methods added at runtime; use Env class or extend ProcessEnv in env.d.ts to remove
 const hasApiKey = process.env.has("API_KEY");
 console.log(`Has API_KEY: ${hasApiKey}`);
 

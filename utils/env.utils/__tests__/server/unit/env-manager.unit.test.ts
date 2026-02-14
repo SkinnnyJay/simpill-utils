@@ -724,5 +724,23 @@ describe("EnvManager", () => {
       EnvManager.setLogger(null);
       expect(EnvManager.getLogger()).toBeNull();
     });
+
+    it("should use defaultLog when no logger set and bootstrap loads a file", () => {
+      EnvManager.resetInstance();
+      EnvManager.resetBootstrap();
+      EnvManager.setLogger(null);
+      const testEnvPath = path.join(__dirname, ".test-default-log.env");
+      fs.writeFileSync(testEnvPath, "DEFAULT_LOG_VAR=value\n");
+      const stderrSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
+      try {
+        EnvManager.bootstrap({ envPaths: [testEnvPath] });
+        expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Loaded:"));
+      } finally {
+        stderrSpy.mockRestore();
+        fs.unlinkSync(testEnvPath);
+        EnvManager.resetBootstrap();
+        EnvManager.resetInstance();
+      }
+    });
   });
 });

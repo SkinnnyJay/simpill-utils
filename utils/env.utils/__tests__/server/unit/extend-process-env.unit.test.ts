@@ -75,6 +75,37 @@ describe("extendProcessEnvPrototype", () => {
     extendProcessEnvPrototype();
     expect(process.env.getBoolean("NON_EXISTENT_FOR_DEFAULT")).toBe(false);
   });
+
+  it("should add getRequiredString and delegate to getRequired", () => {
+    process.env.REQ_STR = "req-str";
+    extendProcessEnvPrototype();
+    expect(typeof process.env.getRequiredString).toBe("function");
+    expect(process.env.getRequiredString("REQ_STR")).toBe("req-str");
+    expect(() => process.env.getRequiredString("MISSING_REQ_STR")).toThrow();
+  });
+
+  it("should add getRequiredNumber and delegate", () => {
+    process.env.REQ_NUM = "99";
+    extendProcessEnvPrototype();
+    expect(process.env.getRequiredNumber("REQ_NUM")).toBe(99);
+    expect(() => process.env.getRequiredNumber("MISSING_NUM")).toThrow();
+  });
+
+  it("should add getRequiredBoolean and delegate", () => {
+    process.env.REQ_BOOL = "true";
+    extendProcessEnvPrototype();
+    expect(process.env.getRequiredBoolean("REQ_BOOL")).toBe(true);
+    expect(() => process.env.getRequiredBoolean("MISSING_BOOL")).toThrow();
+  });
+
+  it("should add isEncrypted and getDecrypted to process.env", () => {
+    process.env.PLAIN_KEY = "plain-value";
+    extendProcessEnvPrototype();
+    expect(typeof process.env.isEncrypted).toBe("function");
+    expect(typeof process.env.getDecrypted).toBe("function");
+    expect(process.env.isEncrypted("PLAIN_KEY")).toBe(false);
+    expect(process.env.getDecrypted("PLAIN_KEY")).toBe("plain-value");
+  });
 });
 
 describe("MissingEnvError", () => {

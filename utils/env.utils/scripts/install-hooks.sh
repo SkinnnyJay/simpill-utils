@@ -94,7 +94,7 @@ EOF
       # Remove existing entry for this package if present
       if grep -q "$MARKER_START" "$PRE_COMMIT_HOOK"; then
         awk "/$MARKER_START/,/$MARKER_END/{next}1" "$PRE_COMMIT_HOOK" > "$PRE_COMMIT_HOOK.tmp"
-        mv "$PRE_COMMIT_HOOK.tmp" "$PRE_COMMIT_HOOK"
+        [ -f "$PRE_COMMIT_HOOK.tmp" ] && mv "$PRE_COMMIT_HOOK.tmp" "$PRE_COMMIT_HOOK"
       fi
       
       # Remove trailing exit and add our content
@@ -192,7 +192,7 @@ EOF
       # Remove existing entry for this package if present
       if grep -q "$MARKER_START" "$PRE_PUSH_HOOK"; then
         awk "/$MARKER_START/,/$MARKER_END/{next}1" "$PRE_PUSH_HOOK" > "$PRE_PUSH_HOOK.tmp"
-        mv "$PRE_PUSH_HOOK.tmp" "$PRE_PUSH_HOOK"
+        [ -f "$PRE_PUSH_HOOK.tmp" ] && mv "$PRE_PUSH_HOOK.tmp" "$PRE_PUSH_HOOK"
       fi
       
       # Remove trailing exit and add our content
