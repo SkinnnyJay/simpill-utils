@@ -1,7 +1,11 @@
 "use client";
 
 import { addCreatedAt, touchUpdatedAt } from "@simpill/data.utils";
-import { createAppStore, withPersistClientOnly } from "@simpill/zustand.utils/client";
+import {
+  createAppStore,
+  getClientOnlyStorage,
+  type PersistOptions,
+} from "@simpill/zustand.utils/client";
 import { generateUUID } from "@simpill/uuid.utils";
 import type { Todo } from "@/lib/schema";
 
