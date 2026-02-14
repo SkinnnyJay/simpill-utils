@@ -242,6 +242,8 @@ module.exports = {
 };
 ```
 
+Use **coverageThreshold.global** with `branches`, `functions`, `lines`, and `statements` (80% default). Single-line `coverageThreshold: { global: { ... } }` and multi-line with nested `global: { ... }` are both acceptable; keep existing packages consistent with the template above.
+
 ### biome.json
 
 ```json
