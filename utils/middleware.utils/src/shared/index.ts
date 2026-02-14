@@ -4,3 +4,4 @@ export type {
   MiddlewareResponse,
   Next,
 } from "./types";
+export { compose } from "./compose";

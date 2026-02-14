@@ -37,11 +37,19 @@ The middleware reads requestId/traceId from headers (if present), otherwise gene
 ## API
 
 - **createCorrelationMiddleware(options?)** — Returns Middleware; options: requestIdHeader, traceIdHeader, generateRequestId.
+- **compose(middlewares)** — Returns a single Middleware that runs the array in order.
 - **Middleware, Next, MiddlewareRequest, MiddlewareResponse** — Shared types.
 
 ### Compose helper
 
-There is **no** built-in **compose** function. Chain middleware by registering them in order with your framework (e.g. **Express** `app.use(m1); app.use(m2);`) or by calling **next()** inside each middleware so the framework invokes the next in the stack. For a custom pipeline you can wrap: `(req, res) => m1(req, res, () => m2(req, res, () => { /* handler */ }))`.
+**compose(middlewares)** returns a single middleware that runs the array in order; each middleware receives a **next** that invokes the next in the chain. Use when stacking multiple middlewares into one (e.g. for a custom pipeline or testing). With Express you can also chain by registering in order: `app.use(m1); app.use(m2);`.
+
+```ts
+import { compose, type Middleware } from "@simpill/middleware.utils";
+
+const stack = compose([m1, m2, m3]);
+app.use(stack);
+```
 
 ### Framework adapters
 
