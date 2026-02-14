@@ -1,6 +1,4 @@
-/**
- * Typed metadata store keyed by symbol or string. Use for attaching annotations to objects or classes.
- */
+/** Typed metadata store keyed by symbol or string; use for attaching annotations. */
 export type MetadataKey = symbol | string;
 
 export interface MetadataStore {
@@ -10,9 +8,7 @@ export interface MetadataStore {
   delete(key: MetadataKey): boolean;
 }
 
-/**
- * Creates a new metadata store (plain Map). Use symbol keys for private annotations.
- */
+/** Creates a new metadata store (plain Map); use symbol keys for private annotations. */
 export function createMetadataStore(): MetadataStore {
   const map = new Map<MetadataKey, unknown>();
   return {
@@ -31,10 +27,7 @@ export function createMetadataStore(): MetadataStore {
   };
 }
 
-/**
- * Global metadata store for process/module-level annotations.
- * Prefer createMetadataStore() for scoped stores.
- */
+/** Global metadata store for process/module-level annotations; prefer createMetadataStore() for scoped stores. */
 export const globalMetadataStore: MetadataStore = createMetadataStore();
 
 /**
@@ -45,9 +38,7 @@ export function getMetadata<T>(key: MetadataKey, store?: MetadataStore): T | und
   return s.get<T>(key);
 }
 
-/**
- * Set metadata for a key on the given store (or global if not provided).
- */
+/** Set metadata for a key on the given store (or global if not provided). */
 export function setMetadata<T>(key: MetadataKey, value: T, store?: MetadataStore): void {
   const s = store ?? globalMetadataStore;
   s.set(key, value);
