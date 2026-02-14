@@ -64,4 +64,37 @@ describe("PollingManager", () => {
     expect(manager.getState().lastError).toBe(error);
     expect(manager.getIsPolling()).toBe(false);
   });
+
+  it("when pollTimeoutMs is set, treats hung pollFn as error and schedules next", async () => {
+    const pollFn = jest
+      .fn<Promise<string>, []>()
+      .mockImplementationOnce(() => new Promise(() => {}))
+      .mockResolvedValueOnce("done");
+    const onError = jest.fn();
+    const onSuccess = jest.fn();
+
+    const manager = new PollingManager(pollFn, {
+      initialIntervalMs: 10,
+      maxIntervalMs: 100,
+      backoffFactor: 1.5,
+      pollTimeoutMs: 5,
+      onError,
+      onSuccess,
+    });
+
+    manager.start();
+
+    jest.advanceTimersByTime(10);
+    await flushMicrotasks();
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect((onError.mock.calls[0][0] as Error).message).toContain("timed out");
+
+    jest.advanceTimersByTime(15);
+    await flushMicrotasks();
+
+    expect(onSuccess).toHaveBeenCalledWith("done");
+    expect(manager.getIsPolling()).toBe(true);
+    manager.stop();
+  });
 });
