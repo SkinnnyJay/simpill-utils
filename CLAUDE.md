@@ -15,32 +15,42 @@ This is a monorepo containing utility packages under the `@simpill` namespace.
 
 | Package | Path | Status |
 |---------|------|--------|
-| `@simpill/env.utils` | `utils/env.utils/` | ✅ Stable |
-| `@simpill/logger.utils` | `utils/logger.utils/` | 🚧 In Development |
-| `@simpill/object.utils` | `utils/object.utils/` | ✅ Stable |
-| `@simpill/misc.utils` | `utils/misc.utils/` | 🆕 New |
-| `@simpill/cache.utils` | `utils/cache.utils/` | 🆕 New |
-| `@simpill/async.utils` | `utils/async.utils/` | 🆕 New |
-| `@simpill/function.utils` | `utils/function.utils/` | 🆕 New |
-| `@simpill/test.utils` | `utils/test.utils/` | 🆕 New |
-| `@simpill/events.utils` | `utils/events.utils/` | 🆕 New |
-| `@simpill/data.utils` | `utils/data.utils/` | 🆕 New |
-| `@simpill/time.utils` | `utils/time.utils/` | ✅ Stable |
-| `@simpill/uuid.utils` | `utils/uuid.utils/` | ✅ Stable |
-| `@simpill/crypto.utils` | `utils/crypto.utils/` | 🆕 New |
-| `@simpill/file.utils` | `utils/file.utils/` | 🆕 New |
-| `@simpill/errors.utils` | `utils/errors.utils/` | 🆕 New |
-| `@simpill/patterns.utils` | `utils/patterns.utils/` | 🆕 New |
-| `@simpill/factories.utils` | `utils/factories.utils/` | 🆕 New |
-| `@simpill/adapters.utils` | `utils/adapters.utils/` | 🆕 New |
-| `@simpill/algorithms.utils` | `utils/algorithms.utils/` | 🆕 New |
-| `@simpill/annotations.utils` | `utils/annotations.utils/` | 🆕 New |
-| `@simpill/array.utils` | `utils/array.utils/` | 🆕 New |
-| `@simpill/collections.utils` | `utils/collections.utils/` | 🆕 New |
-| `@simpill/zod.utils` | `utils/zod.utils/` | 🆕 New |
-| `@simpill/zustand.utils` | `utils/zustand.utils/` | 🆕 New |
-| `@simpill/react.utils` | `utils/react.utils/` | 🆕 New |
-| `@simpill/nextjs.utils` | `utils/nextjs.utils/` | 🆕 New |
+| `@simpill/env.utils` | `utils/@simpill-env.utils/` | Stable |
+| `@simpill/logger.utils` | `utils/@simpill-logger.utils/` | In Development |
+| `@simpill/object.utils` | `utils/@simpill-object.utils/` | Stable |
+| `@simpill/misc.utils` | `utils/@simpill-misc.utils/` | New |
+| `@simpill/cache.utils` | `utils/@simpill-cache.utils/` | New |
+| `@simpill/async.utils` | `utils/@simpill-async.utils/` | New |
+| `@simpill/function.utils` | `utils/@simpill-function.utils/` | New |
+| `@simpill/test.utils` | `utils/@simpill-test.utils/` | New |
+| `@simpill/events.utils` | `utils/@simpill-events.utils/` | New |
+| `@simpill/data.utils` | `utils/@simpill-data.utils/` | New |
+| `@simpill/time.utils` | `utils/@simpill-time.utils/` | Stable |
+| `@simpill/uuid.utils` | `utils/@simpill-uuid.utils/` | Stable |
+| `@simpill/crypto.utils` | `utils/@simpill-crypto.utils/` | New |
+| `@simpill/file.utils` | `utils/@simpill-file.utils/` | New |
+| `@simpill/errors.utils` | `utils/@simpill-errors.utils/` | New |
+| `@simpill/patterns.utils` | `utils/@simpill-patterns.utils/` | New |
+| `@simpill/factories.utils` | `utils/@simpill-factories.utils/` | New |
+| `@simpill/adapters.utils` | `utils/@simpill-adapters.utils/` | New |
+| `@simpill/algorithms.utils` | `utils/@simpill-algorithms.utils/` | New |
+| `@simpill/annotations.utils` | `utils/@simpill-annotations.utils/` | New |
+| `@simpill/array.utils` | `utils/@simpill-array.utils/` | New |
+| `@simpill/collections.utils` | `utils/@simpill-collections.utils/` | New |
+| `@simpill/http.utils` | `utils/@simpill-http.utils/` | New |
+| `@simpill/middleware.utils` | `utils/@simpill-middleware.utils/` | New |
+| `@simpill/nextjs.utils` | `utils/@simpill-nextjs.utils/` | New |
+| `@simpill/number.utils` | `utils/@simpill-number.utils/` | New |
+| `@simpill/observability.utils` | `utils/@simpill-observability.utils/` | New |
+| `@simpill/protocols.utils` | `utils/@simpill-protocols.utils/` | New |
+| `@simpill/react.utils` | `utils/@simpill-react.utils/` | New |
+| `@simpill/request-context.utils` | `utils/@simpill-request-context.utils/` | New |
+| `@simpill/resilience.utils` | `utils/@simpill-resilience.utils/` | New |
+| `@simpill/socket.utils` | `utils/@simpill-socket.utils/` | New |
+| `@simpill/string.utils` | `utils/@simpill-string.utils/` | New |
+| `@simpill/token-optimizer.utils` | `utils/@simpill-token-optimizer.utils/` | New |
+| `@simpill/zod.utils` | `utils/@simpill-zod.utils/` | New |
+| `@simpill/zustand.utils` | `utils/@simpill-zustand.utils/` | New |
 
 ## Quick Reference
 

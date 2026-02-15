@@ -8,55 +8,56 @@ This monorepo hosts lightweight, type-safe TypeScript utility packages under the
 
 | Package | Description | Status |
 |---------|-------------|--------|
-| `@simpill/env.utils` | Type-safe environment variable utilities | ✅ Stable |
-| `@simpill/logger.utils` | Structured logging with correlation context | 🚧 In Development |
-| `@simpill/object.utils` | Object utilities (pick, omit, merge, get/set, guards) | ✅ Stable |
-| `@simpill/misc.utils` | Backend misc: singleton, debounce, throttle, LRU, polling, enums, UUID, once, memoize | 🆕 New |
-| `@simpill/cache.utils` | LRU map, TTL cache, memoize | 🆕 New |
-| `@simpill/async.utils` | raceWithTimeout, delay, retry | 🆕 New |
-| `@simpill/function.utils` | debounce, throttle, once, pipe, compose, arguments, annotations | 🆕 New |
-| `@simpill/string.utils` | formatting, builders, casing, rich text | 🆕 New |
-| `@simpill/test.utils` | Test patterns, faker, enricher, vitest/jest helpers | 🆕 New |
-| `@simpill/events.utils` | PubSub, observer, event emitter | 🆕 New |
-| `@simpill/data.utils` | data validate/prepare/lifecycle/extend, config | 🆕 New |
-| `@simpill/time.utils` | Date/time: getUnixTimeStamp, add* (days/hours/…), diff, delta, add(duration), startOfDay/endOfDay, debounce, throttle, interval manager | ✅ Stable |
-| `@simpill/uuid.utils` | UUID: generate (v1/v4/v5), validate, isUUID, parseUUID, compareUUIDs | ✅ Stable |
-| `@simpill/crypto.utils` | Hash, randomBytesSecure, randomBytesHex, timingSafeEqualBuffer (Node) | 🆕 New |
-| `@simpill/file.utils` | readFileUtf8, readFileJson, writeFileUtf8, writeFileJson, ensureDir (Node) | 🆕 New |
-| `@simpill/errors.utils` | AppError, error codes, serializeError | 🆕 New |
-| `@simpill/patterns.utils` | Result/Either, strategySelector, pipeAsync | 🆕 New |
-| `@simpill/factories.utils` | createFactory, singletonFactory, errorFactory | 🆕 New |
-| `@simpill/adapters.utils` | createAdapter, LoggerAdapter, CacheAdapter, memoryCacheAdapter | 🆕 New |
-| `@simpill/algorithms.utils` | mergeSort, quickSort, binarySearch, lowerBound, upperBound (no @simpill deps) | 🆕 New |
-| `@simpill/api.utils` | Typed API factory: fetch client, handler registry, Zod, middleware, retry/timeout | 🆕 New |
-| `@simpill/annotations.utils` | createMetadataStore, getMetadata, setMetadata | 🆕 New |
-| `@simpill/array.utils` | unique, chunk, compact, groupBy, sortBy, partition, zip, keyBy, countBy, intersection, difference, union, sample, shuffle, take, drop | 🆕 New |
-| `@simpill/collections.utils` | LinkedList, Vector, Queue, Stack, Deque, CircularBuffer, LRU/TTL cache, MultiMap, BiMap, OrderedMap, TypedSet | 🆕 New |
-| `@simpill/request-context.utils` | AsyncLocalStorage request context (requestId, traceId), runWithRequestContext, getRequestContext | 🆕 New |
-| `@simpill/http.utils` | Fetch with timeout, retry, createHttpClient, isRetryableStatus | 🆕 New |
-| `@simpill/resilience.utils` | Circuit breaker, rate limiter, bulkhead, withJitter | 🆕 New |
-| `@simpill/middleware.utils` | Framework-agnostic middleware types, createCorrelationMiddleware | 🆕 New |
-| `@simpill/socket.utils` | Reconnecting WebSocket client with heartbeat | 🆕 New |
-| `@simpill/zod.utils` | Zod schema helpers: builders, safe-parse, transforms, OpenAPI metadata | 🆕 New |
-| `@simpill/zustand.utils` | Zustand store helpers: factory, persist, devtools, slices | 🆕 New |
-| `@simpill/react.utils` | React hooks: useLatest, createSafeContext, useStableCallback, useLazyState, useDeferredUpdate | 🆕 New |
-| `@simpill/nextjs.utils` | Next.js: createSafeAction, route helpers, withRequestContext, withCorrelation | 🆕 New |
+| `@simpill/env.utils` | Type-safe environment variable utilities | Stable |
+| `@simpill/logger.utils` | Structured logging with correlation context | In Development |
+| `@simpill/object.utils` | Object utilities (pick, omit, merge, get/set, guards) | Stable |
+| `@simpill/misc.utils` | Backend misc: singleton, debounce, throttle, LRU, polling, enums, UUID, once, memoize | New |
+| `@simpill/cache.utils` | LRU map, TTL cache, memoize | New |
+| `@simpill/async.utils` | raceWithTimeout, delay, retry | New |
+| `@simpill/function.utils` | debounce, throttle, once, pipe, compose, arguments, annotations | New |
+| `@simpill/string.utils` | formatting, builders, casing, rich text | New |
+| `@simpill/test.utils` | Test patterns, faker, enricher, vitest/jest helpers | New |
+| `@simpill/events.utils` | PubSub, observer, event emitter | New |
+| `@simpill/data.utils` | data validate/prepare/lifecycle/extend, config | New |
+| `@simpill/time.utils` | Date/time: getUnixTimeStamp, add* (days/hours/…), diff, delta, add(duration), startOfDay/endOfDay, debounce, throttle, interval manager | Stable |
+| `@simpill/uuid.utils` | UUID: generate (v1/v4/v5), validate, isUUID, parseUUID, compareUUIDs | Stable |
+| `@simpill/crypto.utils` | Hash, randomBytesSecure, randomBytesHex, timingSafeEqualBuffer (Node) | New |
+| `@simpill/file.utils` | readFileUtf8, readFileJson, writeFileUtf8, writeFileJson, ensureDir (Node) | New |
+| `@simpill/errors.utils` | AppError, error codes, serializeError | New |
+| `@simpill/patterns.utils` | Result/Either, strategySelector, pipeAsync | New |
+| `@simpill/factories.utils` | createFactory, singletonFactory, errorFactory | New |
+| `@simpill/adapters.utils` | createAdapter, LoggerAdapter, CacheAdapter, memoryCacheAdapter | New |
+| `@simpill/algorithms.utils` | mergeSort, quickSort, binarySearch, lowerBound, upperBound (no @simpill deps) | New |
+| `@simpill/api.utils` | Typed API factory: fetch client, handler registry, Zod, middleware, retry/timeout | New |
+| `@simpill/annotations.utils` | createMetadataStore, getMetadata, setMetadata | New |
+| `@simpill/array.utils` | unique, chunk, compact, groupBy, sortBy, partition, zip, keyBy, countBy, intersection, difference, union, sample, shuffle, take, drop | New |
+| `@simpill/collections.utils` | LinkedList, Vector, Queue, Stack, Deque, CircularBuffer, LRU/TTL cache, MultiMap, BiMap, OrderedMap, TypedSet | New |
+| `@simpill/request-context.utils` | AsyncLocalStorage request context (requestId, traceId), runWithRequestContext, getRequestContext | New |
+| `@simpill/http.utils` | Fetch with timeout, retry, createHttpClient, isRetryableStatus | New |
+| `@simpill/resilience.utils` | Circuit breaker, rate limiter, bulkhead, withJitter | New |
+| `@simpill/middleware.utils` | Framework-agnostic middleware types, createCorrelationMiddleware | New |
+| `@simpill/socket.utils` | Reconnecting WebSocket client with heartbeat | New |
+| `@simpill/zod.utils` | Zod schema helpers: builders, safe-parse, transforms, OpenAPI metadata | New |
+| `@simpill/zustand.utils` | Zustand store helpers: factory, persist, devtools, slices | New |
+| `@simpill/react.utils` | React hooks: useLatest, createSafeContext, useStableCallback, useLazyState, useDeferredUpdate | New |
+| `@simpill/nextjs.utils` | Next.js: createSafeAction, route helpers, withRequestContext, withCorrelation | New |
 
 ## Project Structure
 
 ```
 @simpill/
-├── {name}.utils/               # Each package follows the same structure
-│   ├── src/                    # Source code
-│   │   ├── client/             # Edge/browser runtime (no fs)
-│   │   ├── server/             # Node.js runtime (full access)
-│   │   └── shared/             # Runtime-agnostic utilities
-│   ├── __tests__/              # Tests (mirrors src/ structure)
-│   ├── scripts/                # Build/check scripts
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── jest.config.js
-│   └── biome.json
+├── utils/                      # One folder per package: @simpill-<name>.utils
+│   └── @simpill-{name}.utils/
+│       ├── src/                # Source code
+│       │   ├── client/         # Edge/browser runtime (no fs)
+│       │   ├── server/         # Node.js runtime (full access)
+│       │   └── shared/         # Runtime-agnostic utilities
+│       ├── __tests__/          # Tests (mirrors src/ structure)
+│       ├── scripts/            # Build/check scripts
+│       ├── package.json
+│       ├── tsconfig.json
+│       ├── jest.config.js
+│       └── biome.json
 ├── .github/workflows/          # CI/CD per package
 ├── CONTRIBUTING.md             # Package creation guide
 └── README.md                   # Monorepo overview
@@ -64,7 +65,7 @@ This monorepo hosts lightweight, type-safe TypeScript utility packages under the
 
 ## Development Commands
 
-Run from any package directory (e.g., `cd env.utils`):
+Run from any package directory (e.g., `cd utils/@simpill-env.utils`):
 
 | Command | Description |
 |---------|-------------|
@@ -100,15 +101,11 @@ Run from any package directory (e.g., `cd env.utils`):
 - Keep PRs focused with summary and test commands
 - Link related issues
 
-## Literal audit sub-agents
+## Literal audit
 
-To execute the [literal audit](docs/LITERAL_AUDIT_FINDINGS.md) per package:
+To execute the [literal audit](docs/LITERAL_AUDIT_FINDINGS.md) per package, use the findings doc and **literal-hunter** (`.claude/skills/literal-hunter`) for centralizing literals. For batch workflows across packages, see [docs/LITERAL_AUDIT_BATCH_TASKS.md](docs/LITERAL_AUDIT_BATCH_TASKS.md) if present.
 
-- **Single package**: Use the **literal-audit-executor** skill. Example: *"Execute literal audit for env.utils"* or *"Tackle uuid.utils"*. The agent will use the findings doc, add constants, replace usages, and run tests for that package only.
-- **Multiple packages**: Use the **literal-audit-batch** skill. Example: *"Tackle the next 5 packages"* or *"Work through the literal audit todo list"*. The agent will order packages and run the executor workflow per package (or hand off clear tasks).
-- **Split between subagents**: Use [docs/LITERAL_AUDIT_BATCH_TASKS.md](docs/LITERAL_AUDIT_BATCH_TASKS.md): one batch per agent, each with a copy-paste prompt and scoped package list so batches can run in parallel.
-
-Skills live in `.claude/skills/` (literal-audit-executor, literal-audit-batch). The todo list tracks one task per package.
+Project skills live in `.claude/skills/`. Commands, rules, and agents live in `.cursor/commands`, `.cursor/rules`, and `.cursor/agents`. See `.cursor/README.md` for a full index.
 
 ## Security
 

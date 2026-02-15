@@ -27,7 +27,7 @@ Examples:
 - `@simpill/cache.utils`
 - `@simpill/http.utils`
 
-The directory name matches the package suffix (e.g., `env.utils/` for `@simpill/env.utils`).
+Packages live under `utils/@simpill-`; the directory name matches the package suffix (e.g., `utils/@simpill-env.utils/` for `@simpill/env.utils`).
 
 ---
 
@@ -86,9 +86,9 @@ The `src/` directory uses a **runtime-based** organization:
 
 | Directory | Purpose | Can use `fs`? | Example |
 |-----------|---------|---------------|---------|
-| `client/` | Edge Runtime, browser, middleware | ❌ No | Edge env helpers |
-| `server/` | Node.js, API routes, server components | ✅ Yes | File-based config |
-| `shared/` | Runtime-agnostic utilities | ❌ No | Parse helpers, types |
+| `client/` | Edge Runtime, browser, middleware | No | Edge env helpers |
+| `server/` | Node.js, API routes, server components | Yes | File-based config |
+| `shared/` | Runtime-agnostic utilities | No | Parse helpers, types |
 
 ### Test File Naming
 
@@ -570,6 +570,12 @@ describe("{FeatureName}", () => {
 - **Maximum 400 lines** per file
 - Split large modules into smaller, focused files
 
+### JSDoc and comments
+
+- Prefer **edge cases and constraints** (e.g. empty path, encoding, sync vs async); avoid restating the function signature.
+- Avoid long bullet lists for a single option; use one paragraph and link to README or examples.
+- Move prose to README; keep examples minimal. Remove redundant `@file` / `@description` in modular code.
+
 ---
 
 ## Subpath Exports
@@ -623,17 +629,17 @@ on:
   push:
     branches: [main]
     paths:
-      - "{name}.utils/**"
+      - "utils/@simpill-{name}.utils/**"
       - ".github/workflows/{name}-utils-ci.yml"
   pull_request:
     branches: [main]
     paths:
-      - "{name}.utils/**"
+      - "utils/@simpill-{name}.utils/**"
       - ".github/workflows/{name}-utils-ci.yml"
 
 defaults:
   run:
-    working-directory: {name}.utils
+    working-directory: utils/@simpill-{name}.utils
 
 jobs:
   test:
@@ -650,7 +656,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-          cache-dependency-path: "{name}.utils/package-lock.json"
+          cache-dependency-path: "utils/@simpill-{name}.utils/package-lock.json"
 
       - name: Install dependencies
         run: npm ci
@@ -673,7 +679,7 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
-          directory: {name}.utils/coverage
+          directory: utils/@simpill-{name}.utils/coverage
           flags: {name}-utils
 ```
 
@@ -685,7 +691,7 @@ Use this checklist when creating a new package:
 
 ### Initial Setup
 
-- [ ] Create package directory: `{name}.utils/`
+- [ ] Create package directory: `utils/@simpill-{name}.utils/`
 - [ ] Create `src/` directory structure (`client/`, `server/`, `shared/`)
 - [ ] Create `__tests__/` directory structure (mirrors `src/`)
 - [ ] Create `scripts/` directory with `check.sh`, `install-hooks.sh`, `pre-push.sh`
@@ -740,17 +746,17 @@ Use this checklist when creating a new package:
 ## Example: Creating a New Package
 
 ```bash
-# 1. Create directory structure
-mkdir -p cache.utils/{src/{client,server,shared},__tests__/{client,server,shared}/{unit,integration},scripts}
+# 1. Create directory structure (from repo root)
+mkdir -p utils/@simpill-cache.utils/{src/{client,server,shared},__tests__/{client,server,shared}/{unit,integration},scripts}
 
 # 2. Copy template files from env.utils
-cp env.utils/package.json cache.utils/
-cp env.utils/tsconfig.json cache.utils/
-cp env.utils/jest.config.js cache.utils/
-cp env.utils/biome.json cache.utils/
-cp env.utils/.gitignore cache.utils/
-cp env.utils/.npmignore cache.utils/
-cp env.utils/scripts/*.sh cache.utils/scripts/
+cp utils/@simpill-env.utils/package.json utils/@simpill-cache.utils/
+cp utils/@simpill-env.utils/tsconfig.json utils/@simpill-cache.utils/
+cp utils/@simpill-env.utils/jest.config.js utils/@simpill-cache.utils/
+cp utils/@simpill-env.utils/biome.json utils/@simpill-cache.utils/
+cp utils/@simpill-env.utils/.gitignore utils/@simpill-cache.utils/
+cp utils/@simpill-env.utils/.npmignore utils/@simpill-cache.utils/
+cp utils/@simpill-env.utils/scripts/*.sh utils/@simpill-cache.utils/scripts/
 
 # 3. Update package.json
 # - Change name to "@simpill/cache.utils"
@@ -759,16 +765,16 @@ cp env.utils/scripts/*.sh cache.utils/scripts/
 # - Adjust dependencies
 
 # 4. Create entry points
-touch cache.utils/src/index.ts
-touch cache.utils/src/client/index.ts
-touch cache.utils/src/server/index.ts
-touch cache.utils/src/shared/index.ts
+touch utils/@simpill-cache.utils/src/index.ts
+touch utils/@simpill-cache.utils/src/client/index.ts
+touch utils/@simpill-cache.utils/src/server/index.ts
+touch utils/@simpill-cache.utils/src/shared/index.ts
 
 # 5. Make scripts executable
-chmod +x cache.utils/scripts/*.sh
+chmod +x utils/@simpill-cache.utils/scripts/*.sh
 
 # 6. Install dependencies
-cd cache.utils && npm install
+cd utils/@simpill-cache.utils && npm install
 
 # 7. Start developing!
 ```
