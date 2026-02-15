@@ -1,0 +1,33 @@
+---
+description: "Code quality: type safety, file/function limits, logging, naming. See CLAUDE.md for project layout."
+alwaysApply: true
+---
+
+# Code Quality Standards
+
+## Type safety
+
+- Do not use `any`. Type every variable, parameter, and return value.
+- Do not use type casting (`as`). Use type guards, narrowing, or generics.
+- Strict mode; build errors fail the build.
+
+## File and function size
+
+- **Functions:** max 500 lines. Split large functions into smaller helpers.
+- **Files:** max 2500 lines. Split into modules if approaching the limit.
+- Prefer early returns to reduce nesting.
+
+## Environment and logging
+
+- In library code: avoid `process.env` and `console.*` in published code; use config injection or passed options. Tests and scripts may use them.
+- In apps: use project env and logging utilities.
+
+## Comments and naming
+
+- Comments only when they add signal (e.g. non-obvious “why”). No trivial restatements. No emoji in code or comments.
+- Private/protected: use language keywords (`private`/`protected`); do not prefix with underscores.
+- Naming: PascalCase for types/classes; camelCase for functions and variables; SCREAMING_SNAKE_CASE for constants.
+
+## Project layout
+
+- Follow the structure in CLAUDE.md and the Makefile (scripts in `scripts/`, `make help`). Use `make <target>` for build, test, lint, and related workflows.

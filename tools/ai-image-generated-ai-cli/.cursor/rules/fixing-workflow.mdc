@@ -1,0 +1,60 @@
+---
+description: "Workflow for fixing lint, type, test, and E2E failures. Follow whenever resolving multiple errors."
+alwaysApply: true
+---
+
+# Fixing Workflow
+
+When fixing lint errors, type errors, test failures, or E2E failures, follow this process. Do not skip steps.
+
+## Step 1: Discover all failures
+
+Run the appropriate command for the full picture before changing code:
+
+| Category | Discovery command |
+|----------|-------------------|
+| Lint | `npm run lint` or project lint script |
+| Format | Project format check (e.g. `npm run format:check`, Biome, Prettier) |
+| Type errors | `npm run typecheck` or `npx tsc --noEmit` |
+| Unit/integration tests | `npm test` or project test script |
+| E2E tests | Project E2E script (e.g. `npm run test:e2e`, `npx playwright test`) |
+| Build | `npm run build` or `make build` |
+
+Read the full output. For E2E, check the project’s report path if defined.
+
+## Step 2: Create a task list
+
+Before fixing anything, list every failure:
+
+- One item per distinct error (group related errors in the same file).
+- Include file path and short description.
+- Mark all items pending.
+
+Example:
+
+```
+[ ] src/services/chat.ts — missing return type on archive()
+[ ] src/features/jobs/index.ts — unused import BackgroundJob
+[ ] tests/chat.test.ts — "should archive chat" assertion fails (expected 'archived', got null)
+```
+
+## Step 3: Fix one item at a time
+
+For each item:
+
+1. Read the failing file and find the root cause.
+2. Apply the minimal fix.
+3. Verify with the **affected scope only** (e.g. linter on that file, single test file).
+4. Mark done only after that check passes.
+5. If the fix introduces a new error, fix it before continuing.
+
+Do **not** run the full suite until every item is resolved.
+
+## Step 4: Full confirmation
+
+When all items are done:
+
+1. Run the full discovery command again.
+2. If new failures appear, add them to the task list and fix.
+3. Repeat until the suite passes.
+4. Run the project’s final gate (e.g. `npm run lint && npm run typecheck`).
