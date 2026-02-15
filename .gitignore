@@ -76,6 +76,9 @@ site/
 *.apk
 *.ipa
 
+# Local settings (do not commit)
+.claude/settings.local.json
+
 # Project specific
 # Add your project-specific ignore patterns here
 .playwright-mcp/
