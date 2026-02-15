@@ -1,10 +1,24 @@
-# @simpill/socket.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/socket.utils" width="100%" />
+</p>
 
-**Reconnecting WebSocket client with optional heartbeat.**
+<p align="center">
+  <strong>Reconnecting WebSocket client with optional heartbeat</strong>
+</p>
 
-WebSocket client that reconnects and supports heartbeat.
+<p align="center">
+  WebSocket client that reconnects and supports heartbeat. Node and Edge.
+</p>
 
-**Features:** Type-safe · Node & Edge · Lightweight · Uses `@simpill/async.utils` (delay) for backoff
+**Features:** Type-safe · Node & Edge · Lightweight · Uses @simpill/async.utils for backoff
+
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
+
+---
 
 ## Installation
 

@@ -1,10 +1,24 @@
-# @simpill/http.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/http.utils" width="100%" />
+</p>
 
-**Fetch with timeout, retry, and typed HTTP client.**
+<p align="center">
+  <strong>Fetch with timeout, retry, and typed HTTP client</strong>
+</p>
 
-Fetch with timeout, retry, and a typed client—no axios required.
+<p align="center">
+  Timeout, retry, and typed client—no axios required. Node and Edge.
+</p>
 
 **Features:** Type-safe · Node & Edge · Lightweight · Uses `@simpill/async.utils` for retry/timeout
+
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
+
+---
 
 ## Installation
 

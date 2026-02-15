@@ -1,10 +1,24 @@
-# @simpill/middleware.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/middleware.utils" width="100%" />
+</p>
 
-**Framework-agnostic middleware types and correlation ID middleware.**
+<p align="center">
+  <strong>Framework-agnostic middleware types and correlation ID middleware</strong>
+</p>
 
-Framework-agnostic middleware types and correlation ID middleware.
+<p align="center">
+  Correlation ID middleware and types for Node and Edge.
+</p>
 
 **Features:** Type-safe · Node & Edge · Uses `@simpill/request-context.utils` and `@simpill/uuid.utils`
+
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
+
+---
 
 ## Installation
 

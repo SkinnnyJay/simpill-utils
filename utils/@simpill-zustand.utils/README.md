@@ -1,6 +1,24 @@
-# @simpill/zustand.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/zustand.utils" width="100%" />
+</p>
 
-Zustand store helpers: typed store factory, persist wrappers (versioning + migrate), devtools middleware composition, and slice helpers.
+<p align="center">
+  <strong>Zustand store helpers: factory, persist, devtools, slices</strong>
+</p>
+
+<p align="center">
+  Typed store factory, persist (versioning + migrate), devtools middleware, slice composition.
+</p>
+
+**Features:** Type-safe · React · Tree-shakeable · Works with Zustand v4/v5
+
+<p align="center">
+  <a href="#install">Install</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
+
+---
 
 ## Install
 

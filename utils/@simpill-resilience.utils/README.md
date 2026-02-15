@@ -1,10 +1,24 @@
-# @simpill/resilience.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/resilience.utils" width="100%" />
+</p>
 
-**Circuit breaker, rate limiter, bulkhead, and jittered backoff.**
+<p align="center">
+  <strong>Circuit breaker, rate limiter, bulkhead, and jittered backoff</strong>
+</p>
 
-Circuit breaker, rate limiter, and bulkhead for fault-tolerant APIs.
+<p align="center">
+  Fault-tolerant API utilities. Uses @simpill/async.utils for Semaphore and delay.
+</p>
 
-**Features:** Type-safe · Node & Edge · Lightweight · Uses `@simpill/async.utils` (Semaphore, delay)
+**Features:** Type-safe · Node & Edge · Lightweight
+
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
+
+---
 
 ## Installation
 

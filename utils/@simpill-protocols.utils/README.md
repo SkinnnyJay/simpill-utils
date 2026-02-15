@@ -1,6 +1,24 @@
-# @simpill/protocols.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/protocols.utils" width="100%" />
+</p>
 
-Shared protocol constants and types for the @simpill monorepo: HTTP methods, correlation headers, env boolean parsing, and logger env keys.
+<p align="center">
+  <strong>Shared protocol constants and types</strong>
+</p>
+
+<p align="center">
+  HTTP methods, correlation headers, env boolean parsing, and logger env keys for @simpill packages.
+</p>
+
+**Features:** Type-safe · Node & Edge · No runtime deps
+
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#exports">Exports</a>
+</p>
+
+---
 
 ## Installation
 

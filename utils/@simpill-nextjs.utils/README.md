@@ -1,6 +1,24 @@
-# @simpill/nextjs.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/nextjs.utils" width="100%" />
+</p>
 
-Next.js App Router helpers: type-safe server actions (Zod), route handler utilities, request context, and middleware correlation. Composes with `@simpill/zod.utils`, `@simpill/errors.utils`, and `@simpill/request-context.utils`.
+<p align="center">
+  <strong>Next.js App Router helpers: safe server actions, route handlers, request context, middleware</strong>
+</p>
+
+<p align="center">
+  Type-safe server actions (Zod), route utilities, and correlation. Composes with zod.utils, errors.utils, request-context.utils.
+</p>
+
+**Features:** Type-safe · Node & Edge · Zod · Tree-shakeable
+
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
+
+---
 
 ## Installation
 

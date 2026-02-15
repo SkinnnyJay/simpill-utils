@@ -1,6 +1,24 @@
-# @simpill/react.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/react.utils" width="100%" />
+</p>
 
-Framework-agnostic React utilities: hooks, safe context, stable callbacks, and transition helpers.
+<p align="center">
+  <strong>Framework-agnostic React utilities: hooks, safe context, stable callbacks, transitions</strong>
+</p>
+
+<p align="center">
+  useLatest, createSafeContext, useStableCallback, useLazyState, useDeferredUpdate.
+</p>
+
+**Features:** Type-safe · React 18+ · Tree-shakeable
+
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
+
+---
 
 ## Installation
 

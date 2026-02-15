@@ -1,6 +1,23 @@
-# @simpill/observability.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/observability.utils" width="100%" />
+</p>
 
-Single integration surface for correlation middleware, request context, and logger. Use this package when you want one recommended path to wire `createCorrelationMiddleware`, `runWithRequestContext`, and logger context together.
+<p align="center">
+  <strong>Single integration surface for correlation, request context, and logger</strong>
+</p>
+
+<p align="center">
+  Wire createCorrelationMiddleware, runWithRequestContext, and logger context in one place.
+</p>
+
+**Features:** Type-safe · Node · Lightweight
+
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#recommended-integration">Recommended integration</a>
+</p>
+
+---
 
 ## Installation
 

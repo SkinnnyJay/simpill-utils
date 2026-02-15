@@ -1,10 +1,24 @@
-# @simpill/zod.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/zod.utils" width="100%" />
+</p>
 
-**Zod schema helpers: builders, safe-parse results, transforms, OpenAPI metadata.**
+<p align="center">
+  <strong>Zod schema helpers: builders, safe-parse results, transforms, OpenAPI metadata</strong>
+</p>
 
-Zod helpers: safe-parse results, transforms, and OpenAPI metadata.
+<p align="center">
+  Safe-parse results, transforms, and OpenAPI metadata for Zod schemas.
+</p>
 
 **Features:** Type-safe · Node & Edge · Tree-shakeable · Works with Zod 3+
+
+<p align="center">
+  <a href="#install">Install</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
+
+---
 
 ## Install
 

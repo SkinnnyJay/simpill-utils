@@ -1,10 +1,24 @@
-# @simpill/request-context.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/request-context.utils" width="100%" />
+</p>
 
-**AsyncLocalStorage request context (requestId, traceId) for Node.js.**
+<p align="center">
+  <strong>AsyncLocalStorage request context (requestId, traceId) for Node.js</strong>
+</p>
 
-AsyncLocalStorage-based request ID and trace ID for logging and tracing. Compatible with `@simpill/logger.utils` LogContext.
+<p align="center">
+  Request ID and trace ID for logging and tracing. Compatible with @simpill/logger.utils LogContext.
+</p>
 
 **Features:** Type-safe · Node only · Lightweight
+
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
+
+---
 
 ## Installation
 

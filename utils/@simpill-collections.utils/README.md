@@ -1,10 +1,24 @@
-# @simpill/collections.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/collections.utils" width="100%" />
+</p>
 
-**Type-safe LinkedList, Queue, Stack, LRU/TTL, MultiMap, BiMap.**
+<p align="center">
+  <strong>Type-safe LinkedList, Queue, Stack, LRU/TTL, MultiMap, BiMap</strong>
+</p>
 
-Type-safe LinkedList, Queue, Stack, LRU/TTL, MultiMap, BiMap—no full collections lib.
+<p align="center">
+  Type-safe collections—no full collections lib. Node and Edge.
+</p>
 
 **Features:** Type-safe · Node & Edge · Tree-shakeable · Lightweight
+
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
+
+---
 
 ## Installation
 

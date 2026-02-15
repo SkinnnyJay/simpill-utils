@@ -1,10 +1,24 @@
-# @simpill/api.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/api.utils" width="100%" />
+</p>
 
-**Typed API client with Zod validation, handler registry, and middleware.**
+<p align="center">
+  <strong>Typed API client with Zod validation, handler registry, and middleware</strong>
+</p>
 
-Typed API client with Zod validation, handler registry, and middleware.
+<p align="center">
+  Typed API client with Zod validation, handler registry, and middleware (Node and Edge).
+</p>
 
 **Features:** Type-safe · Node & Edge · Zod · Tree-shakeable
+
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
+
+---
 
 ## Installation
 

@@ -1,4 +1,24 @@
-# @simpill/algorithms.utils
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="@simpill/algorithms.utils" width="100%" />
+</p>
+
+<p align="center">
+  <strong>Algorithms: stable merge sort, quick sort, binary search, lower/upper bound</strong>
+</p>
+
+<p align="center">
+  Node and Edge compatible sorting and search utilities.
+</p>
+
+**Features:** Type-safe · Node & Edge · No dependencies
+
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
+
+---
 
 Algorithms: sorting and binary search. No dependencies on other `@simpill` packages, so any package can depend on it without circular dependency risk.
 
