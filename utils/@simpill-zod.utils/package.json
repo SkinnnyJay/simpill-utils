@@ -1,0 +1,88 @@
+{
+  "name": "@simpill/zod.utils",
+  "version": "1.0.0",
+  "description": "Zod schema helpers: builders, safe-parse, transforms, OpenAPI metadata (Node and Edge).",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SkinnnyJay/simpill.git",
+    "directory": "utils/@simpill-zod.utils"
+  },
+  "bugs": {
+    "url": "https://github.com/SkinnnyJay/simpill/issues"
+  },
+  "homepage": "https://github.com/SkinnnyJay/simpill/tree/main/utils/@simpill-zod.utils#readme",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js",
+      "require": "./dist/client/index.js"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.js",
+      "require": "./dist/server/index.js"
+    },
+    "./shared": {
+      "types": "./dist/shared/index.d.ts",
+      "import": "./dist/shared/index.js",
+      "require": "./dist/shared/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist coverage .jest-cache node_modules/.cache",
+    "build": "tsc",
+    "dev:watch": "tsc --watch",
+    "prepublishOnly": "npm run build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "typecheck": "tsc --noEmit",
+    "verify": "./scripts/check.sh",
+    "prepare": "./scripts/install-hooks.sh"
+  },
+  "keywords": [
+    "typescript",
+    "zod",
+    "schema",
+    "validation",
+    "openapi",
+    "transforms"
+  ],
+  "author": "",
+  "license": "ISC",
+  "sideEffects": false,
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.11",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.11.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

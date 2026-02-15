@@ -2,13 +2,15 @@
 
 Utilities are organized into **packages** (publishable, template-conformant) and **legacy subfolders** (no package structure).
 
-The standard package layout is defined in the repo [CONTRIBUTING.md](../CONTRIBUTING.md) and the [template/](../template) directory. Every package under `utils/` should follow: `src/{client,server,shared}/`, `__tests__/`, `scripts/` (check.sh, install-hooks.sh, pre-push.sh), and root files (AGENTS.md, CLAUDE.md, biome.json, jest.config.js, tsconfig.json, .gitignore, .npmignore).
+The standard package layout is defined in the repo [CONTRIBUTING.md](../CONTRIBUTING.md) and the [template/](../template) directory. Every package under `utils/@simpill-` should follow: `src/{client,server,shared}/`, `__tests__/`, `scripts/` (check.sh, install-hooks.sh, pre-push.sh), and root files (AGENTS.md, CLAUDE.md, biome.json, jest.config.js, tsconfig.json, .gitignore, .npmignore).
 
 ---
 
 ## Packages (template-conformant)
 
-| Package | Description |
+Packages live under `utils/@simpill-` (e.g. `utils/@simpill-env.utils/`).
+
+| Folder | Description |
 |---------|-------------|
 | **async.utils/** | `@simpill/async.utils` – raceWithTimeout, retry, delay, polling |
 | **cache.utils/** | `@simpill/cache.utils` – LRU map, TTL cache, memoize |

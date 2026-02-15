@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "utils/@simpill/factories.utils/**"
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - "utils/@simpill/factories.utils/**"
+
+defaults:
+  run:
+    working-directory: utils/@simpill/factories.utils
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: utils/@simpill/factories.utils/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+
+  test:
+    name: Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ["18", "20", "22"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: utils/@simpill/factories.utils/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: utils/@simpill/factories.utils/package-lock.json
+      - run: npm ci
+      - run: npm run test:coverage
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: utils/@simpill/factories.utils/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: |
+          test -f dist/index.js
+          test -f dist/index.d.ts
+          test -f dist/shared/index.js
+          test -f dist/shared/index.d.ts
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: utils/@simpill/factories.utils/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit

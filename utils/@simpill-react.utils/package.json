@@ -1,0 +1,91 @@
+{
+  "name": "@simpill/react.utils",
+  "version": "1.0.0",
+  "description": "Framework-agnostic React utilities: hooks, safe context, stable callbacks, transitions.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SkinnnyJay/simpill.git",
+    "directory": "utils/@simpill-react.utils"
+  },
+  "bugs": {
+    "url": "https://github.com/SkinnnyJay/simpill/issues"
+  },
+  "homepage": "https://github.com/SkinnnyJay/simpill/tree/main/utils/@simpill-react.utils#readme",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js",
+      "require": "./dist/client/index.js"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.js",
+      "require": "./dist/server/index.js"
+    },
+    "./shared": {
+      "types": "./dist/shared/index.d.ts",
+      "import": "./dist/shared/index.js",
+      "require": "./dist/shared/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist coverage .jest-cache node_modules/.cache",
+    "build": "tsc",
+    "dev": "npm run build",
+    "dev:watch": "tsc --watch",
+    "prepublishOnly": "npm run build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "typecheck": "tsc --noEmit",
+    "verify": "./scripts/check.sh",
+    "prepare": "./scripts/install-hooks.sh"
+  },
+  "keywords": [
+    "typescript",
+    "react",
+    "hooks",
+    "stable-callback",
+    "safe-context"
+  ],
+  "author": "",
+  "license": "ISC",
+  "sideEffects": false,
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.11",
+    "@testing-library/react": "^16.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "typescript": ">=4.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
