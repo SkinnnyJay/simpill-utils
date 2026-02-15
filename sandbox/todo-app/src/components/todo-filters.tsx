@@ -2,6 +2,7 @@
 
 import { useTodoStore } from "@/store/todo-store";
 import type { FilterKind } from "@/store/todo-store";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const filters: { value: FilterKind; label: string }[] = [
   { value: "all", label: "All" },
@@ -14,23 +15,19 @@ export function TodoFilters() {
   const setFilter = useTodoStore((s) => s.setFilter);
 
   return (
-    <div className="flex gap-2" role="tablist" aria-label="Filter todos">
-      {filters.map((f) => (
-        <button
-          key={f.value}
-          type="button"
-          role="tab"
-          aria-selected={filter === f.value}
-          onClick={() => setFilter(f.value)}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-            filter === f.value
-              ? "bg-cyan-600 text-white"
-              : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200"
-          }`}
-        >
-          {f.label}
-        </button>
-      ))}
-    </div>
+    <Tabs
+      value={filter}
+      onValueChange={(v) => setFilter(v as FilterKind)}
+      className="w-full"
+      aria-label="Filter todos"
+    >
+      <TabsList className="w-fit">
+        {filters.map((f) => (
+          <TabsTrigger key={f.value} value={f.value}>
+            {f.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   );
 }

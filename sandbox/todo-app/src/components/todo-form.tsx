@@ -5,13 +5,16 @@ import { safeParseResult } from "@simpill/zod.utils";
 import { useState } from "react";
 import { useTodoStore } from "@/store/todo-store";
 import { addTodoSchema } from "@/lib/schema";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function TodoForm() {
   const addTodo = useTodoStore((s) => s.addTodo);
   const [title, setTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = useStableCallback((e: React.FormEvent) => {
+  const handleSubmit = useStableCallback(((e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     const parsed = safeParseResult(addTodoSchema, { title });
@@ -21,29 +24,26 @@ export function TodoForm() {
     }
     addTodo(parsed.data.title);
     setTitle("");
-  });
+  }) as (...args: unknown[]) => unknown);
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 w-full max-w-xl">
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="What needs to be done?"
-        className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900/50 px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-all"
-        aria-label="New todo title"
-      />
-      <button
-        type="submit"
-        className="rounded-lg bg-cyan-600 px-5 py-3 font-medium text-white hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all"
-      >
-        Add
-      </button>
+    <div className="w-full max-w-xl space-y-2">
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <Input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="What needs to be done?"
+          aria-label="New todo title"
+          className="flex-1"
+        />
+        <Button type="submit">Add</Button>
+      </form>
       {error ? (
-        <p className="absolute mt-1 text-sm text-red-400" role="alert">
-          {error}
-        </p>
+        <Alert variant="destructive" role="alert">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : null}
-    </form>
+    </div>
   );
 }

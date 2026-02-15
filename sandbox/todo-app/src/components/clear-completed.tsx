@@ -1,6 +1,7 @@
 "use client";
 
 import { useTodoStore } from "@/store/todo-store";
+import { Button } from "@/components/ui/button";
 
 export function ClearCompleted() {
   const todos = useTodoStore((s) => s.todos);
@@ -10,12 +11,8 @@ export function ClearCompleted() {
   if (!hasCompleted) return null;
 
   return (
-    <button
-      type="button"
-      onClick={clearCompleted}
-      className="rounded-lg px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-all"
-    >
+    <Button type="button" variant="ghost" size="sm" onClick={clearCompleted}>
       Clear completed
-    </button>
+    </Button>
   );
 }

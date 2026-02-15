@@ -1,39 +1,90 @@
 "use client";
 
 import { useStableCallback } from "@simpill/react.utils";
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { useTodoStore } from "@/store/todo-store";
-import type { Todo } from "@/lib/schema";
+import type { Todo, Priority, TodoColor } from "@/lib/schema";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { COLOR_BORDER_MAP, PRIORITY_LABELS, TODO_COLORS } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+import { GripVertical } from "lucide-react";
 
-export function TodoItem({ todo }: { todo: Todo }) {
+export type DragHandleProps = {
+  attributes: Record<string, unknown>;
+  listeners: Record<string, unknown>;
+};
+
+export const TodoItem = forwardRef<
+  HTMLLIElement,
+  { todo: Todo; dragHandleProps?: DragHandleProps; style?: React.CSSProperties }
+>(function TodoItem({ todo, dragHandleProps, style }, ref) {
   const toggleTodo = useTodoStore((s) => s.toggleTodo);
   const updateTodo = useTodoStore((s) => s.updateTodo);
   const deleteTodo = useTodoStore((s) => s.deleteTodo);
+  const setPriority = useTodoStore((s) => s.setPriority);
+  const setColor = useTodoStore((s) => s.setColor);
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(todo.title);
 
-  const handleToggle = useStableCallback(() => toggleTodo(todo.id));
-  const handleDelete = useStableCallback(() => deleteTodo(todo.id));
-  const handleSaveEdit = useStableCallback(() => {
-    const t = editTitle.trim();
-    if (t) updateTodo(todo.id, t);
-    setEditing(false);
-  });
+  const handleToggle = useStableCallback(
+    (() => toggleTodo(todo.id)) as (...args: unknown[]) => unknown
+  );
+  const handleDelete = useStableCallback(
+    (() => deleteTodo(todo.id)) as (...args: unknown[]) => unknown
+  );
+  const handleSaveEdit = useStableCallback(
+    (() => {
+      const t = editTitle.trim();
+      if (t) updateTodo(todo.id, t);
+      setEditing(false);
+    }) as (...args: unknown[]) => unknown
+  );
+
+  const priority = todo.priority ?? "medium";
+  const color = todo.color ?? "zinc";
+  const borderClass = COLOR_BORDER_MAP[color];
 
   return (
     <li
-      className="group flex items-center gap-3 rounded-lg border border-zinc-700/50 bg-zinc-900/30 px-4 py-3 transition-all hover:border-zinc-600"
+      ref={ref}
+      style={style}
+      className={cn(
+        "group flex items-center gap-2 rounded-lg border border-l-4 bg-card px-3 py-2.5 transition-all duration-300 hover:border-border",
+        borderClass,
+        todo.completed && "opacity-75"
+      )}
       data-testid={`todo-item-${todo.id}`}
+      data-completed={todo.completed}
+      data-priority={priority}
+      data-color={color}
     >
-      <input
-        type="checkbox"
+      {dragHandleProps && (
+        <button
+          type="button"
+          {...dragHandleProps.attributes}
+          {...dragHandleProps.listeners}
+          className="touch-none cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing [&:focus]:outline-none"
+          aria-label="Drag to reorder"
+        >
+          <GripVertical className="size-4" />
+        </button>
+      )}
+      <Checkbox
         checked={todo.completed}
-        onChange={handleToggle}
-        className="h-5 w-5 rounded border-zinc-600 bg-zinc-800 text-cyan-600 focus:ring-cyan-500"
+        onCheckedChange={handleToggle}
         aria-label={`Mark "${todo.title}" as ${todo.completed ? "incomplete" : "complete"}`}
       />
       {editing ? (
-        <input
+        <Input
           type="text"
           value={editTitle}
           onChange={(e) => setEditTitle(e.target.value)}
@@ -46,24 +97,71 @@ export function TodoItem({ todo }: { todo: Todo }) {
             }
           }}
           autoFocus
-          className="flex-1 rounded border border-cyan-500/50 bg-zinc-800 px-2 py-1 text-zinc-100 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+          className="flex-1 min-w-0"
         />
       ) : (
         <span
           onClick={() => setEditing(true)}
-          className={`flex-1 cursor-pointer select-none ${todo.completed ? "text-zinc-500 line-through" : "text-zinc-100"}`}
+          className={cn(
+            "flex-1 cursor-pointer select-none transition-all duration-300",
+            todo.completed
+              ? "text-muted-foreground line-through opacity-80"
+              : "text-foreground"
+          )}
         >
           {todo.title}
         </span>
       )}
-      <button
+      {!editing && (
+        <>
+          <Select
+            value={priority}
+            onValueChange={(v) => setPriority(todo.id, v as Priority)}
+          >
+            <SelectTrigger
+              className="h-7 w-[90px] shrink-0 text-xs"
+              aria-label={`Priority for ${todo.title}`}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(["low", "medium", "high"] as const).map((p) => (
+                <SelectItem key={p} value={p}>
+                  {PRIORITY_LABELS[p]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={color}
+            onValueChange={(v) => setColor(todo.id, v as TodoColor)}
+          >
+            <SelectTrigger
+              className="h-7 w-[100px] shrink-0 text-xs"
+              aria-label={`Color for ${todo.title}`}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TODO_COLORS.map((c) => (
+                <SelectItem key={c.value} value={c.value}>
+                  {c.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </>
+      )}
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={handleDelete}
-        className="rounded p-1.5 text-zinc-400 opacity-0 transition-opacity hover:bg-red-900/30 hover:text-red-400 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500"
+        className="text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 focus:opacity-100 shrink-0"
         aria-label={`Delete "${todo.title}"`}
       >
         <span aria-hidden>×</span>
-      </button>
+      </Button>
     </li>
   );
-}
+});
