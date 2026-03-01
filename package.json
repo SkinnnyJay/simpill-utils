@@ -1,0 +1,52 @@
+{
+  "name": "@simpill/monorepo",
+  "private": true,
+  "description": "Root workspace for @simpill utility packages and sandbox. Run 'npm install' at repo root to install and link all packages. Dependencies reference GitHub util repos so external projects pulling this repo get all utils.",
+  "workspaces": [
+    "utils/@simpill-*.utils",
+    "sandbox/*"
+  ],
+  "scripts": {
+    "install:all": "npm install --ignore-scripts"
+  },
+  "dependencies": {
+    "@simpill/adapters.utils": "github:simpill/adapters.utils",
+    "@simpill/algorithms.utils": "github:simpill/algorithms.utils",
+    "@simpill/annotations.utils": "github:simpill/annotations.utils",
+    "@simpill/api.utils": "github:simpill/api.utils",
+    "@simpill/array.utils": "github:simpill/array.utils",
+    "@simpill/async.utils": "github:simpill/async.utils",
+    "@simpill/cache.utils": "github:simpill/cache.utils",
+    "@simpill/collections.utils": "github:simpill/collections.utils",
+    "@simpill/crypto.utils": "github:simpill/crypto.utils",
+    "@simpill/data.utils": "github:simpill/data.utils",
+    "@simpill/env.utils": "github:simpill/env.utils",
+    "@simpill/enum.utils": "github:simpill/enum.utils",
+    "@simpill/errors.utils": "github:simpill/errors.utils",
+    "@simpill/events.utils": "github:simpill/events.utils",
+    "@simpill/factories.utils": "github:simpill/factories.utils",
+    "@simpill/file.utils": "github:simpill/file.utils",
+    "@simpill/function.utils": "github:simpill/function.utils",
+    "@simpill/http.utils": "github:simpill/http.utils",
+    "@simpill/logger.utils": "github:simpill/logger.utils",
+    "@simpill/middleware.utils": "github:simpill/middleware.utils",
+    "@simpill/misc.utils": "github:simpill/misc.utils",
+    "@simpill/nextjs.utils": "github:simpill/nextjs.utils",
+    "@simpill/number.utils": "github:simpill/number.utils",
+    "@simpill/object.utils": "github:simpill/object.utils",
+    "@simpill/observability.utils": "github:simpill/observability.utils",
+    "@simpill/patterns.utils": "github:simpill/patterns.utils",
+    "@simpill/protocols.utils": "github:simpill/protocols.utils",
+    "@simpill/react.utils": "github:simpill/react.utils",
+    "@simpill/request-context.utils": "github:simpill/request-context.utils",
+    "@simpill/resilience.utils": "github:simpill/resilience.utils",
+    "@simpill/socket.utils": "github:simpill/socket.utils",
+    "@simpill/string.utils": "github:simpill/string.utils",
+    "@simpill/test.utils": "github:simpill/test.utils",
+    "@simpill/time.utils": "github:simpill/time.utils",
+    "@simpill/token-optimizer.utils": "github:simpill/token-optimizer.utils",
+    "@simpill/uuid.utils": "github:simpill/uuid.utils",
+    "@simpill/zod.utils": "github:simpill/zod.utils",
+    "@simpill/zustand.utils": "github:simpill/zustand.utils"
+  }
+}
