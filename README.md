@@ -89,6 +89,34 @@ npm install @simpill/string.utils
 
 Use the **Repositories** table above to open a package’s GitHub repo for docs, API reference, and examples.
 
+### Use the main repo in another project
+
+The main project references all util packages via GitHub. To pull in the full set of utils from this repo into another project, add the monorepo as a dependency:
+
+```bash
+npm install github:simpill/simpill
+```
+
+(or add `"@simpill/monorepo": "github:simpill/simpill"` to your `package.json`). Installing it will fetch each util from its GitHub repo (`github:simpill/adapters.utils`, etc.), so you can import any util in your code:
+
+```ts
+import { createAdapter } from "@simpill/adapters.utils";
+import { unique } from "@simpill/array.utils";
+import { getEnvString } from "@simpill/env.utils";
+```
+
+To depend on only one util, install that package from npm or GitHub (e.g. `npm install @simpill/adapters.utils` or `npm install github:simpill/adapters.utils`).
+
+### Monorepo development
+
+If you clone this repo (or pull the full monorepo), install and link all packages from the repo root:
+
+```bash
+npm install
+```
+
+This installs dependencies for every util and the sandbox. Git hooks are skipped during this install to avoid conflicts; to install hooks for a single package, run `npm run setup:hooks` inside that package (e.g. `cd utils/@simpill-env.utils && npm run setup:hooks`). Use the root [Makefile](./Makefile) for building and testing all utils.
+
 ---
 
 ## Discoverability
