@@ -83,7 +83,6 @@ site/
 utils/
 
 # Project specific
-# Add your project-specific ignore patterns here
 .playwright-mcp/
 .playwright/
 ./test-results/
