@@ -191,7 +191,8 @@ From the repo root:
 
 ```bash
 # Full run: push to GitHub, then publish all packages to npm (with confirmations)
-./scripts/publish-all.sh
+npm run publish
+# or: ./scripts/publish-all.sh
 
 # Dry run: no GitHub push; npm publish --dry-run for each package
 ./scripts/publish-all.sh --dry-run
@@ -238,10 +239,11 @@ REPO_BASE="https://github.com/simpill/simpill" BRANCH="main" node scripts/lib/sy
 Run the monorepo verify script (if present) before publishing:
 
 ```bash
-./scripts/verify-all-utils.sh
+npm run utils:verify
+# or: ./scripts/utils-verify-all.sh
 ```
 
-Then run `./scripts/publish-all.sh` (or with `--dry-run` first).
+Then run `npm run publish` or `./scripts/publish-all.sh` (or with `--dry-run` first).
 
 ---
 
@@ -251,4 +253,4 @@ Then run `./scripts/publish-all.sh` (or with `--dry-run` first).
 - **GitHub:** Create a **GitHub org** `simpill` and one monorepo if you want clean URLs; then fix every package’s `repository` / `homepage` / `bugs` to that repo and `directory`.
 - **Strategy:** Your current setup (many small packages under one scope) already limits dependencies and gives one “family” of modules; no need to merge into one large package.
 - **Folders:** Each package under `utils/<name>.utils/` is already laid out as in CONTRIBUTING; use the table above as the “how each package looks” reference and the checklist before publishing.
-- **Script:** Use `./scripts/publish-all.sh` (with `--dry-run` first) to push to GitHub and publish all packages to npm in dependency order; see [Publish script](#publish-script) above.
+- **Script:** Use `npm run publish` or `./scripts/publish-all.sh` (with `--dry-run` first) to push to GitHub and publish all packages to npm in dependency order; see [Publish script](#publish-script) above.

@@ -29,6 +29,13 @@ Examples:
 
 Packages live under `utils/@simpill-`; the directory name matches the package suffix (e.g., `utils/@simpill-env.utils/` for `@simpill/env.utils`).
 
+### Tools and standalone packages
+
+Some deliverables are **standalone GitHub packages** (their own repo, not in this workspace):
+
+- **Image AI toolkit:** [ai-image-generated-ai-cli](https://github.com/simpill/ai-image-generated-ai-cli) — referenced from this monorepo root `package.json` via `github:simpill/ai-image-generated-ai-cli`; CLI available as `npx ai-image-gen` after `npm install`.
+- **Sandbox apps:** [simpill-sandbox](https://github.com/simpill/simpill-sandbox) — todo-app and other demo apps; **not** referenced from this root (no workspace or dependency). Develop and run in that repo.
+
 ---
 
 ## Directory Structure
