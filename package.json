@@ -24,8 +24,7 @@
     "test": "npx vitest run",
     "test:unit": "npx vitest run --dir __tests__/unit",
     "test:integration": "npx vitest run --dir __tests__/integration",
-    "test:e2e": "npx vitest run --dir __tests__/e2e",
-    "test:smoke": "npx tsx index.ts"
+    "test:e2e": "npx vitest run --dir __tests__/e2e"
   },
   "devDependencies": {
     "std-env": "^3.9.0",
