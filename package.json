@@ -45,6 +45,7 @@
     "utils:prepare": "bash scripts/utils/utils-prepare-all.sh",
     "utils:fix-metadata": "node scripts/utils/utils-fix-repo-metadata.js",
     "utils:keywords": "node scripts/utils/utils-set-npm-keywords.js",
+    "utils:readme": "node scripts/utils/utils-update-readme-badges.js && node scripts/utils/utils-modernize-readmes.js",
     "github:topics": "node scripts/github/github-set-all-topics.js",
     "github:topics:repo": "bash scripts/github/github-set-repo-topics.sh",
     "github:repos-public": "bash scripts/github/github-set-repos-public.sh",
