@@ -3,8 +3,8 @@
 # Requires: gh CLI (authenticated), jq. GitHub allows at most 20 topics.
 set -e
 
-SCRIPT_DIR="${BASH_SOURCE%/*}"
-REPO_ROOT="${SCRIPT_DIR}/.."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 TOPICS_FILE="${REPO_ROOT}/.github/TOPICS.md"
 MAX_TOPICS=20
 
