@@ -17,6 +17,7 @@ scripts/
 
 | Script | npm | Description |
 |--------|-----|-------------|
+| `install-hooks.sh` | `npm run install:hooks` | Install root `.git/hooks/pre-commit` from package list; always emits valid bash (no empty then). Run after clone or when adding packages. |
 | `monorepo-clean.sh` | `npm run clean` | Remove node_modules, package-lock.json, dist, coverage, .next, .jest-cache at root. |
 | `monorepo-sync-deps.js` | `npm run sync:deps` | Sync root package.json @simpill deps to npm versions (^ from utils/ or ^1.0.0). |
 | `use-local-utils-at-root.js` | `npm run use:local` | Point root deps at local utils (file:./utils/...) and run npm install. Restore with `npm run sync:deps`. |

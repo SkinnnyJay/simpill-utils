@@ -5,6 +5,7 @@
   "description": "Root package for @simpill: all utils are installed from npm (@simpill/<name>.utils). Run 'npm install' at repo root. Use 'npm run use:local' to point at local utils/ for development.",
   "scripts": {
     "clean": "bash scripts/monorepo/monorepo-clean.sh",
+    "install:hooks": "bash scripts/monorepo/install-hooks.sh",
     "sync:deps": "node scripts/monorepo/monorepo-sync-deps.js",
     "use:local": "node scripts/monorepo/use-local-utils-at-root.js && npm install --no-audit --no-fund",
     "install:all": "npm install --ignore-scripts",
