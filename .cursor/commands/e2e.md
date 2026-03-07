@@ -11,7 +11,7 @@ Execute Playwright E2E tests and systematically fix any failures. When fixing fa
 ## Steps
 
 1. **Run E2E suite**
-   - **Sandbox:** From repo root `make sandbox-e2e` or `cd sandbox/todo-app && npm run test:e2e` (Playwright).
+   - **Sandbox (simpill-sandbox repo):** Clone [simpill-sandbox](https://github.com/simpill/simpill-sandbox), then `cd todo-app && npm run test:e2e` (Playwright).
    - Discover ALL failures; check report path (e.g. playwright-report, test-results).
 
 2. **Create task list**

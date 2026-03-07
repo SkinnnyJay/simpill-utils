@@ -1,6 +1,6 @@
 # Cursor configuration
 
-This repo is an **@simpill monorepo**: utility packages under `utils/@simpill-*.utils` (Jest, Biome, TypeScript) and a **sandbox** app at `sandbox/todo-app` (Next.js, Playwright E2E).
+This repo is an **@simpill monorepo**: utility packages under `utils/@simpill-*.utils` (Jest, Biome, TypeScript). **Sandbox apps** (e.g. todo-app) live in a separate repo: [simpill-sandbox](https://github.com/simpill/simpill-sandbox).
 
 ## Canonical locations
 
@@ -17,9 +17,9 @@ Another skill set lives in **`.agents/skills/`** (e.g. Vitest, shadcn, Next.js p
 
 ## Running commands: monorepo vs single package
 
-- **From repo root:** use the **Makefile** for aggregate targets, e.g. `make utils-verify`, `make utils-build`, `make sandbox-e2e`. See `make help`.
+- **From repo root:** use the **Makefile** for aggregate targets, e.g. `make utils-verify`, `make utils-build`. See `make help`.
 - **Single util package:** `cd utils/@simpill-<name>.utils` then `npm run build`, `npm test`, `npm run lint`, `npm run typecheck`, `npm run verify`.
-- **Sandbox:** `cd sandbox/todo-app` then `npm run dev`, `npm run build`, `npm run test:e2e`.
+- **Sandbox:** clone and run from [simpill-sandbox](https://github.com/simpill/simpill-sandbox) (not in this workspace).
 
 The commands below (build, test, lint, etc.) assume you are either in a **single package directory** or running the corresponding **make** target from root.
 
@@ -27,12 +27,12 @@ The commands below (build, test, lint, etc.) assume you are either in a **single
 
 | Command | Description |
 |---------|-------------|
-| build | Run production build and fix compilation errors (package or sandbox) |
+| build | Run production build and fix compilation errors (util package) |
 | commit | Group changes into atomic commits; run quality gates |
 | typecheck | Run type checking and fix type errors |
 | test | Run test suite and fix failures |
-| e2e | Run E2E tests (sandbox/todo-app: Playwright) and fix failures |
-| lint | Fix linting and formatting (Biome in utils, ESLint in sandbox) |
+| e2e | Run E2E tests (in simpill-sandbox repo: Playwright) |
+| lint | Fix linting and formatting (Biome in utils) |
 | coverage | Generate coverage report and flag gaps |
 | review | Review changes for quality and conventions |
 

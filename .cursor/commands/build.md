@@ -8,7 +8,7 @@ description: Run production build and fix compilation errors. Follow the fixing 
 
 Run the production build and fix any compilation errors. When fixing errors, follow the project's fixing workflow (see project rules).
 
-**Context:** This repo is a monorepo. For a **single util package**, run from that package: `cd utils/@simpill-<name>.utils && npm run build`. For **all utils** from repo root: `make utils-build`. For **sandbox**: `cd sandbox/todo-app && npm run build` or `make sandbox-build`.
+**Context:** This repo is a monorepo. For a **single util package**, run from that package: `cd utils/@simpill-<name>.utils && npm run build`. For **all utils** from repo root: `make utils-build`. Sandbox apps live in the [simpill-sandbox](https://github.com/simpill/simpill-sandbox) repo; build there with `npm run build` (in that repo).
 
 ## Steps
 
@@ -30,8 +30,8 @@ Run the production build and fix any compilation errors. When fixing errors, fol
 4. **Do not re-run full build** until all items are individually resolved.
 
 5. **Full confirmation**
-   - Run `npm run build` (in package) or `make utils-build` / `make sandbox-build`.
-   - For utils: `dist/` is generated. For sandbox: `.next/` is generated.
+   - Run `npm run build` (in package) or `make utils-build`.
+   - For utils: `dist/` is generated.
 
 6. **Final gate:** `npm run lint && npm run typecheck` (in package).
 
