@@ -1,16 +1,38 @@
 {
   "name": "@simpill/utils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Root package for simpill-utils: all utils are installed from npm (@simpill/<name>.utils). Run 'npm install' at repo root. Use 'npm run use:local' to point at local utils/ for development.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SkinnnyJay/simpill-utils.git"
   },
-  "bugs": { "url": "https://github.com/SkinnnyJay/simpill-utils/issues" },
+  "bugs": {
+    "url": "https://github.com/SkinnnyJay/simpill-utils/issues"
+  },
   "homepage": "https://github.com/SkinnnyJay/simpill-utils#readme",
   "license": "ISC",
-  "keywords": ["simpill", "simpill-utils", "utils", "typescript"],
-  "files": ["package.json", "README.md", "index.ts", "tsconfig.json", "scripts", "docs", "CONTRIBUTING.md", "__tests__"],
+  "keywords": [
+    "simpill",
+    "simpill-utils",
+    "utils",
+    "typescript",
+    "utilities",
+    "type-safe",
+    "esm",
+    "tree-shakeable",
+    "monorepo",
+    "javascript"
+  ],
+  "files": [
+    "package.json",
+    "README.md",
+    "index.ts",
+    "tsconfig.json",
+    "scripts",
+    "docs",
+    "CONTRIBUTING.md",
+    "__tests__"
+  ],
   "scripts": {
     "clean": "bash scripts/monorepo/monorepo-clean.sh",
     "install:hooks": "bash scripts/monorepo/install-hooks.sh",
