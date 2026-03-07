@@ -31,11 +31,11 @@ You do **not** need to “claim” anything extra for the scope beyond having th
 
 Right now many packages use URLs like:
 
-- `https://github.com/SkinnnyJay/simpill.git`
+- `https://github.com/SkinnnyJay/simpill-utils.git`
 
 That implies a repo named `@simpill/adapters.utils` under the user `SkinnnyJay`. In a **monorepo**, you usually have **one repo** and many packages inside it, so the canonical form is:
 
-- One repo, e.g. `github.com/<owner>/<repo>` (e.g. `simpill/simpill` or `SkinnnyJay/simpill`).
+- One repo, e.g. `github.com/<owner>/<repo>` (e.g. `SkinnnyJay/simpill-utils`).
 - In each package, set `repository.url` to that repo and `repository.directory` to the package path, e.g. `utils/@simpill-adapters.utils`.
 
 **Recommendation:** If you want a clean “brand” on GitHub:
@@ -224,14 +224,14 @@ So you keep `file:../` in the repo for local development; the script only rewrit
 - **Published separately:** Each package is its own npm package (e.g. `@simpill/async.utils`, `@simpill/errors.utils`). When someone installs one, npm resolves its `@simpill/*` dependencies by version range from the registry.
 - **Version refs between packages:** The publish script rewrites `file:../` to `^<version>` only in the manifest that gets published. So the **version references** between packages are correct: the published `@simpill/async.utils` will list `@simpill/errors.utils: "^1.0.0"` etc., and npm will install the right versions.
 - **Links (repository, homepage, bugs):** The script does **not** change these. Whatever is in each `package.json` is what gets published. So:
-  - If you want every package to point at the **same monorepo** (e.g. `github.com/simpill/simpill` with `directory: "utils/@simpill-async.utils"`), set `repository`, `homepage`, and `bugs` in each package once—or run the sync script below and commit.
+  - If you want every package to point at the **same monorepo** (e.g. `github.com/SkinnnyJay/simpill-utils` with `directory: "utils/@simpill-async.utils"`), set `repository`, `homepage`, and `bugs` in each package once—or run the sync script below and commit.
   - After that, every published package on npm will have consistent links to the same repo and directory.
 
 To sync repository/homepage/bugs across all packages to one base URL (run once, then commit):
 
 ```bash
-# Example: set base to https://github.com/simpill/simpill, branch main
-REPO_BASE="https://github.com/simpill/simpill" BRANCH="main" node scripts/lib/sync-repo-links.js
+# Example: set base to https://github.com/SkinnnyJay/simpill-utils, branch main
+REPO_BASE="https://github.com/SkinnnyJay/simpill-utils" BRANCH="main" node scripts/lib/sync-repo-links.js
 ```
 
 (See `scripts/lib/sync-repo-links.js` for usage. Omit to leave existing links unchanged.)

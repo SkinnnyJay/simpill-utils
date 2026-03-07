@@ -9,6 +9,7 @@ Add these topics to your GitHub repo (Settings → General → Topics) so the re
 ## Core
 
 - `simpill`
+- `simpill-utils`
 - `typescript`
 - `utilities`
 - `monorepo`

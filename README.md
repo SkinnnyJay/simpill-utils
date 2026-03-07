@@ -90,17 +90,17 @@ npm install @simpill/string.utils
 
 Use the **Repositories** table above to open a package’s GitHub repo for docs, API reference, and examples.
 
-**Consumption:** Every package is consumable **separately** (npm or `github:simpill/<repo>`) and **by this monolith** (run `npm install` at root; all packages land in `node_modules`). Run `npm run verify:deps` to confirm. **No `utils/` folder is required**—package source lives in the GitHub repos above; this repo pulls them in via dependencies. You can remove `utils/` if present.
+**Consumption:** Every package is consumable **separately** (npm or `github:SkinnnyJay/<repo>`) and **via @simpill/utils** (run `npm install` at root; all packages land in `node_modules`). Run `npm run verify:deps` to confirm. **No `utils/` folder is required**—package source lives in the GitHub repos above; this repo pulls them in via dependencies. You can remove `utils/` if present.
 
 ### Use the main repo in another project
 
 The main project references all util packages via GitHub. To pull in the full set of utils from this repo into another project, add the monorepo as a dependency:
 
 ```bash
-npm install github:SkinnnyJay/simpill
+npm install github:SkinnnyJay/simpill-utils
 ```
 
-(or add `"@simpill/monorepo": "github:SkinnnyJay/simpill"` to your `package.json`). Installing it will fetch each util from its GitHub repo (`github:SkinnnyJay/adapters.utils`, etc.) so you can import any util in your code:
+(or add `"@simpill/utils": "github:SkinnnyJay/simpill-utils"` to your `package.json`). Installing it will fetch each util from its GitHub repo (`github:SkinnnyJay/adapters.utils`, etc.) so you can import any util in your code:
 
 ```ts
 import { createAdapter } from "@simpill/adapters.utils";
@@ -110,7 +110,7 @@ import { getEnvString } from "@simpill/env.utils";
 
 To depend on only one util, install that package from npm or GitHub (e.g. `npm install @simpill/adapters.utils` or `npm install github:SkinnnyJay/adapters.utils`).
 
-### Using the monolith (this repo)
+### Using @simpill/utils (this repo)
 
 Clone and install from the repo root. All @simpill utils are installed from GitHub into `node_modules` and are usable as-is (e.g. `@simpill/env.utils` ships `dist/` in its repo):
 

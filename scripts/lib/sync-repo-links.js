@@ -6,7 +6,7 @@
  * Usage:
  *   REPO_BASE="https://github.com/owner/repo" [BRANCH=main] node scripts/lib/sync-repo-links.js
  *
- * REPO_BASE  Base URL without trailing slash (e.g. https://github.com/simpill/simpill).
+ * REPO_BASE  Base URL without trailing slash (e.g. https://github.com/SkinnnyJay/simpill-utils).
  * BRANCH     Default branch for homepage links (default: main).
  *
  * If REPO_BASE is not set, exits without changing anything.
@@ -23,7 +23,7 @@ const BRANCH = process.env.BRANCH || "main";
 
 if (!REPO_BASE) {
   console.error("REPO_BASE is not set. Example:");
-  console.error('  REPO_BASE="https://github.com/simpill/simpill" BRANCH=main node scripts/lib/sync-repo-links.js');
+  console.error('  REPO_BASE="https://github.com/SkinnnyJay/simpill-utils" BRANCH=main node scripts/lib/sync-repo-links.js');
   process.exit(1);
 }
 

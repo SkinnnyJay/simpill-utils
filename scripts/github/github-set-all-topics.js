@@ -79,7 +79,7 @@ function main() {
 
   console.log("Setting GitHub topics for @simpill repos...\n");
 
-  // 1) This monorepo (SkinnnyJay/simpill)
+  // 1) This monorepo (e.g. SkinnnyJay/simpill-utils)
   if (!onlyPackages) {
     const repo = run("gh repo view --json nameWithOwner -q .nameWithOwner", {
       cwd: REPO_ROOT,

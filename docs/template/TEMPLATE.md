@@ -77,13 +77,13 @@ Final structure:
   "description": "Brief description of the package",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/simpill.git",
+    "url": "https://github.com/SkinnnyJay/simpill-utils.git",
     "directory": "{name}.utils"
   },
   "bugs": {
-    "url": "https://github.com/SkinnnyJay/simpill/issues"
+    "url": "https://github.com/SkinnnyJay/simpill-utils/issues"
   },
-  "homepage": "https://github.com/SkinnnyJay/simpill/tree/main/{name}.utils#readme",
+  "homepage": "https://github.com/SkinnnyJay/simpill-utils/tree/main/utils/{name}.utils#readme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
