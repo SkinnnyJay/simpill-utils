@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Set each @simpill package GitHub repo from private to public.
 # Usage: run from repo root. Requires: gh CLI. Set GITHUB_OWNER if not using your user.
-#   DRY_RUN=1 ./scripts/set-package-repos-public.sh   # list only, no changes
+#   DRY_RUN=1 ./scripts/github-set-repos-public.sh   # list only, no changes
 set -euo pipefail
 
 GITHUB_OWNER="${GITHUB_OWNER:-$(gh api user -q .login 2>/dev/null || echo '')}"

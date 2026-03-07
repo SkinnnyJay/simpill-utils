@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # =============================================================================
-# Verify All Utils – build and test every package under utils/*.utils
+# Verify all utils – build and test every package under utils/@simpill-*.utils
 # =============================================================================
-# Run from repo root: ./scripts/verify-all-utils.sh
+# Run from repo root: ./scripts/utils-verify-all.sh
 # Exits 0 if all packages build and test pass; 1 otherwise.
 # =============================================================================
 
