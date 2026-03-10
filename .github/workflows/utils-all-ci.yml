@@ -1,6 +1,6 @@
 # All 38 utils packages: lint, format, typecheck, test:coverage, build (Node 20).
 # Builds file: dependencies via scripts/ci/build-package-deps.js.
-name: "Utils (all packages) CI"
+name: Utils-all CI
 
 on:
   push:
@@ -71,7 +71,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-          cache-dependency-path: ${{ matrix.package }}/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
