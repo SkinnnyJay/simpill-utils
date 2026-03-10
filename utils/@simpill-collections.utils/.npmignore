@@ -1,0 +1,19 @@
+# Source files (dist is published)
+src/
+__tests__/
+
+# Config files
+.cursorrules
+.gitignore
+biome.json
+jest.config.js
+tsconfig.json
+scripts/
+.github/
+
+# Coverage
+coverage/
+
+# Documentation (keep README.md)
+AGENTS.md
+CLAUDE.md

@@ -1,0 +1,44 @@
+[
+  {
+    "path": "csv-1mb.csv",
+    "format": "csv",
+    "targetSizeBytes": 1048576,
+    "actualBytes": 1048523,
+    "seed": 42
+  },
+  {
+    "path": "txt-1mb.txt",
+    "format": "txt",
+    "targetSizeBytes": 1048576,
+    "actualBytes": 1048576,
+    "seed": 42
+  },
+  {
+    "path": "json-1mb.json",
+    "format": "json",
+    "targetSizeBytes": 1048576,
+    "actualBytes": 1048531,
+    "seed": 42
+  },
+  {
+    "path": "md-1mb.md",
+    "format": "md",
+    "targetSizeBytes": 1048576,
+    "actualBytes": 1048576,
+    "seed": 42
+  },
+  {
+    "path": "xml-1mb.xml",
+    "format": "xml",
+    "targetSizeBytes": 1048576,
+    "actualBytes": 1048576,
+    "seed": 42
+  },
+  {
+    "path": "jsonl-1mb.jsonl",
+    "format": "jsonl",
+    "targetSizeBytes": 1048576,
+    "actualBytes": 1048468,
+    "seed": 42
+  }
+]

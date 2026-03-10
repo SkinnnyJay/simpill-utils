@@ -1,0 +1,18 @@
+# Build
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Coverage
+coverage/
+.jest-cache/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.log
+.env
+.env.local

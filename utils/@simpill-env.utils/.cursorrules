@@ -1,0 +1,139 @@
+# @simpill/env.utils - Cursor Rules
+
+## Package Identity
+
+Type-safe environment variable utility library for Node.js and Edge runtimes.
+This is a **utility package**, not a frontend application.
+
+## Architecture
+
+### Runtime Separation (Strict)
+
+- `src/client/` - Edge/browser safe. No `fs`, no `process.env` writes.
+- `src/server/` - Full Node.js. File system, dotenvx, process.env extension.
+- `src/shared/` - Pure functions only. Zero runtime dependencies.
+
+### Design Patterns
+
+- **Singleton**: `EnvManager.getInstance()` for consistent state
+- **Lazy initialization**: Auto-bootstrap on first access
+- **Type-safe getters**: `getString`, `getNumber`, `getBoolean` with defaults
+- **Strict variants**: `getNumberStrict`, `getBooleanStrict` throw on parse failure
+
+## Code Standards
+
+### TypeScript
+
+- Strict mode required. No `any`, no unsafe casts.
+- Explicit return types on public APIs.
+- Use `readonly` for immutable properties and parameters.
+- Prefer `as const` objects over enums.
+- Document `@throws` for methods that throw.
+
+### Naming
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Classes | PascalCase | `EnvManager` |
+| Functions | camelCase | `parseBooleanEnvValue` |
+| Constants | SCREAMING_SNAKE | `DEFAULT_ENV_PATHS` |
+| Files | dot-separated | `env.utils.ts` |
+| Tests | `{name}.{type}.test.ts` | `env-manager.unit.test.ts` |
+
+### Style
+
+- 2-space indent, double quotes, semicolons
+- 100 character line width
+- Max 400 lines per file
+- Biome for lint/format: `npm run check:fix`
+
+## Testing
+
+### Structure
+
+```
+__tests__/
+├── client/unit/
+├── server/unit/
+├── server/integration/
+├── shared/unit/
+└── fixtures/
+```
+
+### Requirements
+
+- 80% coverage minimum (branches, functions, lines, statements)
+- Jest with ts-jest
+- Use `EnvManager.resetInstance()` between tests
+- Mock file system for integration tests
+- Test both success and error paths
+
+### Test Patterns
+
+```typescript
+// AAA pattern
+describe("EnvManager", () => {
+  beforeEach(() => {
+    EnvManager.resetInstance();
+  });
+
+  it("returns default when key missing", () => {
+    // Arrange
+    const manager = EnvManager.getInstance();
+    
+    // Act
+    const result = manager.getString("MISSING_KEY", "default");
+    
+    // Assert
+    expect(result).toBe("default");
+  });
+});
+```
+
+## Error Handling
+
+- Use custom errors from `src/shared/errors.ts`
+- `MissingEnvError` - required variable not set
+- `EnvParseError` - value cannot be parsed to expected type
+- `EnvDecryptError` - decryption failure
+- Never swallow errors silently
+
+## Constants
+
+- Centralize in `src/shared/constants.ts`
+- No magic strings or numbers in business logic
+- Use typed const objects:
+
+```typescript
+export const NODE_ENV = {
+  DEVELOPMENT: "development",
+  PRODUCTION: "production",
+  TEST: "test",
+} as const;
+
+export type NodeEnv = typeof NODE_ENV[keyof typeof NODE_ENV];
+```
+
+## Commands
+
+```bash
+npm run build          # Compile to dist/
+npm test               # Run Jest
+npm run test:coverage  # Coverage report
+npm run check:fix      # Fix lint + format
+npm run verify         # All pre-push checks
+npx tsc --noEmit       # Type check only
+```
+
+## Definition of Done
+
+- [ ] Type checks clean (`npx tsc --noEmit`)
+- [ ] All tests pass
+- [ ] Coverage >= 95%
+- [ ] No lint errors (`npm run lint`)
+- [ ] Public APIs have JSDoc with `@throws` where applicable
+- [ ] No `any` types
+- [ ] No magic literals
+- [ ] DRY Patterns applied
+- [ ] Fully strongly typed
+- [ ] No AI Slop

@@ -1,0 +1,119 @@
+{
+  "name": "@simpill/logger.utils",
+  "version": "1.0.0",
+  "description": "Lightweight, type-safe structured logging with correlation context for Node.js and Edge Runtime.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SkinnnyJay/logger.utils.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SkinnnyJay/logger.utils/issues"
+  },
+  "homepage": "https://github.com/SkinnnyJay/logger.utils#readme",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js",
+      "require": "./dist/client/index.js"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.js",
+      "require": "./dist/server/index.js"
+    },
+    "./shared": {
+      "types": "./dist/shared/index.d.ts",
+      "import": "./dist/shared/index.js",
+      "require": "./dist/shared/index.js"
+    },
+    "./adapters/pino": {
+      "types": "./dist/adapters/pino.adapter.d.ts",
+      "import": "./dist/adapters/pino.adapter.js",
+      "require": "./dist/adapters/pino.adapter.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist coverage .jest-cache node_modules/.cache",
+    "build": "tsc",
+    "dev": "npm run build",
+    "dev:watch": "tsc --watch",
+    "prepublishOnly": "npm run build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "typecheck": "tsc --noEmit",
+    "publish": "npm publish",
+    "verify": "./scripts/check.sh",
+    "setup:hooks": "./scripts/install-hooks.sh",
+    "all": "./scripts/build-all.sh"
+  },
+  "keywords": [
+    "simpill",
+    "typescript",
+    "utilities",
+    "type-safe",
+    "esm",
+    "tree-shakeable",
+    "logging",
+    "nodejs"
+  ],
+  "author": "@SkinnnyJay",
+  "license": "ISC",
+  "sideEffects": false,
+  "dependencies": {
+    "@simpill/protocols.utils": "file:../@simpill-protocols.utils"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.11",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.11.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.0.0",
+    "pino": ">=8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "pino": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "typesVersions": {
+    "*": {
+      "client": [
+        "./dist/client/index.d.ts"
+      ],
+      "server": [
+        "./dist/server/index.d.ts"
+      ],
+      "shared": [
+        "./dist/shared/index.d.ts"
+      ],
+      "adapters/pino": [
+        "./dist/adapters/pino.adapter.d.ts"
+      ]
+    }
+  }
+}

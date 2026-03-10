@@ -37,7 +37,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-          cache-dependency-path: "utils/@simpill-nextjs.utils/package-lock.json"
+          cache-dependency-path: utils/@simpill-nextjs.utils/package-lock.json
 
       - name: Install dependencies
         run: npm ci

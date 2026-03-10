@@ -1,0 +1,9 @@
+src/
+__tests__/
+coverage/
+*.config.js
+tsconfig.json
+.gitignore
+.npmignore
+.env
+.env.*

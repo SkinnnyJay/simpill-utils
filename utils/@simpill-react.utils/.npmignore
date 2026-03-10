@@ -1,0 +1,10 @@
+src/
+__tests__/
+.gitignore
+biome.json
+jest.config.js
+tsconfig.json
+scripts/
+coverage/
+AGENTS.md
+CLAUDE.md

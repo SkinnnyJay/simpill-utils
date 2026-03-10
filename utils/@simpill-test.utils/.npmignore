@@ -1,0 +1,9 @@
+src/
+__tests__/
+tsconfig.json
+biome.json
+jest.config.js
+scripts/
+coverage/
+AGENTS.md
+CLAUDE.md

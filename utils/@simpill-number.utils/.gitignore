@@ -1,0 +1,15 @@
+# Build and deps
+dist/
+node_modules/
+coverage/
+.jest-cache/
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
+
+# Env
+.env
+.env.local

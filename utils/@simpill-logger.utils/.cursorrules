@@ -1,0 +1,26 @@
+# Code Quality Rules
+
+## File Size Limit
+- **No file should exceed 400 lines of code**
+- If a file approaches or exceeds this limit, it should be refactored into smaller, focused modules
+- This promotes maintainability, readability, and testability
+
+## Code Style
+- Use Biome for linting and formatting
+- Run `npm run lint` before committing
+- Run `npm run format` to auto-fix formatting issues
+- All code should pass linting checks before merging
+
+## Testing
+- Write tests for all new features
+- Maintain test coverage above 80%
+- Use Jest for unit testing
+- Place test files in `__tests__/` directory mirroring `src/` structure
+- Use `enableMockLogger()` to suppress log output during tests
+- Use `LoggerSingleton.resetInstance()` between tests
+
+## Logger Usage
+- Use `createClassLogger(className)` for class-specific loggers
+- Use `withCorrelationContext()` for distributed tracing
+- Never use `console.log` directly in production code
+- Include meaningful metadata with log entries

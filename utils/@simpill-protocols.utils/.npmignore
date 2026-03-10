@@ -1,0 +1,9 @@
+src/
+__tests__/
+scripts/
+*.config.js
+tsconfig.json
+biome.json
+.gitignore
+AGENTS.md
+CLAUDE.md

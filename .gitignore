@@ -80,9 +80,6 @@ site/
 # Local settings (do not commit)
 .claude/settings.local.json
 
-# Utils are separate GitHub repos; monolith installs via github:SkinnnyJay/<name>.utils
-utils/
-
 # Project specific
 .playwright-mcp/
 .playwright/

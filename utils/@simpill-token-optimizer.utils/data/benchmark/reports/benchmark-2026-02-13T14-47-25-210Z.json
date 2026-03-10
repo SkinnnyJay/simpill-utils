@@ -1,0 +1,1604 @@
+{
+  "timestamp": "2026-02-13T14:47:25.211Z",
+  "iterations": 2,
+  "summary": [
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "JSON",
+      "iterations": 2,
+      "avgMs": 33.0945,
+      "p95Ms": 33.8613,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 1,
+      "inputSizeBytes": 1048523,
+      "outputSizeBytesAvg": 1048523
+    },
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "MARKDOWN",
+      "iterations": 2,
+      "avgMs": 4216.783292,
+      "p95Ms": 4387.2775298,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 0.7035806335374802,
+      "inputSizeBytes": 1048523,
+      "outputSizeBytesAvg": 1490267
+    },
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "XML",
+      "iterations": 2,
+      "avgMs": 75.1470415,
+      "p95Ms": 76.29142885,
+      "avgTokensSaved": 262131,
+      "avgBytesSaved": 1048523,
+      "avgCompressionRatio": null,
+      "inputSizeBytes": 1048523,
+      "outputSizeBytesAvg": 0
+    },
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "YAML",
+      "iterations": 2,
+      "avgMs": 82.892584,
+      "p95Ms": 90.940609,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 0.9758495335383333,
+      "inputSizeBytes": 1048523,
+      "outputSizeBytesAvg": 1074472
+    },
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "CSV",
+      "iterations": 2,
+      "avgMs": 60.1075,
+      "p95Ms": 66.39396219999999,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 1,
+      "inputSizeBytes": 1048523,
+      "outputSizeBytesAvg": 1048523
+    },
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "TOON",
+      "iterations": 2,
+      "avgMs": 23.683041000000003,
+      "p95Ms": 25.2610785,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 1,
+      "inputSizeBytes": 1048523,
+      "outputSizeBytesAvg": 1048523
+    },
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "TONL",
+      "iterations": 2,
+      "avgMs": 21.753020999999997,
+      "p95Ms": 22.2334896,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 1,
+      "inputSizeBytes": 1048523,
+      "outputSizeBytesAvg": 1048523
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "JSON",
+      "iterations": 2,
+      "avgMs": 31.7853755,
+      "p95Ms": 41.12711315,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 1,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1048576
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "MARKDOWN",
+      "iterations": 2,
+      "avgMs": 56.779271,
+      "p95Ms": 61.0150274,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 1,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1048576
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "XML",
+      "iterations": 2,
+      "avgMs": 98.808042,
+      "p95Ms": 119.1148167,
+      "avgTokensSaved": 262144,
+      "avgBytesSaved": 1048576,
+      "avgCompressionRatio": null,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 0
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "YAML",
+      "iterations": 2,
+      "avgMs": 59.079021,
+      "p95Ms": 60.4222521,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 0.9682508756102494,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1082959
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "CSV",
+      "iterations": 2,
+      "avgMs": 40.835958500000004,
+      "p95Ms": 42.16870865,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 1,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1048576
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "TOON",
+      "iterations": 2,
+      "avgMs": 39.0528955,
+      "p95Ms": 41.336476749999996,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 1,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1048576
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "TONL",
+      "iterations": 2,
+      "avgMs": 28.9004795,
+      "p95Ms": 33.12862325,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 1,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1048576
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "JSON",
+      "iterations": 2,
+      "avgMs": 104.8815205,
+      "p95Ms": 122.59758894999999,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 1,
+      "inputSizeBytes": 1048531,
+      "outputSizeBytesAvg": 1048531
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "MARKDOWN",
+      "iterations": 2,
+      "avgMs": 789.3067705,
+      "p95Ms": 814.20697645,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 0.8405327625735495,
+      "inputSizeBytes": 1048531,
+      "outputSizeBytesAvg": 1247460
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "XML",
+      "iterations": 2,
+      "avgMs": 76.51566650000001,
+      "p95Ms": 79.51709135,
+      "avgTokensSaved": 262133,
+      "avgBytesSaved": 1048531,
+      "avgCompressionRatio": null,
+      "inputSizeBytes": 1048531,
+      "outputSizeBytesAvg": 0
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "YAML",
+      "iterations": 2,
+      "avgMs": 138.01458300000002,
+      "p95Ms": 139.1226702,
+      "avgTokensSaved": 2922,
+      "avgBytesSaved": 11690,
+      "avgCompressionRatio": 1.0112746313079826,
+      "inputSizeBytes": 1048531,
+      "outputSizeBytesAvg": 1036841
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "CSV",
+      "iterations": 2,
+      "avgMs": 421.520458,
+      "p95Ms": 437.4954958,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 1,
+      "inputSizeBytes": 1048531,
+      "outputSizeBytesAvg": 1048531
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "TOON",
+      "iterations": 2,
+      "avgMs": 56.06016700000001,
+      "p95Ms": 65.627617,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 0.8103146880168164,
+      "inputSizeBytes": 1048531,
+      "outputSizeBytesAvg": 1293980
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "TONL",
+      "iterations": 2,
+      "avgMs": 141.8274995,
+      "p95Ms": 228.31037464999997,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 1,
+      "inputSizeBytes": 1048531,
+      "outputSizeBytesAvg": 1048531
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "JSON",
+      "iterations": 2,
+      "avgMs": 60.364354,
+      "p95Ms": 81.5088604,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 1,
+      "avgCompressionRatio": 1.000000953675226,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1048575
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "MARKDOWN",
+      "iterations": 2,
+      "avgMs": 4013.8001249999998,
+      "p95Ms": 4112.3133375,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 0.9965595763526948,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1052196
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "XML",
+      "iterations": 2,
+      "avgMs": 102.28218749999999,
+      "p95Ms": 111.10655655,
+      "avgTokensSaved": 262144,
+      "avgBytesSaved": 1048576,
+      "avgCompressionRatio": null,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 0
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "YAML",
+      "iterations": 2,
+      "avgMs": 32.751291499999994,
+      "p95Ms": 33.346228849999996,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 1,
+      "avgCompressionRatio": 1.000000953675226,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1048575
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "CSV",
+      "iterations": 2,
+      "avgMs": 40.983937,
+      "p95Ms": 42.8756056,
+      "avgTokensSaved": 2712,
+      "avgBytesSaved": 10849,
+      "avgCompressionRatio": 1.0104545800581464,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1037727
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "TOON",
+      "iterations": 2,
+      "avgMs": 28.015479499999998,
+      "p95Ms": 29.07768605,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 1,
+      "avgCompressionRatio": 1.000000953675226,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1048575
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "TONL",
+      "iterations": 2,
+      "avgMs": 28.222104,
+      "p95Ms": 29.3340729,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 1,
+      "avgCompressionRatio": 1.000000953675226,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1048575
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "JSON",
+      "iterations": 2,
+      "avgMs": 39.064271000000005,
+      "p95Ms": 40.7889149,
+      "avgTokensSaved": 2080,
+      "avgBytesSaved": 8322,
+      "avgCompressionRatio": 1.0079999692382822,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1040254
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "MARKDOWN",
+      "iterations": 2,
+      "avgMs": 56.6053335,
+      "p95Ms": 74.27218365,
+      "avgTokensSaved": 2080,
+      "avgBytesSaved": 8321,
+      "avgCompressionRatio": 1.0079990002451322,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1040255
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "XML",
+      "iterations": 2,
+      "avgMs": 127.8629995,
+      "p95Ms": 158.27722465,
+      "avgTokensSaved": 2080,
+      "avgBytesSaved": 8322,
+      "avgCompressionRatio": 1.0079999692382822,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1040254
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "YAML",
+      "iterations": 2,
+      "avgMs": 67.50066699999999,
+      "p95Ms": 79.924492,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 0.9843704381703396,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1065225
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "CSV",
+      "iterations": 2,
+      "avgMs": 37.408833,
+      "p95Ms": 37.7965458,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 0.9692264035664208,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1081869
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "TOON",
+      "iterations": 2,
+      "avgMs": 22.908271,
+      "p95Ms": 24.5521021,
+      "avgTokensSaved": 2080,
+      "avgBytesSaved": 8322,
+      "avgCompressionRatio": 1.0079999692382822,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1040254
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "TONL",
+      "iterations": 2,
+      "avgMs": 23.276479000000002,
+      "p95Ms": 24.0150226,
+      "avgTokensSaved": 2080,
+      "avgBytesSaved": 8322,
+      "avgCompressionRatio": 1.0079999692382822,
+      "inputSizeBytes": 1048576,
+      "outputSizeBytesAvg": 1040254
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "JSON",
+      "iterations": 2,
+      "avgMs": 29.735625,
+      "p95Ms": 34.6675503,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 1,
+      "avgCompressionRatio": 1.0000009537734615,
+      "inputSizeBytes": 1048468,
+      "outputSizeBytesAvg": 1048467
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "MARKDOWN",
+      "iterations": 2,
+      "avgMs": 1666.741583,
+      "p95Ms": 1679.0980205,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 0,
+      "avgCompressionRatio": 0.7871990101336664,
+      "inputSizeBytes": 1048468,
+      "outputSizeBytesAvg": 1331897
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "XML",
+      "iterations": 2,
+      "avgMs": 85.8487085,
+      "p95Ms": 85.89183335,
+      "avgTokensSaved": 262117,
+      "avgBytesSaved": 1048468,
+      "avgCompressionRatio": null,
+      "inputSizeBytes": 1048468,
+      "outputSizeBytesAvg": 0
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "YAML",
+      "iterations": 2,
+      "avgMs": 37.394667,
+      "p95Ms": 40.838066999999995,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 1,
+      "avgCompressionRatio": 1.0000009537734615,
+      "inputSizeBytes": 1048468,
+      "outputSizeBytesAvg": 1048467
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "CSV",
+      "iterations": 2,
+      "avgMs": 61.173479,
+      "p95Ms": 65.8370729,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 1,
+      "avgCompressionRatio": 1.0000009537734615,
+      "inputSizeBytes": 1048468,
+      "outputSizeBytesAvg": 1048467
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "TOON",
+      "iterations": 2,
+      "avgMs": 26.847375,
+      "p95Ms": 27.1767003,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 1,
+      "avgCompressionRatio": 1.0000009537734615,
+      "inputSizeBytes": 1048468,
+      "outputSizeBytesAvg": 1048467
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "TONL",
+      "iterations": 2,
+      "avgMs": 31.375459,
+      "p95Ms": 31.6057465,
+      "avgTokensSaved": 0,
+      "avgBytesSaved": 1,
+      "avgCompressionRatio": 1.0000009537734615,
+      "inputSizeBytes": 1048468,
+      "outputSizeBytesAvg": 1048467
+    }
+  ],
+  "rawRuns": [
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "JSON",
+      "runs": [
+        {
+          "ms": 32.2425,
+          "tokensBefore": 262131,
+          "tokensAfter": 262131,
+          "bytesBefore": 1048523,
+          "bytesAfter": 1048523,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 33.9465,
+          "tokensBefore": 262131,
+          "tokensAfter": 262131,
+          "bytesBefore": 1048523,
+          "bytesAfter": 1048523,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "MARKDOWN",
+      "runs": [
+        {
+          "ms": 4406.221334,
+          "tokensBefore": 262131,
+          "tokensAfter": 372567,
+          "bytesBefore": 1048523,
+          "bytesAfter": 1490267,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 4027.34525,
+          "tokensBefore": 262131,
+          "tokensAfter": 372567,
+          "bytesBefore": 1048523,
+          "bytesAfter": 1490267,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "XML",
+      "runs": [
+        {
+          "ms": 73.8755,
+          "tokensBefore": 262131,
+          "tokensAfter": 0,
+          "bytesBefore": 1048523,
+          "bytesAfter": 0,
+          "tokensSaved": 262131,
+          "bytesSaved": 1048523
+        },
+        {
+          "ms": 76.418583,
+          "tokensBefore": 262131,
+          "tokensAfter": 0,
+          "bytesBefore": 1048523,
+          "bytesAfter": 0,
+          "tokensSaved": 262131,
+          "bytesSaved": 1048523
+        }
+      ]
+    },
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "YAML",
+      "runs": [
+        {
+          "ms": 73.950334,
+          "tokensBefore": 262131,
+          "tokensAfter": 268618,
+          "bytesBefore": 1048523,
+          "bytesAfter": 1074472,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 91.834834,
+          "tokensBefore": 262131,
+          "tokensAfter": 268618,
+          "bytesBefore": 1048523,
+          "bytesAfter": 1074472,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "CSV",
+      "runs": [
+        {
+          "ms": 67.092458,
+          "tokensBefore": 262131,
+          "tokensAfter": 262131,
+          "bytesBefore": 1048523,
+          "bytesAfter": 1048523,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 53.122542,
+          "tokensBefore": 262131,
+          "tokensAfter": 262131,
+          "bytesBefore": 1048523,
+          "bytesAfter": 1048523,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "TOON",
+      "runs": [
+        {
+          "ms": 25.436416,
+          "tokensBefore": 262131,
+          "tokensAfter": 262131,
+          "bytesBefore": 1048523,
+          "bytesAfter": 1048523,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 21.929666,
+          "tokensBefore": 262131,
+          "tokensAfter": 262131,
+          "bytesBefore": 1048523,
+          "bytesAfter": 1048523,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "csv-1mb.csv",
+      "format": "csv",
+      "compressionType": "TONL",
+      "runs": [
+        {
+          "ms": 22.286875,
+          "tokensBefore": 262131,
+          "tokensAfter": 262131,
+          "bytesBefore": 1048523,
+          "bytesAfter": 1048523,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 21.219167,
+          "tokensBefore": 262131,
+          "tokensAfter": 262131,
+          "bytesBefore": 1048523,
+          "bytesAfter": 1048523,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "JSON",
+      "runs": [
+        {
+          "ms": 21.405667,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048576,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 42.165084,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048576,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "MARKDOWN",
+      "runs": [
+        {
+          "ms": 52.072875,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048576,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 61.485667,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048576,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "XML",
+      "runs": [
+        {
+          "ms": 121.371125,
+          "tokensBefore": 262144,
+          "tokensAfter": 0,
+          "bytesBefore": 1048576,
+          "bytesAfter": 0,
+          "tokensSaved": 262144,
+          "bytesSaved": 1048576
+        },
+        {
+          "ms": 76.244959,
+          "tokensBefore": 262144,
+          "tokensAfter": 0,
+          "bytesBefore": 1048576,
+          "bytesAfter": 0,
+          "tokensSaved": 262144,
+          "bytesSaved": 1048576
+        }
+      ]
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "YAML",
+      "runs": [
+        {
+          "ms": 60.5715,
+          "tokensBefore": 262144,
+          "tokensAfter": 270740,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1082959,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 57.586542,
+          "tokensBefore": 262144,
+          "tokensAfter": 270740,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1082959,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "CSV",
+      "runs": [
+        {
+          "ms": 39.355125,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048576,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 42.316792,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048576,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "TOON",
+      "runs": [
+        {
+          "ms": 36.515583,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048576,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 41.590208,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048576,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "txt-1mb.txt",
+      "format": "txt",
+      "compressionType": "TONL",
+      "runs": [
+        {
+          "ms": 33.598417,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048576,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 24.202542,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048576,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "JSON",
+      "runs": [
+        {
+          "ms": 124.566041,
+          "tokensBefore": 262133,
+          "tokensAfter": 262133,
+          "bytesBefore": 1048531,
+          "bytesAfter": 1048531,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 85.197,
+          "tokensBefore": 262133,
+          "tokensAfter": 262133,
+          "bytesBefore": 1048531,
+          "bytesAfter": 1048531,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "MARKDOWN",
+      "runs": [
+        {
+          "ms": 761.639875,
+          "tokensBefore": 262133,
+          "tokensAfter": 311865,
+          "bytesBefore": 1048531,
+          "bytesAfter": 1247460,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 816.973666,
+          "tokensBefore": 262133,
+          "tokensAfter": 311865,
+          "bytesBefore": 1048531,
+          "bytesAfter": 1247460,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "XML",
+      "runs": [
+        {
+          "ms": 73.18075,
+          "tokensBefore": 262133,
+          "tokensAfter": 0,
+          "bytesBefore": 1048531,
+          "bytesAfter": 0,
+          "tokensSaved": 262133,
+          "bytesSaved": 1048531
+        },
+        {
+          "ms": 79.850583,
+          "tokensBefore": 262133,
+          "tokensAfter": 0,
+          "bytesBefore": 1048531,
+          "bytesAfter": 0,
+          "tokensSaved": 262133,
+          "bytesSaved": 1048531
+        }
+      ]
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "YAML",
+      "runs": [
+        {
+          "ms": 136.783375,
+          "tokensBefore": 262133,
+          "tokensAfter": 259211,
+          "bytesBefore": 1048531,
+          "bytesAfter": 1036841,
+          "tokensSaved": 2922,
+          "bytesSaved": 11690
+        },
+        {
+          "ms": 139.245791,
+          "tokensBefore": 262133,
+          "tokensAfter": 259211,
+          "bytesBefore": 1048531,
+          "bytesAfter": 1036841,
+          "tokensSaved": 2922,
+          "bytesSaved": 11690
+        }
+      ]
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "CSV",
+      "runs": [
+        {
+          "ms": 403.770416,
+          "tokensBefore": 262133,
+          "tokensAfter": 262133,
+          "bytesBefore": 1048531,
+          "bytesAfter": 1048531,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 439.2705,
+          "tokensBefore": 262133,
+          "tokensAfter": 262133,
+          "bytesBefore": 1048531,
+          "bytesAfter": 1048531,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "TOON",
+      "runs": [
+        {
+          "ms": 45.429667,
+          "tokensBefore": 262133,
+          "tokensAfter": 323495,
+          "bytesBefore": 1048531,
+          "bytesAfter": 1293980,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 66.690667,
+          "tokensBefore": 262133,
+          "tokensAfter": 323495,
+          "bytesBefore": 1048531,
+          "bytesAfter": 1293980,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "json-1mb.json",
+      "format": "json",
+      "compressionType": "TONL",
+      "runs": [
+        {
+          "ms": 45.735416,
+          "tokensBefore": 262133,
+          "tokensAfter": 262133,
+          "bytesBefore": 1048531,
+          "bytesAfter": 1048531,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 237.919583,
+          "tokensBefore": 262133,
+          "tokensAfter": 262133,
+          "bytesBefore": 1048531,
+          "bytesAfter": 1048531,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "JSON",
+      "runs": [
+        {
+          "ms": 83.85825,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048575,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        },
+        {
+          "ms": 36.870458,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048575,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        }
+      ]
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "MARKDOWN",
+      "runs": [
+        {
+          "ms": 3904.341,
+          "tokensBefore": 262144,
+          "tokensAfter": 263049,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1052196,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 4123.25925,
+          "tokensBefore": 262144,
+          "tokensAfter": 263049,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1052196,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "XML",
+      "runs": [
+        {
+          "ms": 92.477333,
+          "tokensBefore": 262144,
+          "tokensAfter": 0,
+          "bytesBefore": 1048576,
+          "bytesAfter": 0,
+          "tokensSaved": 262144,
+          "bytesSaved": 1048576
+        },
+        {
+          "ms": 112.087042,
+          "tokensBefore": 262144,
+          "tokensAfter": 0,
+          "bytesBefore": 1048576,
+          "bytesAfter": 0,
+          "tokensSaved": 262144,
+          "bytesSaved": 1048576
+        }
+      ]
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "YAML",
+      "runs": [
+        {
+          "ms": 32.09025,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048575,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        },
+        {
+          "ms": 33.412333,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048575,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        }
+      ]
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "CSV",
+      "runs": [
+        {
+          "ms": 43.085791,
+          "tokensBefore": 262144,
+          "tokensAfter": 259432,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1037727,
+          "tokensSaved": 2712,
+          "bytesSaved": 10849
+        },
+        {
+          "ms": 38.882083,
+          "tokensBefore": 262144,
+          "tokensAfter": 259432,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1037727,
+          "tokensSaved": 2712,
+          "bytesSaved": 10849
+        }
+      ]
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "TOON",
+      "runs": [
+        {
+          "ms": 29.195709,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048575,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        },
+        {
+          "ms": 26.83525,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048575,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        }
+      ]
+    },
+    {
+      "file": "md-1mb.md",
+      "format": "md",
+      "compressionType": "TONL",
+      "runs": [
+        {
+          "ms": 26.986583,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048575,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        },
+        {
+          "ms": 29.457625,
+          "tokensBefore": 262144,
+          "tokensAfter": 262144,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1048575,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        }
+      ]
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "JSON",
+      "runs": [
+        {
+          "ms": 37.148,
+          "tokensBefore": 262144,
+          "tokensAfter": 260064,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1040254,
+          "tokensSaved": 2080,
+          "bytesSaved": 8322
+        },
+        {
+          "ms": 40.980542,
+          "tokensBefore": 262144,
+          "tokensAfter": 260064,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1040254,
+          "tokensSaved": 2080,
+          "bytesSaved": 8322
+        }
+      ]
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "MARKDOWN",
+      "runs": [
+        {
+          "ms": 76.235167,
+          "tokensBefore": 262144,
+          "tokensAfter": 260064,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1040255,
+          "tokensSaved": 2080,
+          "bytesSaved": 8321
+        },
+        {
+          "ms": 36.9755,
+          "tokensBefore": 262144,
+          "tokensAfter": 260064,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1040255,
+          "tokensSaved": 2080,
+          "bytesSaved": 8321
+        }
+      ]
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "XML",
+      "runs": [
+        {
+          "ms": 161.656583,
+          "tokensBefore": 262144,
+          "tokensAfter": 260064,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1040254,
+          "tokensSaved": 2080,
+          "bytesSaved": 8322
+        },
+        {
+          "ms": 94.069416,
+          "tokensBefore": 262144,
+          "tokensAfter": 260064,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1040254,
+          "tokensSaved": 2080,
+          "bytesSaved": 8322
+        }
+      ]
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "YAML",
+      "runs": [
+        {
+          "ms": 81.304917,
+          "tokensBefore": 262144,
+          "tokensAfter": 266307,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1065225,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 53.696417,
+          "tokensBefore": 262144,
+          "tokensAfter": 266307,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1065225,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "CSV",
+      "runs": [
+        {
+          "ms": 36.978041,
+          "tokensBefore": 262144,
+          "tokensAfter": 270468,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1081869,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 37.839625,
+          "tokensBefore": 262144,
+          "tokensAfter": 270468,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1081869,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "TOON",
+      "runs": [
+        {
+          "ms": 24.73475,
+          "tokensBefore": 262144,
+          "tokensAfter": 260064,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1040254,
+          "tokensSaved": 2080,
+          "bytesSaved": 8322
+        },
+        {
+          "ms": 21.081792,
+          "tokensBefore": 262144,
+          "tokensAfter": 260064,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1040254,
+          "tokensSaved": 2080,
+          "bytesSaved": 8322
+        }
+      ]
+    },
+    {
+      "file": "xml-1mb.xml",
+      "format": "xml",
+      "compressionType": "TONL",
+      "runs": [
+        {
+          "ms": 24.097083,
+          "tokensBefore": 262144,
+          "tokensAfter": 260064,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1040254,
+          "tokensSaved": 2080,
+          "bytesSaved": 8322
+        },
+        {
+          "ms": 22.455875,
+          "tokensBefore": 262144,
+          "tokensAfter": 260064,
+          "bytesBefore": 1048576,
+          "bytesAfter": 1040254,
+          "tokensSaved": 2080,
+          "bytesSaved": 8322
+        }
+      ]
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "JSON",
+      "runs": [
+        {
+          "ms": 24.255708,
+          "tokensBefore": 262117,
+          "tokensAfter": 262117,
+          "bytesBefore": 1048468,
+          "bytesAfter": 1048467,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        },
+        {
+          "ms": 35.215542,
+          "tokensBefore": 262117,
+          "tokensAfter": 262117,
+          "bytesBefore": 1048468,
+          "bytesAfter": 1048467,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        }
+      ]
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "MARKDOWN",
+      "runs": [
+        {
+          "ms": 1653.012208,
+          "tokensBefore": 262117,
+          "tokensAfter": 332975,
+          "bytesBefore": 1048468,
+          "bytesAfter": 1331897,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        },
+        {
+          "ms": 1680.470958,
+          "tokensBefore": 262117,
+          "tokensAfter": 332975,
+          "bytesBefore": 1048468,
+          "bytesAfter": 1331897,
+          "tokensSaved": 0,
+          "bytesSaved": 0
+        }
+      ]
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "XML",
+      "runs": [
+        {
+          "ms": 85.896625,
+          "tokensBefore": 262117,
+          "tokensAfter": 0,
+          "bytesBefore": 1048468,
+          "bytesAfter": 0,
+          "tokensSaved": 262117,
+          "bytesSaved": 1048468
+        },
+        {
+          "ms": 85.800792,
+          "tokensBefore": 262117,
+          "tokensAfter": 0,
+          "bytesBefore": 1048468,
+          "bytesAfter": 0,
+          "tokensSaved": 262117,
+          "bytesSaved": 1048468
+        }
+      ]
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "YAML",
+      "runs": [
+        {
+          "ms": 41.220667,
+          "tokensBefore": 262117,
+          "tokensAfter": 262117,
+          "bytesBefore": 1048468,
+          "bytesAfter": 1048467,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        },
+        {
+          "ms": 33.568667,
+          "tokensBefore": 262117,
+          "tokensAfter": 262117,
+          "bytesBefore": 1048468,
+          "bytesAfter": 1048467,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        }
+      ]
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "CSV",
+      "runs": [
+        {
+          "ms": 66.35525,
+          "tokensBefore": 262117,
+          "tokensAfter": 262117,
+          "bytesBefore": 1048468,
+          "bytesAfter": 1048467,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        },
+        {
+          "ms": 55.991708,
+          "tokensBefore": 262117,
+          "tokensAfter": 262117,
+          "bytesBefore": 1048468,
+          "bytesAfter": 1048467,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        }
+      ]
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "TOON",
+      "runs": [
+        {
+          "ms": 27.213292,
+          "tokensBefore": 262117,
+          "tokensAfter": 262117,
+          "bytesBefore": 1048468,
+          "bytesAfter": 1048467,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        },
+        {
+          "ms": 26.481458,
+          "tokensBefore": 262117,
+          "tokensAfter": 262117,
+          "bytesBefore": 1048468,
+          "bytesAfter": 1048467,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        }
+      ]
+    },
+    {
+      "file": "jsonl-1mb.jsonl",
+      "format": "jsonl",
+      "compressionType": "TONL",
+      "runs": [
+        {
+          "ms": 31.119584,
+          "tokensBefore": 262117,
+          "tokensAfter": 262117,
+          "bytesBefore": 1048468,
+          "bytesAfter": 1048467,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        },
+        {
+          "ms": 31.631334,
+          "tokensBefore": 262117,
+          "tokensAfter": 262117,
+          "bytesBefore": 1048468,
+          "bytesAfter": 1048467,
+          "tokensSaved": 0,
+          "bytesSaved": 1
+        }
+      ]
+    }
+  ]
+}
