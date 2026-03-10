@@ -1,5 +1,4 @@
-# All 38 utils packages: lint, format, typecheck, test:coverage, build (Node 20).
-# Builds file: dependencies via scripts/ci/build-package-deps.js.
+# All 38 utils packages: single job runs scripts/ci/run-utils-all-ci.sh (install, build deps, lint, format, typecheck, test:coverage, build).
 name: Utils-all CI
 
 on:
@@ -19,84 +18,13 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [20.x]
-        package:
-          - utils/@simpill-adapters.utils
-          - utils/@simpill-algorithms.utils
-          - utils/@simpill-annotations.utils
-          - utils/@simpill-api.utils
-          - utils/@simpill-array.utils
-          - utils/@simpill-async.utils
-          - utils/@simpill-cache.utils
-          - utils/@simpill-collections.utils
-          - utils/@simpill-crypto.utils
-          - utils/@simpill-data.utils
-          - utils/@simpill-enum.utils
-          - utils/@simpill-env.utils
-          - utils/@simpill-errors.utils
-          - utils/@simpill-events.utils
-          - utils/@simpill-factories.utils
-          - utils/@simpill-file.utils
-          - utils/@simpill-function.utils
-          - utils/@simpill-http.utils
-          - utils/@simpill-logger.utils
-          - utils/@simpill-middleware.utils
-          - utils/@simpill-misc.utils
-          - utils/@simpill-nextjs.utils
-          - utils/@simpill-number.utils
-          - utils/@simpill-object.utils
-          - utils/@simpill-observability.utils
-          - utils/@simpill-patterns.utils
-          - utils/@simpill-protocols.utils
-          - utils/@simpill-react.utils
-          - utils/@simpill-request-context.utils
-          - utils/@simpill-resilience.utils
-          - utils/@simpill-socket.utils
-          - utils/@simpill-string.utils
-          - utils/@simpill-test.utils
-          - utils/@simpill-time.utils
-          - utils/@simpill-token-optimizer.utils
-          - utils/@simpill-uuid.utils
-          - utils/@simpill-zod.utils
-          - utils/@simpill-zustand.utils
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-          cache-dependency-path: package-lock.json
+          node-version: "20.x"
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: ${{ matrix.package }}
-
-      - name: Build file: dependencies
-        run: node scripts/ci/build-package-deps.js ${{ matrix.package }}
-        working-directory: .
-
-      - name: Lint
-        run: npm run lint
-        working-directory: ${{ matrix.package }}
-
-      - name: Format check
-        run: npm run format:check
-        working-directory: ${{ matrix.package }}
-
-      - name: Type check
-        run: npx tsc --noEmit
-        working-directory: ${{ matrix.package }}
-
-      - name: Tests with coverage
-        run: npm run test:coverage
-        working-directory: ${{ matrix.package }}
-
-      - name: Build
-        run: npm run build
-        working-directory: ${{ matrix.package }}
+      - name: Run utils CI (all packages)
+        run: bash scripts/ci/run-utils-all-ci.sh
