@@ -4,23 +4,23 @@ on:
   push:
     branches: [main]
     paths:
-      - "utils/nextjs.utils/**"
-      - "utils/zod.utils/**"
-      - "utils/errors.utils/**"
-      - "utils/request-context.utils/**"
+      - "utils/@simpill-nextjs.utils/**"
+      - "utils/@simpill-zod.utils/**"
+      - "utils/@simpill-errors.utils/**"
+      - "utils/@simpill-request-context.utils/**"
       - ".github/workflows/nextjs-utils-ci.yml"
   pull_request:
     branches: [main]
     paths:
-      - "utils/nextjs.utils/**"
-      - "utils/zod.utils/**"
-      - "utils/errors.utils/**"
-      - "utils/request-context.utils/**"
+      - "utils/@simpill-nextjs.utils/**"
+      - "utils/@simpill-zod.utils/**"
+      - "utils/@simpill-errors.utils/**"
+      - "utils/@simpill-request-context.utils/**"
       - ".github/workflows/nextjs-utils-ci.yml"
 
 defaults:
   run:
-    working-directory: utils/nextjs.utils
+    working-directory: utils/@simpill-nextjs.utils
 
 jobs:
   test:
@@ -37,7 +37,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-          cache-dependency-path: "utils/nextjs.utils/package-lock.json"
+          cache-dependency-path: "utils/@simpill-nextjs.utils/package-lock.json"
 
       - name: Install dependencies
         run: npm ci
@@ -60,5 +60,5 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
-          directory: utils/nextjs.utils/coverage
+          directory: utils/@simpill-nextjs.utils/coverage
           flags: nextjs-utils

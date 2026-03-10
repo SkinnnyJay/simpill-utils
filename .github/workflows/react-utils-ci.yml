@@ -4,17 +4,17 @@ on:
   push:
     branches: [main]
     paths:
-      - "utils/react.utils/**"
+      - "utils/@simpill-react.utils/**"
       - ".github/workflows/react-utils-ci.yml"
   pull_request:
     branches: [main]
     paths:
-      - "utils/react.utils/**"
+      - "utils/@simpill-react.utils/**"
       - ".github/workflows/react-utils-ci.yml"
 
 defaults:
   run:
-    working-directory: utils/react.utils
+    working-directory: utils/@simpill-react.utils
 
 jobs:
   test:
@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-          cache-dependency-path: "utils/react.utils/package-lock.json"
+          cache-dependency-path: "utils/@simpill-react.utils/package-lock.json"
 
       - name: Install dependencies
         run: npm ci
@@ -54,5 +54,5 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
-          directory: utils/react.utils/coverage
+          directory: utils/@simpill-react.utils/coverage
           flags: react-utils
