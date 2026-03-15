@@ -6,8 +6,8 @@
 # Usage:
 #   ./scripts/publish/publish-all.sh              # GitHub push + npm publish (prompts)
 #   ./scripts/publish/publish-all.sh --dry-run   # No push, npm publish --dry-run
-#   ./scripts/publish/publish-all.sh --skip-github   # Only npm publish
 #   ./scripts/publish/publish-all.sh --yes       # Skip confirmations
+#   ./scripts/publish/publish-all.sh --otp=123456 # 2FA one-time password for npm
 # =============================================================================
 
 set -euo pipefail
@@ -19,6 +19,7 @@ LIB_DIR="$REPO_ROOT/scripts/lib"
 DRY_RUN=false
 SKIP_GITHUB=false
 YES=false
+NPM_OTP=""
 
 for arg in "$@"; do
   case "$arg" in
@@ -26,9 +27,10 @@ for arg in "$@"; do
     --skip-github) SKIP_GITHUB=true ;;
     --npm-only)    SKIP_GITHUB=true ;;
     --yes|-y)      YES=true ;;
+    --otp=*)       NPM_OTP="${arg#--otp=}" ;;
     *)
       echo "Unknown option: $arg"
-      echo "Usage: $0 [--dry-run] [--skip-github|--npm-only] [--yes|-y]"
+      echo "Usage: $0 [--dry-run] [--skip-github|--npm-only] [--yes|-y] [--otp=CODE]"
       exit 1
       ;;
   esac
@@ -40,6 +42,7 @@ echo "============================================"
 echo "  --dry-run:     $DRY_RUN"
 echo "  --skip-github: $SKIP_GITHUB"
 echo "  --yes:         $YES"
+echo "  --otp:         ${NPM_OTP:+<set>}"
 echo "============================================"
 
 # -----------------------------------------------------------------------------
@@ -119,14 +122,15 @@ for dir in "${ORDER[@]}"; do
   echo "Publishing: $name ($dir)"
   echo "----------------------------------------"
   backup="$pkg_path.publish-backup"
+  tmp="$pkg_path.publish-tmp"
   cp "$pkg_path" "$backup"
-  trap "mv -f '$backup' '$pkg_path'" EXIT
-  node "$LIB_DIR/publish-order.js" rewrite "$dir" "$REPO_ROOT" > "$pkg_path"
+  trap "mv -f '$backup' '$pkg_path'; rm -f '$tmp'" EXIT
+  node "$LIB_DIR/publish-order.js" rewrite "$dir" "$REPO_ROOT" > "$tmp" && mv -f "$tmp" "$pkg_path"
   set +e
   if [ "$DRY_RUN" = true ]; then
     (cd "$REPO_ROOT/utils/$dir" && npm publish --access public --dry-run)
   else
-    (cd "$REPO_ROOT/utils/$dir" && npm publish --access public)
+    (cd "$REPO_ROOT/utils/$dir" && npm publish --access public ${NPM_OTP:+--otp="$NPM_OTP"})
   fi
   ret=$?
   set -e
