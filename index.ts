@@ -6,6 +6,7 @@
  */
 import * as EnvClient from "@simpill/env.utils/client";
 import * as EnvServer from "@simpill/env.utils/server";
+import * as AcpLlmCli from "@simpill/acp-llm-cli";
 import * as Adapters from "@simpill/adapters.utils";
 import * as Algorithms from "@simpill/algorithms.utils";
 import * as Annotations from "@simpill/annotations.utils";
@@ -48,6 +49,7 @@ import * as Zustand from "@simpill/zustand.utils";
 export {
   EnvClient,
   EnvServer,
+  AcpLlmCli,
   Adapters,
   Algorithms,
   Annotations,

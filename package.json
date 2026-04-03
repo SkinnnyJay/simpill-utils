@@ -69,6 +69,7 @@
     "glob": "^11.0.0"
   },
   "dependencies": {
+    "@simpill/acp-llm-cli": "^0.1.0",
     "@simpill/adapters.utils": "^1.0.0",
     "@simpill/algorithms.utils": "^1.0.0",
     "@simpill/annotations.utils": "^1.0.0",

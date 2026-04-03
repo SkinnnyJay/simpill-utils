@@ -27,6 +27,7 @@ This monorepo hosts lightweight, type-safe TypeScript utility packages under the
 | `@simpill/patterns.utils` | Result/Either, strategySelector, pipeAsync | New |
 | `@simpill/factories.utils` | createFactory, singletonFactory, errorFactory | New |
 | `@simpill/adapters.utils` | createAdapter, LoggerAdapter, CacheAdapter, memoryCacheAdapter | New |
+| `@simpill/acp-llm-cli` | ACP LLM CLI harness (Claude, Codex, Gemini, Cursor); [repo](https://github.com/SkinnnyJay/acp-llm-cli), npm `@simpill/acp-llm-cli` | New |
 | `@simpill/algorithms.utils` | mergeSort, quickSort, binarySearch, lowerBound, upperBound (no @simpill deps) | New |
 | `@simpill/api.utils` | Typed API factory: fetch client, handler registry, Zod, middleware, retry/timeout | New |
 | `@simpill/annotations.utils` | createMetadataStore, getMetadata, setMetadata | New |

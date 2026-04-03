@@ -88,3 +88,6 @@ site/
 .playwright/
 ./test-results/
 ./tmp/
+
+# Standalone repositories (own .git; not versioned in this monorepo)
+utils/@simpill-acp-llm-cli.utils/

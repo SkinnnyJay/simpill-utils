@@ -2,6 +2,7 @@
 /**
  * Sync monorepo root package.json @simpill dependencies to npm versions.
  * If utils/@simpill-*.utils exists, uses each package's version (^version); otherwise uses ^1.0.0.
+ * Standalone packages (own repo, not tracked under utils/) are listed in STANDALONE_SIMPILL_DEPS.
  * Run from repo root. Use npm run use:local to switch to file:./utils/ for local development.
  */
 const fs = require("fs");
@@ -10,6 +11,11 @@ const path = require("path");
 const REPO_ROOT = path.join(__dirname, "..", "..");
 const UTILS = path.join(REPO_ROOT, "utils");
 const ROOT_PKG = path.join(REPO_ROOT, "package.json");
+
+/** @simpill packages not in this repo (own git / npm only). Kept when syncing root deps. */
+const STANDALONE_SIMPILL_DEPS = {
+  "@simpill/acp-llm-cli": "^0.1.0",
+};
 
 function getPackageDirs() {
   if (!fs.existsSync(UTILS)) return [];
@@ -27,6 +33,7 @@ function getPackageDirs() {
 
 const dirs = getPackageDirs();
 const deps = {};
+const scannedPackageNames = new Set();
 
 for (const dir of dirs) {
   const pkgPath = path.join(UTILS, dir, "package.json");
@@ -36,6 +43,7 @@ for (const dir of dirs) {
   const version = (pkg.version && String(pkg.version).trim()) || "1.0.0";
   if (name && name.startsWith("@simpill/")) {
     deps[name] = `^${version}`;
+    scannedPackageNames.add(name);
   }
 }
 
@@ -51,6 +59,12 @@ if (Object.keys(deps).length === 0) {
   }
 }
 
+for (const [name, spec] of Object.entries(STANDALONE_SIMPILL_DEPS)) {
+  if (!deps[name]) {
+    deps[name] = spec;
+  }
+}
+
 const rootDeps = rootPkg.dependencies || {};
 let changed = false;
 for (const [name, spec] of Object.entries(deps)) {
@@ -59,9 +73,12 @@ for (const [name, spec] of Object.entries(deps)) {
     changed = true;
   }
 }
-const utilNames = new Set(Object.keys(deps));
+const keepSimpillNames = new Set([
+  ...scannedPackageNames,
+  ...Object.keys(STANDALONE_SIMPILL_DEPS),
+]);
 for (const name of Object.keys(rootDeps)) {
-  if (name.startsWith("@simpill/") && !utilNames.has(name)) {
+  if (name.startsWith("@simpill/") && !keepSimpillNames.has(name)) {
     delete rootDeps[name];
     changed = true;
   }
