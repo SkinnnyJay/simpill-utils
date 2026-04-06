@@ -9,6 +9,11 @@ FAILED=()
 for dir in utils/@simpill-*.utils; do
   [ -d "$dir" ] || continue
   name=$(basename "$dir")
+  # Git submodule: Vitest-only tooling; full CI runs on https://github.com/SkinnnyJay/acp-llm-cli
+  if [ "$name" = "@simpill-acp-llm-cli.utils" ]; then
+    echo "========== CI: $name (submodule — skipped; see acp-llm-cli repo) =========="
+    continue
+  fi
   echo "========== CI: $name =========="
   if ! (cd "$dir" && npm ci --silent 2>&1); then
     echo "  npm ci FAIL"

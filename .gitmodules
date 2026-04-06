@@ -1,0 +1,3 @@
+[submodule "utils/@simpill-acp-llm-cli.utils"]
+	path = utils/@simpill-acp-llm-cli.utils
+	url = https://github.com/SkinnnyJay/acp-llm-cli.git

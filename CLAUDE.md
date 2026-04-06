@@ -33,7 +33,7 @@ This is a monorepo containing utility packages under the `@simpill` namespace.
 | `@simpill/patterns.utils` | `utils/@simpill-patterns.utils/` | New |
 | `@simpill/factories.utils` | `utils/@simpill-factories.utils/` | New |
 | `@simpill/adapters.utils` | `utils/@simpill-adapters.utils/` | New |
-| `@simpill/acp-llm-cli` | Standalone: [acp-llm-cli](https://github.com/SkinnnyJay/acp-llm-cli) (optional checkout `utils/@simpill-acp-llm-cli.utils/` next to simpill-utils) | New |
+| `@simpill/acp-llm-cli` | Git submodule: `utils/@simpill-acp-llm-cli.utils/` → [acp-llm-cli](https://github.com/SkinnnyJay/acp-llm-cli) (`git submodule update --init`) | New |
 | `@simpill/algorithms.utils` | `utils/@simpill-algorithms.utils/` | New |
 | `@simpill/annotations.utils` | `utils/@simpill-annotations.utils/` | New |
 | `@simpill/array.utils` | `utils/@simpill-array.utils/` | New |

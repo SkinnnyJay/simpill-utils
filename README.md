@@ -21,7 +21,15 @@
 - **Type-safe** — TypeScript strict mode, no `any`.
 - **Tested** — 80%+ coverage; shared style and tooling.
 
-All packages are in this monorepo and published under the `@simpill` scope on [npm](https://www.npmjs.com/org/simpill).
+Most packages live in this repo and are published under the `@simpill` scope on [npm](https://www.npmjs.com/org/simpill). **`@simpill/acp-llm-cli`** is included as a **git submodule** at `utils/@simpill-acp-llm-cli.utils/` ([source](https://github.com/SkinnnyJay/acp-llm-cli)).
+
+Clone with submodules:
+
+```bash
+git clone --recurse-submodules https://github.com/SkinnnyJay/simpill-utils.git
+# or, after clone:
+git submodule update --init --recursive
+```
 
 ---
 
@@ -70,6 +78,7 @@ import type { AppError } from "@simpill/errors.utils";
 
 | Package | Description |
 |---------|-------------|
+| [@simpill/acp-llm-cli](https://www.npmjs.com/package/@simpill/acp-llm-cli) | ACP LLM CLI harness ([git submodule](https://github.com/SkinnnyJay/acp-llm-cli)) |
 | [@simpill/adapters.utils](https://www.npmjs.com/package/@simpill/adapters.utils) | Adapter helpers, logger and cache adapter interfaces |
 | [@simpill/algorithms.utils](https://www.npmjs.com/package/@simpill/algorithms.utils) | Merge sort, quick sort, binary search, lower/upper bound |
 | [@simpill/annotations.utils](https://www.npmjs.com/package/@simpill/annotations.utils) | Typed metadata store and annotation helpers |

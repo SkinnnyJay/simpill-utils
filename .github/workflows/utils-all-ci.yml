@@ -1,4 +1,4 @@
-# All 38 utils packages: single job runs scripts/ci/run-utils-all-ci.sh (install, build deps, lint, format, typecheck, test:coverage, build).
+# Utils packages: single job runs scripts/ci/run-utils-all-ci.sh (submodule acp-llm-cli skipped; it has its own CI).
 name: Utils-all CI
 
 on:
@@ -8,18 +8,22 @@ on:
       - "utils/**"
       - "scripts/ci/**"
       - ".github/workflows/utils-all-ci.yml"
+      - ".gitmodules"
   pull_request:
     branches: [main]
     paths:
       - "utils/**"
       - "scripts/ci/**"
       - ".github/workflows/utils-all-ci.yml"
+      - ".gitmodules"
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
