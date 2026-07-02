@@ -1,9 +1,15 @@
-import { delay, type Gate, type RunOptions } from "@simpill/async.utils";
+import type { Gate, RunOptions } from "@simpill/async.utils";
 import type { RateLimiterOptions } from "../shared";
-import { ERROR_NAME_ABORT, ERROR_OPERATION_ABORTED, VALUE_0 } from "../shared/constants";
+import { VALUE_0 } from "../shared/constants";
+import { abortableDelay, throwIfAborted } from "../shared/errors";
 
 /**
- * In-memory fixed-window rate limiter. run(fn) waits until under the limit, then runs fn.
+ * In-memory fixed-window rate limiter. run(fn) waits until under the limit,
+ * then runs fn. Waiting is abort-aware: aborting the signal rejects the wait
+ * immediately instead of sleeping out the remainder of the window.
+ *
+ * Note: fixed windows permit up to 2x maxRequests across a window boundary.
+ * If that matters for your downstream, use TokenBucketRateLimiter.
  */
 export class RateLimiter implements Gate {
   private readonly maxRequests: number;
@@ -17,11 +23,7 @@ export class RateLimiter implements Gate {
   }
 
   async run<T>(fn: () => Promise<T>, options?: RunOptions): Promise<T> {
-    if (options?.signal?.aborted) {
-      const error = new Error(ERROR_OPERATION_ABORTED);
-      error.name = ERROR_NAME_ABORT;
-      throw error;
-    }
+    throwIfAborted(options?.signal);
     const now = Date.now();
     if (now - this.windowStart >= this.windowMs) {
       this.windowStart = now;
@@ -29,12 +31,8 @@ export class RateLimiter implements Gate {
     }
     if (this.count >= this.maxRequests) {
       const wait = this.windowMs - (now - this.windowStart);
-      if (wait > VALUE_0) await delay(wait);
-      if (options?.signal?.aborted) {
-        const error = new Error(ERROR_OPERATION_ABORTED);
-        error.name = ERROR_NAME_ABORT;
-        throw error;
-      }
+      if (wait > VALUE_0) await abortableDelay(wait, options?.signal);
+      throwIfAborted(options?.signal);
       return this.run(fn, options);
     }
     this.count++;
