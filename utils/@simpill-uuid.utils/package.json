@@ -1,7 +1,7 @@
 {
   "name": "@simpill/uuid.utils",
   "version": "1.0.0",
-  "description": "Generate and validate UUIDs (v1/v4/v5) with full TypeScript support (Node and Edge).",
+  "description": "Generate and validate UUIDs (v1/v4/v5/v7, RFC 9562) with full TypeScript support (Node and Edge).",
   "repository": {
     "type": "git",
     "url": "https://github.com/SkinnnyJay/uuid.utils.git"
