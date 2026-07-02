@@ -11,6 +11,7 @@ import {
   OVERFLOW_POLICY_DROP_NEWEST,
   OVERFLOW_POLICY_DROP_OLDEST,
 } from "./constants";
+import { Fifo, type FifoNode } from "./fifo";
 
 export type OverflowPolicy = "reject" | "drop_oldest" | "drop_newest";
 
@@ -27,6 +28,7 @@ type Task = {
   reject: (reason?: unknown) => void;
   signal?: AbortSignal;
   onAbort?: () => void;
+  node?: FifoNode<Task>;
 };
 
 /** Concurrency limiter: callable as limit(fn, ...args), with map, clearQueue, activeCount, pendingCount, concurrency. */
@@ -86,10 +88,10 @@ export function createLimit(options: number | LimitOptions): Limit {
 
   let concurrency = config.concurrency;
   let activeCount = 0;
-  const queue: Task[] = [];
+  const queue = new Fifo<Task>();
 
   const runNext = (): void => {
-    while (activeCount < concurrency && queue.length > 0) {
+    while (activeCount < concurrency && queue.size > 0) {
       const task = queue.shift();
       if (!task) return;
       if (task.signal?.aborted) {
@@ -128,7 +130,7 @@ export function createLimit(options: number | LimitOptions): Limit {
     const signal = options?.signal;
     throwIfAborted(signal);
     return new Promise<TResult>((resolve, reject) => {
-      if (config.maxQueueSize !== undefined && queue.length >= config.maxQueueSize) {
+      if (config.maxQueueSize !== undefined && queue.size >= config.maxQueueSize) {
         const policy = config.onOverflow ?? "reject";
         const overflowError = createOverflowError();
         if (policy === OVERFLOW_POLICY_DROP_OLDEST) {
@@ -155,16 +157,15 @@ export function createLimit(options: number | LimitOptions): Limit {
       };
       if (signal) {
         const onAbort = (): void => {
-          const index = queue.indexOf(task);
-          if (index >= 0) {
-            queue.splice(index, 1);
+          if (task.node && !task.node.detached) {
+            queue.remove(task.node);
             reject(createSignalAbortError());
           }
         };
         task.onAbort = onAbort;
         signal.addEventListener("abort", onAbort, { once: true });
       }
-      queue.push(task);
+      task.node = queue.push(task);
       runNext();
     });
   };
@@ -184,7 +185,7 @@ export function createLimit(options: number | LimitOptions): Limit {
   };
 
   limit.clearQueue = () => {
-    const pending = queue.splice(0, queue.length);
+    const pending = queue.drain();
     for (const task of pending) {
       if (task.signal && task.onAbort) {
         task.signal.removeEventListener("abort", task.onAbort);
@@ -203,7 +204,7 @@ export function createLimit(options: number | LimitOptions): Limit {
     get: () => activeCount,
   });
   Object.defineProperty(limit, "pendingCount", {
-    get: () => queue.length,
+    get: () => queue.size,
   });
   Object.defineProperty(limit, "concurrency", {
     get: () => concurrency,
