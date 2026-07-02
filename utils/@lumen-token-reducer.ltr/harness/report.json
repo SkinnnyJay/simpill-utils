@@ -1,0 +1,148 @@
+{
+  "tool_a": "LTR (Lumen Industries)",
+  "tool_b": "@simpill/token-optimizer",
+  "tokenizer": "gpt-tokenizer",
+  "budget_s3": 400,
+  "scenarios": {
+    "S1_pure_structured": {
+      "tokens_before": 4400,
+      "ltr": {
+        "tokens_after": 1729,
+        "reduction_pct": 60.7,
+        "fidelity": true,
+        "encoder": "csv"
+      },
+      "jay": {
+        "tokens_after": 1773,
+        "reduction_pct": 59.7,
+        "fidelity": true,
+        "encoder": "TOON"
+      }
+    },
+    "S2_arbitrary_prompt": {
+      "tokens_before": 1928,
+      "ltr": {
+        "tokens_after": 886,
+        "reduction_pct": 54.0,
+        "fidelity": true,
+        "deduped": 1,
+        "encoded": 2
+      },
+      "jay": {
+        "tokens_after": 1724,
+        "reduction_pct": 10.6,
+        "fidelity": true,
+        "encoder": "TOON"
+      }
+    },
+    "S3_retrieval_budget": {
+      "tokens_before": 6759,
+      "queries": [
+        {
+          "query": "how do I switch the vault primary safely?",
+          "ltr": {
+            "tokens_after": 291,
+            "reduction_pct": 95.7,
+            "hits": "3/3",
+            "fidelity": true
+          },
+          "jay": {
+            "tokens_after": 400,
+            "hits": "0/3",
+            "truncated": true,
+            "fidelity": false
+          }
+        },
+        {
+          "query": "where do nightly backups go and what's the retention?",
+          "ltr": {
+            "tokens_after": 322,
+            "reduction_pct": 95.2,
+            "hits": "3/3",
+            "fidelity": true
+          },
+          "jay": {
+            "tokens_after": 400,
+            "hits": "0/3",
+            "truncated": true,
+            "fidelity": false
+          }
+        },
+        {
+          "query": "what happens to torrents if the VPN drops?",
+          "ltr": {
+            "tokens_after": 231,
+            "reduction_pct": 96.6,
+            "hits": "2/2",
+            "fidelity": true
+          },
+          "jay": {
+            "tokens_after": 400,
+            "hits": "0/2",
+            "truncated": true,
+            "fidelity": false
+          }
+        },
+        {
+          "query": "which endpoint serves dense embeddings for retrieval?",
+          "ltr": {
+            "tokens_after": 316,
+            "reduction_pct": 95.3,
+            "hits": "2/2",
+            "fidelity": true
+          },
+          "jay": {
+            "tokens_after": 400,
+            "hits": "0/2",
+            "truncated": true,
+            "fidelity": false
+          }
+        },
+        {
+          "query": "how are model calls routed for fleet services?",
+          "ltr": {
+            "tokens_after": 228,
+            "reduction_pct": 96.6,
+            "hits": "2/2",
+            "fidelity": true
+          },
+          "jay": {
+            "tokens_after": 400,
+            "hits": "2/2",
+            "truncated": true,
+            "fidelity": false
+          }
+        },
+        {
+          "query": "what is the alert queue and how often is it drained?",
+          "ltr": {
+            "tokens_after": 310,
+            "reduction_pct": 95.4,
+            "hits": "2/2",
+            "fidelity": true
+          },
+          "jay": {
+            "tokens_after": 400,
+            "hits": "0/2",
+            "truncated": true,
+            "fidelity": false
+          }
+        }
+      ],
+      "summary": {
+        "ltr": {
+          "avg_reduction_pct": 95.8,
+          "hit_rate_pct": 100.0,
+          "fidelity": true,
+          "avg_et_cost": 283.0
+        },
+        "jay": {
+          "avg_reduction_pct": 94.1,
+          "hit_rate_pct": 16.7,
+          "fidelity": false,
+          "avg_et_cost": 400.0
+        }
+      }
+    }
+  }
+}

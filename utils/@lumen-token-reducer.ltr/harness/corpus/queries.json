@@ -1,0 +1,46 @@
+[
+  {
+    "query": "how do I switch the vault primary safely?",
+    "must_survive": [
+      "disarm the HA monitor",
+      "systemd-run",
+      "re-arm"
+    ]
+  },
+  {
+    "query": "where do nightly backups go and what's the retention?",
+    "must_survive": [
+      "anubis-node",
+      "192.168.8.107",
+      "14 daily"
+    ]
+  },
+  {
+    "query": "what happens to torrents if the VPN drops?",
+    "must_survive": [
+      "NordVPN kill-switch",
+      "qBittorrent must halt"
+    ]
+  },
+  {
+    "query": "which endpoint serves dense embeddings for retrieval?",
+    "must_survive": [
+      "bge-m3",
+      "127.0.0.1:11434"
+    ]
+  },
+  {
+    "query": "how are model calls routed for fleet services?",
+    "must_survive": [
+      "LiteLLM gateway",
+      "localhost:4000"
+    ]
+  },
+  {
+    "query": "what is the alert queue and how often is it drained?",
+    "must_survive": [
+      "/var/lib/aq/alerts.db",
+      "30 minutes"
+    ]
+  }
+]
