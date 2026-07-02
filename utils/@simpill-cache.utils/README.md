@@ -40,7 +40,7 @@ const fn = memoize((x: number) => expensive(x), { cache: new LRUMap(50) });
 | **InMemoryCache** | TTL-capable in-memory cache (no max size; use defaultTtlMs or bounded keys to avoid unbounded growth) |
 | **memoize** | Memoize with optional custom cache (e.g. LRUMap) |
 | **memoizeAsync** | Memoize async functions with optional custom cache |
-| **TTLCache** | TTL cache with max size (server) |
+| **TTLCache** | TTL cache with optional max size, O(1) amortized pruning (server) |
 | **RedisCache** | Redis-backed cache via adapter interface (server) |
 
 ---
@@ -58,16 +58,26 @@ import { ... } from "@simpill/cache.utils/shared"; // Shared only
 
 ## API Reference
 
-- **LRUMap**&lt;K, V&gt;(maxSize) — get, set, has, size, clear
-- **InMemoryCache** — get, set, has, delete, clear, size. Optional defaultTtlMs and maxSize (LRU eviction); without both the cache is unbounded.
-- **memoize**(fn, options?) — options: key, cache (MemoizeCache). **Default cache is unbounded**; for long-lived processes pass a bounded cache (e.g. **LRUMap** or **InMemoryCache** with maxSize).
+- **LRUMap**&lt;K, V&gt;(maxSize) — get, set, has, delete, peek (no recency bump), size, maxSize, clear, iteration (keys/values/entries/for..of, least-recently-used first)
+- **InMemoryCache** — get, set, has, delete, clear, size, getRemainingTTL, keys. Optional defaultTtlMs and maxSize (LRU eviction); without both the cache is unbounded. Expired entries are physically reclaimed by size reads and capacity sweeps (no silent memory growth). NaN TTLs are rejected.
+- **memoize**(fn, options?) — options: key, keySerializer, cache (MemoizeCache). Returns a function exposing **`.cache`** for invalidation (`fn.cache.delete?.(key)` / `fn.cache.clear?.()`). **Default cache is unbounded**; for long-lived processes pass a bounded cache (e.g. **LRUMap** or **InMemoryCache** with maxSize). **The default key is the first argument only** — pass keySerializer for multi-argument functions.
 - **memoizeAsync**(fn, options?) — async memoize with custom key/cache. Same unbounded-default note; use a bounded cache to avoid unbounded growth.
-- **TTLCache** — server TTL cache with max size
+- **TTLCache**(ttlMs, { maxSize? }) — server TTL cache with optional max size (oldest-first eviction). get, set, has, delete, size, getRemainingTTL, clear. Pruning is O(expired) amortized (front-pop on an expiry-ordered map), not a full scan per set.
 - **RedisCache** — server cache wrapper (requires RedisCacheAdapter)
 
 ### memoizeAsync
 
 Memoizes async functions: same arguments return the same promise (cached). Options: `key` (custom key function), `cache` (custom cache instance), `ttlMs` (default TTL when using the default InMemoryCache). Unlike sync `memoize`, concurrent calls with the same key share one in-flight promise when the cache is empty — no built-in “in-flight dedupe” flag; the default behavior reuses the same promise until it settles and is stored. Use a bounded cache (e.g. `InMemoryCache({ maxSize: 500, defaultTtlMs: 60000 })`) to avoid unbounded growth.
+
+### Stale-while-revalidate (memoizeAsync)
+
+Set `ttlMs` + `staleWhileRevalidateMs` to serve stale values instantly while refreshing in the background (single-flight — concurrent stale hits share one refresh; a failed refresh keeps serving the stale value for the rest of the window, i.e. stale-if-error):
+
+```ts
+const getUser = memoizeAsync(fetchUser, { ttlMs: 60_000, staleWhileRevalidateMs: 300_000 });
+```
+
+Not compatible with a custom `cache`; requires `ttlMs`.
 
 ### Invalidation and eviction
 
