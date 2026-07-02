@@ -77,7 +77,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@simpill/async.utils": "file:../@simpill-async.utils",
     "@simpill/protocols.utils": "file:../@simpill-protocols.utils"
   },
   "peerDependencies": {
