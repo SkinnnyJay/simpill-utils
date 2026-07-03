@@ -13,6 +13,21 @@ export interface HandlerBuilderLogging {
   onError?: (info: { method: string; url: string; routeKey?: string; error: unknown }) => void;
 }
 
+/** Decode a percent-encoded path segment; fall back to the raw value on malformed input. */
+function decodeSegment(value: string): string {
+  if (!value.includes("%")) return value;
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+/**
+ * Extract :params from a path. v1 fix: segments are percent-decoded, so
+ * "/users/john%20doe" yields { id: "john doe" } — round-tripping what the
+ * client now encodes on the way out.
+ */
 export function parsePathParams(pathPattern: string, path: string): Record<string, string> {
   const patternParts = pathPattern.split("/").filter(Boolean);
   const pathParts = path.replace(/^\//, "").split("/").filter(Boolean);
@@ -20,10 +35,30 @@ export function parsePathParams(pathPattern: string, path: string): Record<strin
   for (let i = 0; i < patternParts.length; i++) {
     const part = patternParts[i];
     if (part?.startsWith(":") && pathParts[i] !== undefined) {
-      params[part.slice(1)] = pathParts[i];
+      params[part.slice(1)] = decodeSegment(pathParts[i]);
     }
   }
   return params;
+}
+
+/**
+ * Parse the query string. v1 fix: repeated keys become arrays instead of
+ * silently collapsing to the last value ("?tag=a&tag=b" was { tag: "b" }).
+ * Single-valued keys stay plain strings (back-compat).
+ */
+export function parseQuery(searchParams: URLSearchParams): Record<string, unknown> {
+  const query: Record<string, unknown> = {};
+  for (const [key, value] of searchParams.entries()) {
+    const existing = query[key];
+    if (existing === undefined) {
+      query[key] = value;
+    } else if (Array.isArray(existing)) {
+      existing.push(value);
+    } else {
+      query[key] = [existing, value];
+    }
+  }
+  return query;
 }
 
 /** Build request context from route and request; schema parsing via parseWithSchema. */
@@ -34,7 +69,7 @@ export function buildHandlerContext(
   const url = new URL(req.url, "http://_");
   const pathname = url.pathname;
   const rawParams = parsePathParams(r.path, pathname);
-  const rawQuery = Object.fromEntries(url.searchParams.entries()) as Record<string, unknown>;
+  const rawQuery = parseQuery(url.searchParams);
   const params = parseWithSchema<Record<string, string>>(r.schema.params, rawParams);
   const query = parseWithSchema<Record<string, unknown>>(r.schema.query, rawQuery);
   const body = parseWithSchema<unknown>(r.schema.body, req.body ?? {});

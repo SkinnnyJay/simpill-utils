@@ -59,11 +59,20 @@ const client = api.client({
   timeoutMs: 5000,
   retry: { maxRetries: 3, delayMs: 100 },
 });
-const user = await client.getUser({ params: { id: "..." } });
+// Fully inferred from the route's Zod schemas — no casts:
+const user = await client.getUser({ params: { id: "..." } }); // { id: string; name: string }
 const created = await client.createUser({ body: { name: "Jane" } });
 ```
 
-Use `timeoutMs` and `retry` for built-in timeout and retries.
+Method names, option shapes (`params`/`query`/`body`), and return types are all inferred
+from the route definitions. Wrong param types, missing required params, and unknown route
+keys are compile errors. Path params are percent-encoded; a missing param throws
+`ApiMissingParamError` instead of sending a literal `:id` to the server. Query values may
+be arrays and serialize as repeated keys (`{ tag: ["a", "b"] }` → `tag=a&tag=b`).
+
+Use `timeoutMs` and `retry` for built-in timeout and retries, and
+`validateRequest: true` to also validate `params`/`query`/`body` against the route
+schemas before sending (throws `ZodError` client-side).
 
 ### Handler registry
 
@@ -87,11 +96,34 @@ Attach `before`, `after`, `onError` globally (in `createApiFactory({ middleware 
 ### Retry and timeout
 
 ```ts
-import { fetchWithRetry, fetchWithTimeout } from "@simpill/api.utils";
+import { fetchWithRetry, fetchWithTimeout, composeSignals } from "@simpill/api.utils";
 
-const res = await fetchWithRetry(url, init, { maxRetries: 3, delayMs: 100, fetcher });
+const res = await fetchWithRetry(url, init, {
+  maxRetries: 3,
+  delayMs: 100,
+  // opt-in: advanced knobs pass straight through to @simpill/http.utils
+  policy: {
+    retryableStatuses: (s) => [502, 503, 504].includes(s),
+    backoffMultiplier: 2, // exponential
+    jitter: true,         // full jitter: random(0, delay)
+  },
+  fetcher,
+});
 const res2 = await fetchWithTimeout(url, init, { timeoutMs: 5000, fetcher });
 ```
+
+Retry defaults are unchanged (network errors only, fixed delay), but user aborts are never
+retried and retry delays are abort-aware. `fetchWithRetry` delegates to
+`@simpill/http.utils` `fetchWithRetry`; the `policy` option exposes its full
+`HttpRetryPolicy` (Retry-After honoring, retryMethods, per-attempt timeoutMs, ...).
+With status retries enabled, exhausting attempts throws instead of returning the
+final response. Timeouts abort with an `ApiTimeoutError` whose
+`name` is `"TimeoutError"`, so they're distinguishable from user aborts (`"AbortError"`).
+
+If you pass your own `init.signal`, `fetchWithTimeout` keeps passing it through untouched
+and enforces the timeout by rejecting the promise on expiry (the in-flight request itself
+is not cancelled in that mode). Pass `composeSignal: true` — or compose yourself with the
+exported `composeSignals(a, b)` — to have the timeout also cancel the request.
 
 ### OpenAPI generation
 
@@ -99,15 +131,15 @@ This package does **not** generate OpenAPI/Swagger specs. Define routes and Zod 
 
 ### Client entry usage
 
-The **client** subpath (**@simpill/api.utils/client**) exports an empty object. It is for environments that resolve **client** first (e.g. some bundlers) so they don’t pull server-only code. The **typed fetch client** is created with **api.client({ baseUrl, headers, ... })** from the factory; create the factory and call **api.client()** in server or in a build step that runs in Node. For browser-only usage, build the client once (e.g. in a script) and pass the resulting **client** object or use **@simpill/api.utils** and rely on tree-shaking.
+The **client** subpath (**@simpill/api.utils/client**) exports the Edge-safe shared surface: all shared types plus the error classes (`ApiHttpError`, `ApiTimeoutError`, `ApiMissingParamError`, `ApiResponseParseError`, `ApiDuplicateRouteError`), so isomorphic code can do `err instanceof ApiHttpError` in a client bundle without pulling server-only code. The **typed fetch client** itself is created with **api.client({ baseUrl, headers, ... })** from the factory; create the factory and call **api.client()** in server or in a build step that runs in Node. For browser-only usage, build the client once (e.g. in a script) and pass the resulting **client** object or use **@simpill/api.utils** and rely on tree-shaking.
 
 ### Typing client and handler results
 
-**api.client()** returns an object whose methods are typed as **Promise&lt;unknown&gt;** unless your route definitions use Zod **response** schemas; the factory infers from those when possible. **api.handlers()** returns a map of handler functions; request/response bodies are **unknown** at the type level. **Type at call site:** define a type from your route’s response schema (e.g. `type User = z.infer<typeof userSchema>`) and use it when calling the client so the result is typed; or assert after the call (`as User`) when you control the API.
+Everything is inferred — no call-site casts needed. **api.client()** methods take typed `params`/`query`/`body` (from `z.input` of each schema) and return `Promise<z.output<responseSchema>>` (or the `transform` return type when set). **api.handlers()** hands your handler a typed `ctx` (`ctx.params`, `ctx.query`, `ctx.body` from the schemas) and only routes defined **with** a handler exist on the returned map — accessing a handler-less route is a compile error. Routes without schemas stay `unknown`, exactly as before. Inference is compile-time only: dispatch benchmarks at parity with the untyped v1 client (0.99x).
 
 ### Error response shape
 
-The **client** does not return a Result type. On **!res.ok** it throws **Error(`HTTP ${res.status}: ${text}`)**. After **res.json()**, if a **response** schema is set, **schema.parse(raw)** is used; **parse** throws **ZodError** on validation failure. So both HTTP and validation errors are **thrown**; catch them and map to your app’s error shape (e.g. **@simpill/errors.utils** or a standard API error body) if needed.
+The **client** does not return a Result type. On **!res.ok** it throws **ApiHttpError** with `status`, `statusText`, `body`, `url`, `method`, and `routeKey` fields — the message stays `HTTP ${res.status}: ${text}`, so existing string matching keeps working, but you no longer have to regex the message for the status. If a 2xx response has a **non-empty** body that is not valid JSON, the client throws **ApiResponseParseError** (v1 silently coerced it to `{}`); empty bodies (204s) still parse to `{}`. If a **response** schema is set, **schema.parse(raw)** runs and throws **ZodError** on validation failure. All of these are **thrown**; catch and map to your app’s error shape (e.g. **@simpill/errors.utils**) if needed.
 
 ### Interceptors and hooks
 
@@ -143,7 +175,7 @@ try {
 
 ### baseUrl and headers
 
-**api.client({ baseUrl, headers, ... })** uses **baseUrl** with a trailing slash removed, then builds URLs as **baseUrl + path + query**. If you omit **baseUrl** in **createApiFactory**, the default is an empty string; pass **baseUrl** in **createApiFactory({ baseUrl: "..." })** or in each **api.client({ baseUrl })** so requests use the correct origin. **headers** are merged: **defaultHeaders** (from **createApiFactory**) then **opts.headers** then per-call **options.headers** in each client method. **Content-Type: application/json** is set by the client unless overridden.
+**api.client({ baseUrl, headers, ... })** uses **baseUrl** with a trailing slash removed, then builds URLs as **baseUrl + path + query**. If you omit **baseUrl** in **createApiFactory**, the default is an empty string; pass **baseUrl** in **createApiFactory({ baseUrl: "..." })** or in each **api.client({ baseUrl })** so requests use the correct origin. **headers** are merged case-insensitively: **defaultHeaders** (from **createApiFactory**) then **opts.headers** then per-call **options.headers** in each client method — later values win regardless of key casing, so `content-type` and `Content-Type` never produce duplicate headers. **Content-Type: application/json** is set by the client unless overridden (v1 claimed this but spread its default last, making an override impossible; now any caller-supplied content-type wins).
 
 ### Comparison with tRPC / zodios
 

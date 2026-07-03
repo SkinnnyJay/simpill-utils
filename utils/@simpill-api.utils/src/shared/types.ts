@@ -1,5 +1,6 @@
 import type { HttpMethod } from "@simpill/protocols.utils";
 import type { z } from "zod";
+import type { HttpRetryPolicy } from "@simpill/http.utils";
 
 /** HTTP method for a route (from @simpill/protocols.utils) */
 export type { HttpMethod };
@@ -86,4 +87,12 @@ export interface RetryOptions {
   maxRetries?: number;
   delayMs?: number;
   timeoutMs?: number;
+  /**
+   * Advanced retry knobs, merged over the mapped defaults and passed straight
+   * to @simpill/http.utils fetchWithRetry: status-based retries
+   * (retryableStatuses), exponential backoff (backoffMultiplier), full jitter,
+   * Retry-After honoring, retryMethods, per-attempt timeoutMs.
+   * Off by default (v1 compat: only thrown/network errors are retried).
+   */
+  policy?: HttpRetryPolicy;
 }
