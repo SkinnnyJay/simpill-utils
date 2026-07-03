@@ -53,3 +53,26 @@ describe("transforms", () => {
     });
   });
 });
+
+import { z as z2 } from "zod";
+
+describe("transforms (uplift fixes: preprocess ordering)", () => {
+  it("trimString trims BEFORE validation (previously ' ' passed min(1) and output '')", () => {
+    const s = trimString(z2.string().min(1));
+    expect(s.safeParse(" ").success).toBe(false);
+    expect(s.parse(" a ")).toBe("a");
+  });
+  it("lowerString lowercases BEFORE validation", () => {
+    const s = lowerString(z2.string().regex(/^[a-z]+$/));
+    expect(s.parse("ABC")).toBe("abc");
+  });
+  it("upperString uppercases BEFORE validation", () => {
+    const s = upperString(z2.string().regex(/^[A-Z]+$/));
+    expect(s.parse("abc")).toBe("ABC");
+  });
+  it("non-string inputs get the schema's type error, not a TypeError", () => {
+    const s = trimString(z2.string());
+    const r = s.safeParse(42);
+    expect(r.success).toBe(false);
+  });
+});

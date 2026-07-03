@@ -67,3 +67,31 @@ describe("safe-parse", () => {
     });
   });
 });
+
+import { z as z3 } from "zod";
+import { flattenZodErrorAll } from "../../../src/shared";
+
+describe("safe-parse (uplift fixes)", () => {
+  const multi = z3.object({
+    x: z3
+      .string()
+      .min(5, "too short")
+      .regex(/^[a-z]+$/, "lowercase only"),
+  });
+
+  it("flattenZodError keeps the FIRST issue per path (previously last overwrote)", () => {
+    const r = multi.safeParse({ x: "A1" });
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      expect(r.error.issues.length).toBe(2);
+      expect(flattenZodError(r.error)).toEqual({ x: "too short" });
+    }
+  });
+
+  it("flattenZodErrorAll keeps every message per path", () => {
+    const r = multi.safeParse({ x: "A1" });
+    if (!r.success) {
+      expect(flattenZodErrorAll(r.error)).toEqual({ x: ["too short", "lowercase only"] });
+    }
+  });
+});
