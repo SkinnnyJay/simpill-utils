@@ -1,4 +1,5 @@
 export {
+  type ConfigFromEnvOptions,
   type ConfigLayer,
   configFromEnv,
   mergeConfigLayers,
@@ -31,12 +32,19 @@ export {
   pickKeys,
 } from "./data.utils";
 export {
+  andThenResult,
   invalid,
   isNumber,
   isRecord,
   isString,
+  mapResult,
+  refine,
   type ValidationResult,
+  type Validator,
   valid,
+  validateArray,
+  validateBoolean,
+  validateEnum,
   validateNumber,
   validateRecord,
   validateString,
@@ -44,7 +52,9 @@ export {
 export {
   type ObjectSearchMatch,
   type SearchObjectOptions,
+  type SearchStringAllOptions,
   StringSearchAlgorithm,
   searchObject,
   searchString,
+  searchStringAll,
 } from "./search.utils";

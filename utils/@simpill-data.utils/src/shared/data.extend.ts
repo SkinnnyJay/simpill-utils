@@ -5,6 +5,8 @@ import {
   isPlainObject,
   setByPath as setByPathObj,
 } from "@simpill/object.utils";
+import { deepClone } from "./data.utils";
+import { isForbiddenKey, safeAssign } from "./internal.safety";
 
 function deepDefaultsRecord(
   target: Record<string, unknown>,
@@ -12,11 +14,21 @@ function deepDefaultsRecord(
 ): Record<string, unknown> {
   const out = { ...target };
   for (const key of Object.keys(defaults)) {
+    // JSON.parse('{"__proto__":{...}}') produces an own "__proto__" key; assigning it
+    // through out[key] replaces the result's prototype and injects attacker-controlled
+    // inherited properties (the lodash.merge / deepmerge CVE class). Skip at every depth.
+    if (isForbiddenKey(key)) {
+      continue;
+    }
     const d = defaults[key];
-    if (d === undefined) continue;
+    if (d === undefined) {
+      continue;
+    }
     const t = out[key];
     if (t === undefined) {
-      out[key] = d;
+      // Deep-clone defaults-only branches: the original copied them by reference,
+      // so mutating the result mutated the shared defaults object.
+      safeAssign(out, key, d !== null && typeof d === "object" ? deepClone(d) : d);
       continue;
     }
     if (isPlainObject(t) && isPlainObject(d)) {
