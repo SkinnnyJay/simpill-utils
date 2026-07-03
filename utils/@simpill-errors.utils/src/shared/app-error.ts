@@ -9,15 +9,28 @@ export interface AppErrorMeta {
 export class AppError extends Error {
   readonly code: string;
   readonly meta: AppErrorMeta;
-  readonly cause: unknown;
+  /** Underlying cause (ES2022 `Error.cause` semantics: present but non-enumerable). */
+  declare readonly cause: unknown;
 
   constructor(message: string, options?: { code?: string; meta?: AppErrorMeta; cause?: unknown }) {
     super(message);
     this.name = APPERROR;
     this.code = options?.code ?? APP_ERROR;
     this.meta = options?.meta ?? {};
-    this.cause = options?.cause ?? undefined;
+    // Match native ES2022 Error cause semantics: own, writable, configurable, NON-enumerable.
+    // The previous own enumerable assignment leaked the cause (often internal errors with
+    // stack traces) into `{ ...err }` spreads and generic object serializers.
+    Object.defineProperty(this, "cause", {
+      value: options?.cause ?? undefined,
+      writable: true,
+      enumerable: false,
+      configurable: true,
+    });
     Object.setPrototypeOf(this, AppError.prototype);
+    // V8: drop the AppError constructor frame from the stack (no-op elsewhere).
+    const capture = (Error as unknown as { captureStackTrace?: (t: object, c?: unknown) => void })
+      .captureStackTrace;
+    if (typeof capture === "function") capture(this, AppError);
   }
 
   /** Serialize to a plain object (name, message, code, meta). */
@@ -29,4 +42,16 @@ export class AppError extends Error {
       meta: this.meta,
     };
   }
+}
+
+/** Type guard for AppError (instanceof plus duck-type for cross-realm/deserialized instances). */
+export function isAppError(value: unknown): value is AppError {
+  if (value instanceof AppError) return true;
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { name?: unknown }).name === APPERROR &&
+    typeof (value as { code?: unknown }).code === "string" &&
+    typeof (value as { message?: unknown }).message === "string"
+  );
 }
