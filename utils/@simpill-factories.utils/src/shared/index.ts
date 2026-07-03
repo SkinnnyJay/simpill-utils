@@ -1,3 +1,17 @@
-export { createFactory } from "./create-factory";
-export { type ErrorConstructor, errorFactory } from "./error-factory";
-export { resetSingletonFactory, singletonFactory } from "./singleton-factory";
+export {
+  type BuildContext,
+  createFactory,
+  type FactoryFn,
+  type ListOverrides,
+} from "./create-factory";
+export {
+  type ErrorConstructor,
+  type ErrorFactoryOptions,
+  type ErrorFactorySettings,
+  errorFactory,
+} from "./error-factory";
+export {
+  resetSingletonFactory,
+  singletonAsyncFactory,
+  singletonFactory,
+} from "./singleton-factory";
