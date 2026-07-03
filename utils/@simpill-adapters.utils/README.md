@@ -40,21 +40,37 @@ const wrapped = createAdapter(myImpl);
 
 | Feature | Description |
 |---------|-------------|
-| **CacheAdapter** | get, set, delete, has — sync or async; no getMany/deleteMany; memoryCacheAdapter has no TTL/eviction |
+| **CacheAdapter** | get, set (with optional advisory ttlMs), delete, has — sync or async; optional clear/getMany/setMany/deleteMany/keys capabilities (keyv-style) |
+| **AsyncCacheAdapter** | Fully promise-based cache shape; get one via asAsyncCacheAdapter |
 | **LoggerAdapter** | debug, info, warn, error — minimal; use with logger.utils setLoggerAdapter |
-| **memoryCacheAdapter** | Sync Map-based cache; for TTL/LRU use cache.utils |
-| **consoleLoggerAdapter** | Wraps console-like (log/info/warn/error) into LoggerAdapter |
-| **createAdapter** | Identity: use to type a superset implementation as interface T (e.g. for DI) |
+| **memoryCacheAdapter** | Sync Map-based cache; optional lazy TTL (no timers, edge-safe) and LRU maxSize eviction with onEvict callback |
+| **asAsyncCacheAdapter** | Normalizes any CacheAdapter (sync/async/mixed) to all-Promise; batch/clear fall back to singular ops |
+| **namespacedCacheAdapter** | Key-prefixed view of a shared string-keyed backend; clear() only touches its own namespace |
+| **noopCacheAdapter** | Stores nothing — disable caching in DI without branching |
+| **consoleLoggerAdapter** | Wraps console-like into LoggerAdapter; any missing method (incl. warn/error) falls back to log |
+| **noopLoggerAdapter** | Frozen logger that discards everything |
+| **prefixLoggerAdapter** | Prepends a prefix to every message of a wrapped logger |
+| **levelFilterLoggerAdapter** | Drops calls below a minimum level (debug < info < warn < error) |
+| **createAdapter** | Identity: compile-time-only typed view of a superset implementation (type param must be explicit) |
+| **scopedAdapter** | Runtime-narrowed view: only listed members exist, methods bound to the implementation |
 
 ---
 
 ## API Reference
 
-- **CacheAdapter**&lt;K, V&gt; — get, set, delete, has. Methods may be **sync or async** (return type is union); consumers should await when using an async implementation. No getMany/deleteMany; implement batch ops on top of get/set/delete if needed.
+- **CacheAdapter**&lt;K, V&gt; — get, set(key, value, ttlMs?), delete, has. Methods may be **sync or async** (return type is union); consumers should await when using an async implementation, or normalize once with **asAsyncCacheAdapter**. `ttlMs` is advisory (implementations without TTL may ignore it). Optional capabilities: clear, getMany, setMany (entries `{ key, value, ttlMs? }`, keyv convention), deleteMany, keys.
+- **AsyncCacheAdapter**&lt;K, V&gt; — the fully promise-based shape: every method (including batch ops, clear, keys) present and returning a Promise.
 - **LoggerAdapter** — debug, info, warn, error (message + ...args). Minimal interface; for structured log types use your logger (e.g. @simpill/logger.utils) and wrap with an adapter that implements this shape.
-- **memoryCacheAdapter**&lt;K, V&gt;() → CacheAdapter&lt;K, V&gt; — **sync**, Map-based; **no TTL or eviction**. For TTL/LRU use @simpill/cache.utils and wrap with an adapter if needed.
-- **consoleLoggerAdapter**(consoleLike) → LoggerAdapter — uses log for debug/info when debug/info are missing.
-- **createAdapter**&lt;T&gt;(impl: T) → T — **identity**: returns impl unchanged. Use when your implementation has a **superset** of interface T and you want a typed view (e.g. for DI or testing) so callers only see T.
+- **memoryCacheAdapter**&lt;K, V&gt;(options?) → MemoryCacheAdapter&lt;K, V&gt; — **sync**, Map-based. With no options it behaves exactly like a plain Map. Options: `ttlMs` (default TTL, lazy keyv-style expiry at read time — **no timers**, edge-safe), `maxSize` (LRU eviction, recency updated on get), `onEvict(key, value, reason)` with reason `"evicted" | "expired"`. Per-set `ttlMs` overrides the default; NaN/zero/negative/Infinity ttls throw instead of creating immortal or instantly-dead entries. Implements clear/getMany/setMany/deleteMany/keys.
+- **asAsyncCacheAdapter**(cache) → AsyncCacheAdapter — normalizes sync/async/mixed adapters. Batch ops use the adapter's native getMany/setMany/deleteMany when present, otherwise fall back to singular ops. clear() uses native clear, falls back to keys()+delete, and otherwise rejects with a descriptive TypeError instead of silently doing nothing.
+- **namespacedCacheAdapter**(cache, namespace, separator?) → AsyncCacheAdapter&lt;string, V&gt; — prefixes every key so multiple consumers share one backend without collisions. clear()/keys() cover keys written through the wrapper, so clearing one namespace never touches a sibling's entries.
+- **noopCacheAdapter**() → CacheAdapter — stores nothing (get → undefined, has → false). Disable caching via DI without call-site branching.
+- **consoleLoggerAdapter**(consoleLike) → LoggerAdapter — any missing method (debug, info, **warn, error**) falls back to log, so a `{ log }`-only object is valid. Methods are looked up at call time, so spies patched in after wrapping are honored.
+- **noopLoggerAdapter** — frozen LoggerAdapter that discards everything.
+- **prefixLoggerAdapter**(logger, prefix) → LoggerAdapter — prepends prefix to every message.
+- **levelFilterLoggerAdapter**(logger, minLevel) → LoggerAdapter — forwards only calls at or above minLevel; unknown levels throw RangeError. **LOG_LEVELS** / **LogLevel** exported.
+- **createAdapter**&lt;T&gt;(impl: T) → T — **identity**: returns impl unchanged. The type parameter must be **explicit** (`createAdapter<CacheAdapter>(redisImpl)`); when inferred, T becomes the concrete type and no narrowing happens. Compile-time only: at runtime every superset member is still reachable.
+- **scopedAdapter**(impl, members) → Pick&lt;T, K&gt; — runtime-narrowed view: only listed members exist on the result, methods are **bound** to impl (destructuring keeps `this` — destructuring a raw Map method throws), non-function members are live getters.
 
 ### createAdapter value
 
@@ -74,8 +90,9 @@ Use **LoggerAdapter** as the contract for @simpill/logger.utils: pass **consoleL
 
 ### What we don’t provide
 
-- **Pino / Winston adapters** — No pre-built adapters for pino or winston. Implement an object with `debug`, `info`, `warn`, `error` that forwards to your logger (e.g. `pino.info(msg)` or `winston.info(msg)`).
+- **Pino / Winston adapters** — No pre-built adapters for pino or winston. Implement an object with `debug`, `info`, `warn`, `error` that forwards to your logger (e.g. `pino.info(msg)` or `winston.info(msg)`); combine with prefixLoggerAdapter / levelFilterLoggerAdapter as needed.
 - **Structured log types** — **LoggerAdapter** is message + ...args only. For structured fields (ECS, log levels, correlation IDs), use @simpill/logger.utils and pass an adapter that implements this interface; the logger layer handles structure.
+- **Timer-based cache expiry** — memoryCacheAdapter expiry is lazy (checked at read time). Entries that are never read again stay in the Map until read, evicted, or cleared; use maxSize to bound memory.
 
 ---
 
