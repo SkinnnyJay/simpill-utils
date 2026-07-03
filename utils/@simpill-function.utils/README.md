@@ -59,19 +59,19 @@ import { ... } from "@simpill/function.utils/shared";  // Shared only
 
 ## API Reference
 
-- **debounce**(fn, wait) → returns a **CancellableFunction**: same signature plus `.cancel()`, `.flush()`, `.pending()`. No `leading`/`trailing`/`maxWait`; invokes only after `wait` ms of no further calls.
-- **throttle**(fn, wait, options?) → **ThrottleOptions**: `leading` (default true), `trailing` (default true). Returns CancellableFunction with `.cancel()`, `.flush()`, `.pending()`.
-- **once**(fn) → runs `fn` only on the first call; every subsequent call returns the same cached result. **No reset** — there is no API to “run again”.
+- **debounce**(fn, wait, options?) → returns a **CancellableFunction**: same signature plus `.cancel()`, `.flush()`, `.pending()`. **DebounceOptions**: `leading` (default false), `trailing` (default true), `maxWait` (bounds total delay under continuous calls — starvation guard), `signal` (AbortSignal cancellation). Invokes with the latest args, preserves `this`, and returns/caches the last result (`.flush()` returns it).
+- **throttle**(fn, wait, options?) → **ThrottleOptions**: `leading` (default true), `trailing` (default true), `signal` (AbortSignal). Returns CancellableFunction with `.cancel()`, `.flush()`, `.pending()`. The trailing invocation always receives the **latest** arguments provided during the window (lodash contract).
+- **once**(fn) → runs `fn` only on the first call; every subsequent call returns the same cached result. Preserves `this`. If the single invocation throws, the same error is rethrown on subsequent calls. **No reset** — there is no API to “run again”.
 - **pipe**(...fns) → composed function (left-to-right: first fn applied first). **Sync only**; for async pipelines use `pipeAsync` from `@simpill/patterns.utils`.
 - **compose**(...fns) → composed function (right-to-left). Sync only.
-- **pipeWith** / **composeWith** → typed overloads for pipe/compose with distinct input/output types.
+- **pipeWith** / **composeWith** → typed overloads for pipe/compose with distinct input/output types (inference up to 12 functions for `pipeWith`, 8 for `composeWith`, untyped rest fallback beyond that).
 - **spreadArgs**(args), **fillArgs**(template, values), **requireArgs**(args, count), **firstArg**/ **lastArg**/ **restArgs**(args, from?) — argument helpers (see below).
 - **setAnnotation**(target, key, value), **getAnnotation**(target, key), **hasAnnotation**, **deleteAnnotation**, **getAnnotations** — metadata on objects (validation, DI, plugins).
 - **noop**() → no-op function
 
 ### This binding
 
-`debounce`, `throttle`, and `once` do not preserve `this`. For methods, wrap: `debounce(() => obj.method(), 100)` or pass a bound function: `debounce(obj.method.bind(obj), 100)`.
+`debounce`, `throttle`, and `once` preserve `this`, so they can wrap methods directly: `obj.save = debounce(obj.save, 100)`. Binding via `.bind(obj)` or an arrow wrapper still works too.
 
 ### Once behavior
 

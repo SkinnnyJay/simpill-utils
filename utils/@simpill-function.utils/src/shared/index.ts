@@ -15,6 +15,7 @@ export {
 } from "./arguments.utils";
 export {
   type CancellableFunction,
+  type DebounceOptions,
   debounce,
   type ThrottleOptions,
   throttle,
