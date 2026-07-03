@@ -4,7 +4,8 @@
   "description": "Test patterns, faker wrapper, enricher, and test-runner helpers (Node and Edge).",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/test.utils.git"
+    "url": "https://github.com/SkinnnyJay/simpill-utils.git",
+    "directory": "utils/@simpill-test.utils"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -86,9 +87,9 @@
     "node": ">=16.0.0"
   },
   "bugs": {
-    "url": "https://github.com/SkinnnyJay/test.utils/issues"
+    "url": "https://github.com/SkinnnyJay/simpill-utils/issues"
   },
-  "homepage": "https://github.com/SkinnnyJay/test.utils#readme",
+  "homepage": "https://github.com/SkinnnyJay/simpill-utils/tree/main/utils/@simpill-test.utils#readme",
   "typesVersions": {
     "*": {
       "client": [

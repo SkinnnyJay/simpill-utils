@@ -1,24 +1,36 @@
 export { DEFAULT_SEED, FAKE } from "./constants";
 export {
   createEnricher,
-  type Enricher,
+  Enricher,
   type EnrichOptions,
 } from "./enricher";
 export {
   createFaker,
-  type FakerWrapper,
+  FakerWrapper,
   type FakerWrapperOptions,
 } from "./faker-wrapper";
-export { createSeededRandom, randomInt, randomString } from "./random";
+export {
+  createSeededRandom,
+  DEFAULT_ALPHABET,
+  randomInt,
+  randomString,
+} from "./random";
 export {
   createTestPatterns,
+  type FixtureContext,
   type FixtureFactory,
-  type TestPatterns,
+  TestPatterns,
 } from "./test-patterns";
 export {
   type AsyncVoidFn,
+  type Deferred,
+  type DeferredState,
   deferred,
   ref,
   runAsync,
+  type WaitMsOptions,
+  type WaitUntilOptions,
+  WaitUntilTimeoutError,
   waitMs,
+  waitUntil,
 } from "./vitest-test-utils";
