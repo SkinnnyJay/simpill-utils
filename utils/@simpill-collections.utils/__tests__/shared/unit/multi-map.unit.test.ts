@@ -70,3 +70,22 @@ describe("MultiMap", () => {
     expect(m.deleteEntry("a", 1)).toBe(true);
   });
 });
+
+describe("MultiMap (uplift)", () => {
+  it("flatEntries, flatValues, and countValues cover per-value iteration", () => {
+    const m = new MultiMap<string, number>();
+    m.add("a", 1);
+    m.add("a", 2);
+    m.add("b", 3);
+    expect(m.countValues()).toBe(3);
+    expect(m.size).toBe(2);
+    expect([...m.flatEntries()]).toEqual([
+      ["a", 1],
+      ["a", 2],
+      ["b", 3],
+    ]);
+    expect([...m.flatValues()]).toEqual([1, 2, 3]);
+    m.deleteEntry("a", 1);
+    expect(m.countValues()).toBe(2);
+  });
+});

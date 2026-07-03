@@ -84,3 +84,23 @@ describe("Vector", () => {
     expect(v.toArray()).toEqual([1, 2, 3]);
   });
 });
+
+describe("Vector (uplift)", () => {
+  it("insertAt(0) preserves capacity invariants after reserve()", () => {
+    const v = new Vector<number>();
+    v.reserve(8);
+    v.push(1);
+    v.push(2);
+    v.insertAt(0, 0);
+    // Previously Array#unshift grew the raw buffer past the reserved capacity.
+    expect(v.capacity()).toBe(8);
+    expect(v.toArray()).toEqual([0, 1, 2]);
+    expect(v.size).toBe(3);
+  });
+
+  it("iterates lazily in index order", () => {
+    const v = Vector.fromArray([1, 2, 3]);
+    expect([...v]).toEqual([1, 2, 3]);
+    expect(v.size).toBe(3);
+  });
+});
