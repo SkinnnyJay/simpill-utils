@@ -38,6 +38,7 @@ export function loadEnvFiles(
 
 export function applyOverrides(
   envCache: Map<string, string>,
+  rawCache: Map<string, string>,
   overrides?: Readonly<Record<string, string>>
 ): void {
   if (!overrides) {
@@ -45,6 +46,10 @@ export function applyOverrides(
   }
   for (const [key, value] of Object.entries(overrides)) {
     envCache.set(key, value);
+    // rawCache must track overrides too: previously getRawValue() and
+    // isEncrypted() kept serving the PRE-override raw value, so an
+    // override of an encrypted key still reported isEncrypted() === true.
+    rawCache.set(key, value);
   }
 }
 
