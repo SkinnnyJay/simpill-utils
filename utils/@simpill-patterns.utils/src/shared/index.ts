@@ -34,15 +34,33 @@ export { pipeAsync } from "./pipe-async";
 export { createMethodProxy, type MethodProxyHooks } from "./proxy";
 export { type RaceOkOptions, raceOk } from "./race-ok";
 export {
+  andThen,
+  andThenAsync,
+  combine,
+  combineWithAllErrors,
   err,
+  fromNullable,
   fromPromise,
   fromThrowable,
   isErr,
   isOk,
+  map,
+  mapAsync,
+  mapErr,
+  match,
   ok,
+  orElse,
   type Result,
+  safeTry,
+  safeTryAsync,
+  safeUnwrap,
+  tap,
+  tapErr,
   toResult,
+  unwrap,
+  unwrapErr,
   unwrapOr,
+  unwrapOrElse,
 } from "./result";
 export {
   createStateMachine,

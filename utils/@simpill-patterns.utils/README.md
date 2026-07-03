@@ -139,19 +139,41 @@ import { ... } from "@simpill/patterns.utils/shared"; // Shared only
 
 ### Result combinators
 
-This package does **not** provide **map**, **flatMap**, **mapError**, or **andThen** on Result. Use **isOk** / **isErr** and branch, or **unwrapOr**(r, default). To transform: `isOk(r) ? ok(f(r.value)) : r`; to chain async: use **fromPromise** / **toResult** in sequence and check **isOk** between steps. For a full combinator set use **fp-ts** or **neverthrow**.
+Full combinator set, neverthrow-parity, as tree-shakeable standalone functions over the same plain-object Result — no classes, no extra dependency:
+
+- **Transform**: `map(r, fn)`, `mapErr(r, fn)`, `andThen(r, fn)` (flatMap; Err short-circuits), `orElse(r, fn)` (error recovery), `tap(r, fn)` / `tapErr(r, fn)` (side effects, result passes through).
+- **Consume**: `match(r, onOk, onErr)` — exhaustive fold; both branches must be handled.
+- **Aggregate**: `combine(results)` — Ok(values[]) or the first Err; `combineWithAllErrors(results)` — collects every error.
+- **Interop**: `fromNullable(value, onNullish)`; `fromThrowable(fn, mapError?)` now takes an optional error mapper.
+
+```ts
+const r = andThen(parse(input), (n) => (n > 0 ? ok(n * 2) : err("must be positive")));
+const msg = match(r, (v) => `got ${v}`, (e) => `failed: ${e}`);
+```
+
+**safeTry** emulates Rust's `?` operator — `yield* safeUnwrap(result)` unwraps an Ok or early-returns the Err:
+
+```ts
+const r = safeTry(function* () {
+  const user = yield* safeUnwrap(parseUser(raw));
+  const plan = yield* safeUnwrap(lookupPlan(user));
+  return ok({ user, plan });
+}); // Result<{user, plan}, ParseError | LookupError>
+```
+
+`safeTryAsync` is the same over an async generator (awaits allowed in the body).
 
 ### Async Result
 
-**toResult**(promise, mapError?) and **fromPromise**(fn, mapError?) turn a Promise into **Promise&lt;Result&lt;T, AppError&gt;&gt;** (default **mapError** wraps to AppError). Use them for async I/O; combine with **raceOk** for “first success.” For retry that returns Result use **@simpill/resilience.utils** **retryResult**.
+**toResult**(promise, mapError?) and **fromPromise**(fn, mapError?) turn a Promise into **Promise&lt;Result&lt;T, AppError&gt;&gt;** (default **mapError** wraps to AppError). For chaining: **mapAsync**(r, asyncFn) transforms an Ok asynchronously, and **andThenAsync**(rOrPromise, fn) chains `Promise<Result>` steps linearly with Err short-circuit — no manual isOk checks between steps. Combine with **raceOk** for “first success.” For retry that returns Result use **@simpill/resilience.utils** **retryResult**.
 
 ### All exports
 
-The **API Reference** above lists every public export. From **shared**: Result (ok, err, isOk, isErr, unwrapOr, fromThrowable, toResult, fromPromise), pipeAsync, strategySelector, strategySelectorOptional, chainOfResponsibility (handled, unhandled), Command, Adapter, Builder, Decorator, Facade, Factory, Flyweight, Mediator, Observable, Proxy, StateMachine, Composite helpers, raceOk. Client/server re-export the same; see package **index** and **shared/index** for the full list.
+The **API Reference** above lists every public export. From **shared**: Result (ok, err, isOk, isErr, map, mapErr, andThen, orElse, tap, tapErr, match, unwrap, unwrapErr, unwrapOr, unwrapOrElse, combine, combineWithAllErrors, fromNullable, fromThrowable, mapAsync, andThenAsync, safeTry, safeTryAsync, safeUnwrap, toResult, fromPromise), pipeAsync, strategySelector, strategySelectorOptional, chainOfResponsibility (handled, unhandled), Command, Adapter, Builder, Decorator, Facade, Factory, Flyweight, Mediator, Observable, Proxy, StateMachine, Composite helpers, raceOk. Client/server re-export the same; see package **index** and **shared/index** for the full list.
 
 ### Unwrap (value or throw)
 
-There is **no** **unwrap**(r) that returns value or throws. Use **unwrapOr**(r, fallback) for a default, or `if (isOk(r)) return r.value; throw r.error` (or return a typed error response). This avoids hidden throws and keeps handling explicit.
+**unwrap**(r) returns the Ok value or throws (Error instances rethrown as-is; other error values wrapped with `cause`). **unwrapErr**(r) returns the Err value or throws on Ok. Prefer **unwrapOr**(r, fallback) / **unwrapOrElse**(r, (e) => fallback) or **match** at boundaries where throwing is not acceptable — unwrap is for the edges where an Err is a programmer error.
 
 ### pipeAsync and cancellation
 
@@ -163,17 +185,26 @@ There is **no** **unwrap**(r) that returns value or throws. Use **unwrapOr**(r, 
 
 ### Chaining Results
 
-There is no **flatMap**/chain helper. Chain by sequencing **fromPromise** and branching:
+Sync: **andThen** chains Result-returning steps with Err short-circuit. Async: **andThenAsync** does the same over `Promise<Result>`:
 
 ```ts
-const a = await fromPromise(() => loadUser(id));
-if (isErr(a)) return a;
-const b = await fromPromise(() => loadOrders(a.value.id));
-if (isErr(b)) return b;
-return ok({ user: a.value, orders: b.value });
+const r = await andThenAsync(
+  andThenAsync(fromPromise(() => loadUser(id)), (user) =>
+    mapAsync(fromPromise(() => loadOrders(user.id)), async (orders) => ({ user, orders }))
+  ),
+  (both) => ok(both)
+);
 ```
 
-Or use **pipeAsync** with steps that return **Result** and a final **unwrapOr** or single **isOk** check at the end.
+Or, flatter, with **safeTryAsync**:
+
+```ts
+const r = await safeTryAsync(async function* () {
+  const user = yield* safeUnwrap(await fromPromise(() => loadUser(id)));
+  const orders = yield* safeUnwrap(await fromPromise(() => loadOrders(user.id)));
+  return ok({ user, orders });
+});
+```
 
 ---
 

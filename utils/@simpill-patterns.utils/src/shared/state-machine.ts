@@ -46,7 +46,10 @@ export function createStateMachine<S extends string, E extends string, C = undef
     can: (event) => transitions[currentState]?.[event] != null,
     transition: (event, context) => {
       const next = resolveTransition(currentState, event, context);
-      if (!next) {
+      // `=== undefined`, not falsy: "" is a legal state literal — the previous
+      // `!next` check treated a transition into an empty-string state as
+      // "no transition" and threw (or silently stayed put with allowUnknown).
+      if (next === undefined) {
         if (options?.allowUnknown) {
           return currentState;
         }

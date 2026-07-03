@@ -22,6 +22,10 @@ export const ERROR_CHAIN_NO_HANDLER_HANDLED = "No handler handled the input." as
 export const ERROR_STATE_MACHINE_NO_TRANSITION_PREFIX = "No transition for event: " as const;
 /** Default mapError message for unknown error. */
 export const ERROR_UNKNOWN_ERROR = "Unknown error" as const;
+/** unwrap() called on an Err holding a non-Error value. */
+export const ERROR_UNWRAP_ERR = "Called unwrap on an Err result" as const;
+/** unwrapErr() called on an Ok. */
+export const ERROR_UNWRAP_ERR_OK = "Called unwrapErr on an Ok result" as const;
 /** raceOk: default message when no result succeeded. */
 export const ERROR_RACE_OK_NO_RESULT = "No successful result" as const;
 /** raceOk: empty array. */

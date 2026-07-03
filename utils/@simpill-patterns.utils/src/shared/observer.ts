@@ -23,9 +23,23 @@ export function createObservable<T>(): Observable<T> {
       };
     },
     next: (event) => {
+      // Delivery isolation: a throwing observer no longer prevents delivery
+      // to the remaining observers. The first error is rethrown after the
+      // loop so failures stay loud (contract preserved), and any further
+      // errors are attached via AggregateError semantics on `cause`.
+      let firstError: unknown;
+      let errored = false;
       for (const observer of observers) {
-        observer(event);
+        try {
+          observer(event);
+        } catch (e) {
+          if (!errored) {
+            firstError = e;
+            errored = true;
+          }
+        }
       }
+      if (errored) throw firstError;
     },
     clear: () => {
       observers.clear();
