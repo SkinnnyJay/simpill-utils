@@ -4,7 +4,8 @@
   "description": "Typed metadata store and annotation helpers for symbols and keys (Node and Edge).",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/annotations.utils.git"
+    "url": "https://github.com/SkinnnyJay/simpill-utils.git",
+    "directory": "utils/@simpill-annotations.utils"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -84,9 +85,9 @@
     "node": ">=16.0.0"
   },
   "bugs": {
-    "url": "https://github.com/SkinnnyJay/annotations.utils/issues"
+    "url": "https://github.com/SkinnnyJay/simpill-utils/issues"
   },
-  "homepage": "https://github.com/SkinnnyJay/annotations.utils#readme",
+  "homepage": "https://github.com/SkinnnyJay/simpill-utils/tree/main/utils/@simpill-annotations.utils#readme",
   "typesVersions": {
     "*": {
       "client": [
