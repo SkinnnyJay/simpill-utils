@@ -7,6 +7,7 @@
 import { LOG_LEVEL, LOGGER_CONTEXT, type LogLevel } from "../shared/constants";
 import { simpleFormatter } from "../shared/formatters";
 import type { LogEntry, Logger, LoggerOptions, LogMetadata } from "../shared/types";
+import { LOG_LEVEL_PRIORITY } from "../shared/types";
 
 /**
  * Global flag to enable/disable mock logger for testing
@@ -79,19 +80,54 @@ function writeEdgeLogLine(
  * Create a lightweight logger for Edge Runtime
  *
  * @param name - Logger name/context
- * @param options - Optional configuration (limited in edge)
+ * @param options - Optional configuration. `options.minLevel` IS honored
+ *   (the frozen version accepted LoggerOptions but silently ignored it —
+ *   `createEdgeLogger("X", { minLevel: "ERROR" })` still logged everything).
  * @returns Logger instance
  */
-export function createEdgeLogger(name: string, _options?: LoggerOptions): Logger {
+export function createEdgeLogger(name: string, options?: LoggerOptions): Logger {
+  const minLevel = options?.minLevel ?? LOG_LEVEL.DEBUG;
+  const minPriority = LOG_LEVEL_PRIORITY[minLevel];
+  const isEnabled = (level: LogLevel): boolean => LOG_LEVEL_PRIORITY[level] >= minPriority;
+  const write = (level: LogLevel, message: string, metadata?: LogMetadata): void => {
+    if (!isEnabled(level)) {
+      return;
+    }
+    writeEdgeLogLine(level, name, message, metadata);
+  };
   return {
     info: (message: string, metadata?: LogMetadata): void =>
-      writeEdgeLogLine(LOG_LEVEL.INFO, name, message, metadata),
+      write(LOG_LEVEL.INFO, message, metadata),
     warn: (message: string, metadata?: LogMetadata): void =>
-      writeEdgeLogLine(LOG_LEVEL.WARN, name, message, metadata),
+      write(LOG_LEVEL.WARN, message, metadata),
     debug: (message: string, metadata?: LogMetadata): void =>
-      writeEdgeLogLine(LOG_LEVEL.DEBUG, name, message, metadata),
+      write(LOG_LEVEL.DEBUG, message, metadata),
     error: (message: string, metadata?: LogMetadata): void =>
-      writeEdgeLogLine(LOG_LEVEL.ERROR, name, message, metadata),
+      write(LOG_LEVEL.ERROR, message, metadata),
+    child(nameOrMetadata: string | LogMetadata, metadata?: LogMetadata): Logger {
+      // Edge child: metadata is applied per-call via closure-free merge
+      const childName = typeof nameOrMetadata === "string" ? `${name}.${nameOrMetadata}` : name;
+      const childMeta =
+        typeof nameOrMetadata === "string" ? metadata : (nameOrMetadata as LogMetadata);
+      const childLogger = createEdgeLogger(childName, options);
+      if (!childMeta) {
+        return childLogger;
+      }
+      const wrap =
+        (fn: (message: string, meta?: LogMetadata) => void) =>
+        (message: string, meta?: LogMetadata): void =>
+          fn(message, { ...childMeta, ...meta });
+      return {
+        ...childLogger,
+        info: wrap(childLogger.info),
+        warn: wrap(childLogger.warn),
+        debug: wrap(childLogger.debug),
+        error: wrap(childLogger.error),
+      };
+    },
+    isLevelEnabled(level: LogLevel): boolean {
+      return !isMockLoggerEnabled && isEnabled(level);
+    },
   };
 }
 

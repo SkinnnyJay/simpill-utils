@@ -4,12 +4,13 @@
   "description": "Lightweight, type-safe structured logging with correlation context for Node.js and Edge Runtime.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/logger.utils.git"
+    "url": "https://github.com/SkinnnyJay/simpill-utils.git",
+    "directory": "utils/@simpill-logger.utils"
   },
   "bugs": {
-    "url": "https://github.com/SkinnnyJay/logger.utils/issues"
+    "url": "https://github.com/SkinnnyJay/simpill-utils/issues"
   },
-  "homepage": "https://github.com/SkinnnyJay/logger.utils#readme",
+  "homepage": "https://github.com/SkinnnyJay/simpill-utils/tree/main/utils/@simpill-logger.utils#readme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {

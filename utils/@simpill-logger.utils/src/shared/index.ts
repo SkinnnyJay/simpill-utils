@@ -103,6 +103,16 @@ export {
   timestampFormatter,
   verboseFormatter,
 } from "./formatters";
+export {
+  createRedactor,
+  parseRedactPath,
+  type RedactCensor,
+  type RedactCensorFn,
+  type RedactCensorValue,
+  type RedactOptions,
+  type Redactor,
+} from "./redact";
+export { safeStringify, sanitizeForJson } from "./safe-stringify";
 export { createSimpleAdapter, SimpleLoggerAdapter } from "./simple-adapter";
 export {
   type ErrorInfo,
