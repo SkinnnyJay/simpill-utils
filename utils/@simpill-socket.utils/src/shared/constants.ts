@@ -32,6 +32,7 @@ export const ERROR_WS_GENERIC = "WebSocket error" as const;
 export const JITTER_MODE_NONE = "none" as const;
 export const JITTER_MODE_FULL = "full" as const;
 export const JITTER_MODE_EQUAL = "equal" as const;
+export const JITTER_MODE_DECORRELATED = "decorrelated" as const;
 
 /** Pong message/type for heartbeat (string or object.type). */
 export const PONG_VALUE = "pong" as const;
