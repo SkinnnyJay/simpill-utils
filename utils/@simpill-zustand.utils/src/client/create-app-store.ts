@@ -3,7 +3,7 @@
  * Uses zustand create (React-bound); for vanilla/store API only use createTypedStore from shared.
  */
 
-import { create, type StoreApi, type UseBoundStore } from "zustand";
+import { create, type Mutate, type StoreApi, type UseBoundStore } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import type { StateCreator } from "zustand/vanilla";
 import type { DevtoolsOptions } from "./devtools";
@@ -14,11 +14,28 @@ export type CreateAppStoreOptions<T> = {
   devtools?: DevtoolsOptions;
 };
 
+/** Store type carrying the persist middleware API (store.persist.*). */
+export type PersistedAppStore<T> = UseBoundStore<Mutate<StoreApi<T>, [["zustand/persist", T]]>>;
+
 /**
  * Creates a Zustand store with optional persist and/or devtools in one call.
  * For React apps only (uses create from "zustand" which includes React hook).
- * Order: persist then devtools around the builder.
+ * Order: devtools wraps persist wraps the builder (zustand's recommended order).
+ *
+ * When persist options are given, the RETURN TYPE now includes the persist
+ * API — `useStore.persist.rehydrate()` / `.hasHydrated()` /
+ * `.onFinishHydration()` type-check without casts. (The original asserted the
+ * store back to a bare UseBoundStore<StoreApi<T>>, erasing an API that exists
+ * at runtime.)
  */
+export function createAppStore<T>(
+  builder: StateCreator<T, [], [], T>,
+  options: CreateAppStoreOptions<T> & { persist: PersistOptions<T> }
+): PersistedAppStore<T>;
+export function createAppStore<T>(
+  builder: StateCreator<T, [], [], T>,
+  options?: CreateAppStoreOptions<T>
+): UseBoundStore<StoreApi<T>>;
 export function createAppStore<T>(
   builder: StateCreator<T, [], [], T>,
   options?: CreateAppStoreOptions<T>
