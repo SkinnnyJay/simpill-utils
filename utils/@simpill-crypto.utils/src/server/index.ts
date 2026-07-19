@@ -1,7 +1,26 @@
-export type { HashAlgorithm } from "../shared";
+export type {
+  DigestEncoding,
+  HashAlgorithm,
+  HashPasswordOptions,
+  HkdfOptions,
+  PasswordAlgorithm,
+  Pbkdf2Options,
+} from "../shared";
 export {
+  hasArgon2,
   hash,
+  hashBuffer,
+  hashPassword,
+  hkdf,
+  hmac,
+  hmacBuffer,
+  pbkdf2,
+  randomBytesBase64Url,
   randomBytesHex,
   randomBytesSecure,
+  randomIntSecure,
+  safeEqual,
+  scryptDerive,
   timingSafeEqualBuffer,
+  verifyPassword,
 } from "./crypto.utils";
