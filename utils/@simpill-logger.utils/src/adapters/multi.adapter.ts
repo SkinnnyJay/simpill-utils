@@ -19,9 +19,18 @@
  */
 
 import type { LoggerAdapter, LoggerAdapterConfig } from "../shared/adapter";
-import { ERROR_MESSAGES, LOG_PREFIX } from "../shared/constants";
+import { ERROR_MESSAGES, LOG_PREFIX, type LogLevel } from "../shared/constants";
 import { VALUE_0 } from "../shared/internal-constants";
 import type { LogEntry, LogMetadata } from "../shared/types";
+
+/** Rethrow the first rejection AFTER every promise has settled. */
+function rethrowFirstRejection(results: PromiseSettledResult<void>[]): void {
+  for (const result of results) {
+    if (result.status === "rejected") {
+      throw result.reason;
+    }
+  }
+}
 
 /**
  * Multi-transport adapter - broadcasts logs to multiple adapters
@@ -85,31 +94,52 @@ export class MultiTransportAdapter implements LoggerAdapter {
   }
 
   /**
-   * Flush all adapters that support flushing
+   * Fast level gate: enabled if ANY transport would emit at this level.
+   * Transports without a gate are treated as enabled (can't be skipped safely).
    */
-  async flush(): Promise<void> {
-    const flushPromises = this.adapters
-      .filter(
-        (adapter): adapter is LoggerAdapter & { flush: () => Promise<void> } =>
-          adapter.flush !== undefined
-      )
-      .map((adapter) => adapter.flush());
-
-    await Promise.all(flushPromises);
+  isLevelEnabled(level: LogLevel): boolean {
+    for (const adapter of this.adapters) {
+      if (!adapter.isLevelEnabled || adapter.isLevelEnabled(level)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
-   * Destroy all adapters that support cleanup
+   * Flush all adapters that support flushing.
+   * Uses allSettled so one failing transport cannot prevent the others from
+   * flushing (the frozen Promise.all rejected on the FIRST failure while other
+   * flushes were abandoned mid-air); the first failure is still rethrown after
+   * every transport has settled.
+   */
+  async flush(): Promise<void> {
+    const results = await Promise.allSettled(
+      this.adapters
+        .filter(
+          (adapter): adapter is LoggerAdapter & { flush: () => Promise<void> } =>
+            adapter.flush !== undefined
+        )
+        .map((adapter) => adapter.flush())
+    );
+    rethrowFirstRejection(results);
+  }
+
+  /**
+   * Destroy all adapters that support cleanup.
+   * allSettled semantics: every transport gets its destroy() even when one
+   * throws; the first failure is rethrown after all have settled.
    */
   async destroy(): Promise<void> {
-    const destroyPromises = this.adapters
-      .filter(
-        (adapter): adapter is LoggerAdapter & { destroy: () => Promise<void> } =>
-          adapter.destroy !== undefined
-      )
-      .map((adapter) => adapter.destroy());
-
-    await Promise.all(destroyPromises);
+    const results = await Promise.allSettled(
+      this.adapters
+        .filter(
+          (adapter): adapter is LoggerAdapter & { destroy: () => Promise<void> } =>
+            adapter.destroy !== undefined
+        )
+        .map((adapter) => adapter.destroy())
+    );
+    rethrowFirstRejection(results);
   }
 
   /**

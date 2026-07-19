@@ -135,6 +135,18 @@ export interface Logger {
   warn(message: string, metadata?: LogMetadata): void;
   debug(message: string, metadata?: LogMetadata): void;
   error(message: string, metadata?: LogMetadata): void;
+  /**
+   * Create a child logger (optional; always present on factory-created loggers).
+   * `child(metadata)` keeps the parent name; `child(name, metadata?)` appends
+   * ".name" to the parent name. Metadata is inherited and merged.
+   */
+  child?(nameOrMetadata: string | LogMetadata, metadata?: LogMetadata): Logger;
+  /**
+   * True if a log at this level would be emitted (optional; always present on
+   * factory-created loggers). Use to skip expensive metadata construction:
+   * `if (logger.isLevelEnabled?.("DEBUG")) logger.debug(msg, buildHugeMeta())`.
+   */
+  isLevelEnabled?(level: LogLevel): boolean;
 }
 
 /**

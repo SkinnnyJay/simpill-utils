@@ -12,14 +12,28 @@ import {
 import { getLogContext } from "./context";
 import { hasEnvConfig, loadAdapterConfigFromEnv } from "./env.config";
 import { VALUE_0 } from "./internal-constants";
+import { createRedactor, type Redactor } from "./redact";
+import { safeStringify } from "./safe-stringify";
 import { SimpleLoggerAdapter } from "./simple-adapter";
 import type { LogEntry, Logger, LogMetadata } from "./types";
 import { normalizeErrorsInMetadata } from "./types";
 
 let globalAdapter: LoggerAdapter | null = null;
 let globalConfig: LoggerAdapterConfig = {};
+let globalRedactor: Redactor | null = null;
 let isMockEnabled = false;
 let isEnvConfigApplied = false;
+
+/** (Re)compile the redactor from current config. Throws on malformed paths. */
+function compileRedactor(): void {
+  const redact = globalConfig.redact;
+  if (!redact) {
+    globalRedactor = null;
+    return;
+  }
+  const paths = Array.isArray(redact) ? redact : (redact as { paths: readonly string[] }).paths;
+  globalRedactor = paths && paths.length > VALUE_0 ? createRedactor(redact) : null;
+}
 
 const loggerCache = new Map<string, Logger>();
 
@@ -53,13 +67,19 @@ function logAdapterError(adapterError: unknown, entry: LogEntry): void {
     process.stderr.write(
       `${LOG_PREFIX.LOGGER_ERROR} ${ERROR_MESSAGES.ADAPTER_FAILED}: ${errorMsg}\n`
     );
-    process.stderr.write(`${LOG_PREFIX.FALLBACK} ${JSON.stringify(entry)}\n`);
+    // safeStringify: a circular metadata object must not take down the
+    // last-resort fallback too (JSON.stringify here used to throw, and the
+    // entry was silently lost on BOTH streams)
+    process.stderr.write(`${LOG_PREFIX.FALLBACK} ${safeStringify(entry)}\n`);
   } catch {
     // Never throw from logger
   }
 }
 
 function createLoggerFromAdapter(adapter: LoggerAdapter, name: string): Logger {
+  // Bound once per logger; a disabled level then costs one call + one branch
+  const levelGate = adapter.isLevelEnabled ? adapter.isLevelEnabled.bind(adapter) : null;
+
   const createLogMethod =
     (level: LogLevel) =>
     (message: string, metadata?: LogMetadata): void => {
@@ -67,10 +87,21 @@ function createLoggerFromAdapter(adapter: LoggerAdapter, name: string): Logger {
         return;
       }
 
+      // Fast level gate BEFORE any entry construction (pino's core principle:
+      // disabled levels should be near-noops). Opt-in via adapter.isLevelEnabled
+      // so custom adapters keep their exact previous behavior.
+      if (levelGate && !levelGate(level)) {
+        return;
+      }
+
       const context = getLogContext();
       const mergedMetadata = context ? { ...context, ...metadata } : metadata;
 
-      const normalizedMetadata = normalizeErrorsInMetadata(mergedMetadata);
+      let normalizedMetadata = normalizeErrorsInMetadata(mergedMetadata);
+
+      if (globalRedactor && normalizedMetadata) {
+        normalizedMetadata = globalRedactor(normalizedMetadata);
+      }
 
       const entry: LogEntry = {
         level,
@@ -87,12 +118,26 @@ function createLoggerFromAdapter(adapter: LoggerAdapter, name: string): Logger {
       }
     };
 
-  return {
+  const logger: Logger = {
     info: createLogMethod(LOG_LEVEL.INFO),
     warn: createLogMethod(LOG_LEVEL.WARN),
     debug: createLogMethod(LOG_LEVEL.DEBUG),
     error: createLogMethod(LOG_LEVEL.ERROR),
+    child(nameOrMetadata: string | LogMetadata, metadata?: LogMetadata): Logger {
+      const childName = typeof nameOrMetadata === "string" ? `${name}.${nameOrMetadata}` : name;
+      const childMetadata =
+        typeof nameOrMetadata === "string" ? metadata : (nameOrMetadata as LogMetadata);
+      return createLoggerFromAdapter(adapter.child(childName, childMetadata), childName);
+    },
+    isLevelEnabled(level: LogLevel): boolean {
+      if (isMockEnabled) {
+        return false;
+      }
+      return levelGate ? levelGate(level) : true;
+    },
   };
+
+  return logger;
 }
 
 /** Set adapter and/or config; clears cache when adapter changes. */
@@ -111,6 +156,8 @@ export function configureLoggerFactory(options: {
   if (options.config) {
     globalConfig = { ...globalConfig, ...options.config };
   }
+
+  compileRedactor();
 
   if (globalAdapter) {
     globalAdapter.initialize(globalConfig);
@@ -194,6 +241,7 @@ export async function resetLoggerFactory(): Promise<void> {
   }
   globalAdapter = null;
   globalConfig = {};
+  globalRedactor = null;
   isMockEnabled = false;
   isEnvConfigApplied = false;
   loggerCache.clear();

@@ -1,14 +1,30 @@
-/** Buffered adapter. Never throws; call destroy() on shutdown to flush remaining. On flush failure, the failed batch is re-prepended to the buffer; order is preserved within each batch. */
+/**
+ * Buffered adapter. Never throws; call destroy() on shutdown to flush remaining.
+ *
+ * On flush failure only the entries that were NOT yet delivered to the inner
+ * adapter are re-prepended (entries the inner adapter already accepted are
+ * never replayed, so a mid-batch failure cannot cause duplicate delivery).
+ * While the inner adapter keeps failing the retry buffer is BOUNDED at
+ * 2 x maxBufferSize: beyond that the oldest entries are dropped and reported
+ * via onFlushError so a dead sink cannot grow memory without limit.
+ */
 
 import type { LoggerAdapter, LoggerAdapterConfig } from "./adapter";
-import { BUFFERED_ADAPTER_DEFAULTS } from "./constants";
+import { BUFFERED_ADAPTER_DEFAULTS, ERROR_MESSAGES, type LogLevel } from "./constants";
 import { VALUE_0 } from "./internal-constants";
 import type { LogEntry, LogMetadata } from "./types";
+
+/** Retry buffer cap = OVERFLOW_FACTOR x maxBufferSize while the inner adapter fails. */
+const OVERFLOW_FACTOR = 2;
 
 export interface BufferedAdapterConfig {
   maxBufferSize?: number;
   flushIntervalMs?: number;
-  /** Called on flush failure (default: no-op). Never throw from logger. */
+  /**
+   * Called on flush failure with the entries that were NOT delivered
+   * (requeued for retry), and on overflow with the entries that were DROPPED.
+   * Default: no-op. Never throw from logger.
+   */
   onFlushError?: (error: unknown, entries: LogEntry[]) => void;
 }
 
@@ -43,6 +59,11 @@ export class BufferedLoggerAdapter implements LoggerAdapter {
     this.buffer.push(entry);
 
     if (this.buffer.length >= this.config.maxBufferSize) {
+      if (this.isFlushing) {
+        // An async flush is in-flight; bound growth instead of skipping silently
+        this.enforceOverflowCap();
+        return;
+      }
       this.flushSync();
     }
   }
@@ -52,9 +73,23 @@ export class BufferedLoggerAdapter implements LoggerAdapter {
     return new BufferedChildAdapter(this, name, defaultMetadata);
   }
 
-  /** Never throws; errors reported via onFlushError. */
+  /** Delegate the fast level gate so buffering doesn't defeat it. */
+  isLevelEnabled(level: LogLevel): boolean {
+    return this.inner.isLevelEnabled ? this.inner.isLevelEnabled(level) : true;
+  }
+
+  /**
+   * Never throws; errors reported via onFlushError. Concurrent calls are
+   * serialized: awaiting flush() during an in-flight flush waits for that
+   * flush to complete instead of resolving early with entries still in the air.
+   */
   async flush(): Promise<void> {
-    if (this.isFlushing || this.buffer.length === VALUE_0) {
+    this.pendingFlush = this.pendingFlush.then(() => this.doFlush());
+    return this.pendingFlush;
+  }
+
+  private async doFlush(): Promise<void> {
+    if (this.buffer.length === VALUE_0) {
       return;
     }
 
@@ -62,16 +97,22 @@ export class BufferedLoggerAdapter implements LoggerAdapter {
     const entries = this.buffer;
     this.buffer = [];
 
+    let delivered = 0;
     try {
       for (const entry of entries) {
         this.inner.log(entry);
+        delivered++;
       }
       if (this.inner.flush) {
         await this.inner.flush();
       }
     } catch (err) {
-      this.config.onFlushError(err, entries);
-      this.buffer = entries.concat(this.buffer);
+      // Requeue ONLY the undelivered remainder — entries the inner adapter
+      // already accepted must not be replayed (duplicate delivery)
+      const undelivered = entries.slice(delivered);
+      this.config.onFlushError(err, undelivered);
+      this.buffer = undelivered.concat(this.buffer);
+      this.enforceOverflowCap();
     } finally {
       this.isFlushing = false;
     }
@@ -87,15 +128,38 @@ export class BufferedLoggerAdapter implements LoggerAdapter {
     const entries = this.buffer;
     this.buffer = [];
 
+    let delivered = 0;
     try {
       for (const entry of entries) {
         this.inner.log(entry);
+        delivered++;
       }
     } catch (err) {
-      this.config.onFlushError(err, entries);
-      this.buffer = entries.concat(this.buffer);
+      const undelivered = entries.slice(delivered);
+      this.config.onFlushError(err, undelivered);
+      this.buffer = undelivered.concat(this.buffer);
+      this.enforceOverflowCap();
     } finally {
       this.isFlushing = false;
+    }
+  }
+
+  /**
+   * Cap the retry buffer at OVERFLOW_FACTOR x maxBufferSize. The frozen
+   * behavior re-prepended failed batches forever: with a dead inner adapter
+   * the buffer grew without bound AND every subsequent log() retried the whole
+   * backlog synchronously. Dropped entries are reported via onFlushError.
+   */
+  private enforceOverflowCap(): void {
+    const cap = this.config.maxBufferSize * OVERFLOW_FACTOR;
+    if (this.buffer.length <= cap) {
+      return;
+    }
+    const dropped = this.buffer.splice(VALUE_0, this.buffer.length - cap);
+    try {
+      this.config.onFlushError(new Error(ERROR_MESSAGES.BUFFER_OVERFLOW), dropped);
+    } catch {
+      // Never throw from logger
     }
   }
 
@@ -109,6 +173,8 @@ export class BufferedLoggerAdapter implements LoggerAdapter {
       await this.inner.destroy();
     }
   }
+
+  private pendingFlush: Promise<void> = Promise.resolve();
 
   private startFlushTimer(): void {
     if (this.flushTimer) {
@@ -164,6 +230,11 @@ class BufferedChildAdapter implements LoggerAdapter {
       ...this.defaultMetadata,
       ...defaultMetadata,
     });
+  }
+
+  /** Delegate the fast level gate through the parent to the inner adapter. */
+  isLevelEnabled(level: LogLevel): boolean {
+    return this.parent.isLevelEnabled(level);
   }
 
   async flush(): Promise<void> {
