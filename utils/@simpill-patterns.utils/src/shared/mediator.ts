@@ -39,9 +39,21 @@ export function createMediator<TEvents extends Record<string, unknown>>(): Media
     emit: (event, payload) => {
       const set = handlers.get(event);
       if (!set) return;
+      // Delivery isolation (see observer.ts): every handler runs even if an
+      // earlier one throws; the first error is rethrown after the loop.
+      let firstError: unknown;
+      let errored = false;
       for (const handler of set) {
-        (handler as MediatorHandler<unknown>)(payload);
+        try {
+          (handler as MediatorHandler<unknown>)(payload);
+        } catch (e) {
+          if (!errored) {
+            firstError = e;
+            errored = true;
+          }
+        }
       }
+      if (errored) throw firstError;
     },
     clear: () => {
       handlers.clear();
