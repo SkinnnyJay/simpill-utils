@@ -63,3 +63,14 @@ describe("Stack", () => {
     expect(s.size).toBe(2);
   });
 });
+
+describe("Stack (uplift)", () => {
+  it("iterates lazily in LIFO order without copying", () => {
+    const s = new Stack<number>();
+    s.push(1);
+    s.push(2);
+    s.push(3);
+    expect([...s]).toEqual([3, 2, 1]);
+    expect(s.size).toBe(3); // iteration does not consume
+  });
+});

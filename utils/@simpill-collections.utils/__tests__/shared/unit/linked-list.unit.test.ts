@@ -92,3 +92,34 @@ describe("LinkedList", () => {
     expect(list.toArray()).toEqual([1, 2]);
   });
 });
+
+describe("LinkedList (uplift)", () => {
+  it("removeAt out-of-range returns undefined and removes nothing", () => {
+    const list = LinkedList.fromArray([1, 2, 3]);
+    // Previously removeAt(99) popped the tail and removeAt(-1) shifted the head.
+    expect(list.removeAt(99)).toBeUndefined();
+    expect(list.removeAt(3)).toBeUndefined();
+    expect(list.removeAt(-1)).toBeUndefined();
+    expect(list.toArray()).toEqual([1, 2, 3]);
+    expect(list.size).toBe(3);
+  });
+
+  it("iterates lazily in order and supports reversed()", () => {
+    const list = LinkedList.fromArray([1, 2, 3, 4]);
+    expect([...list]).toEqual([1, 2, 3, 4]);
+    expect([...list.reversed()]).toEqual([4, 3, 2, 1]);
+  });
+
+  it("indexes correctly from both ends (tail-walk path)", () => {
+    const n = 101;
+    const list = LinkedList.fromArray(Array.from({ length: n }, (_, i) => i));
+    expect(list.get(0)).toBe(0);
+    expect(list.get(n - 1)).toBe(n - 1);
+    expect(list.get(n - 2)).toBe(n - 2);
+    expect(list.get(Math.floor(n / 2))).toBe(Math.floor(n / 2));
+    list.set(n - 2, -1);
+    expect(list.get(n - 2)).toBe(-1);
+    expect(list.removeAt(n - 2)).toBe(-1);
+    expect(list.size).toBe(n - 1);
+  });
+});

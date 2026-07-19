@@ -37,10 +37,12 @@ export class OrderedMap<K, V> {
   }
 
   getAt(index: number): [K, V] | undefined {
-    const key = this._order[index];
-    if (key === undefined) return undefined;
-    const value = this._map.get(key);
-    return value !== undefined ? [key, value] : undefined;
+    // Bounds-checked so stored `undefined` keys/values are handled correctly
+    // (previously any entry whose value was undefined was reported missing).
+    if (index < 0 || index >= this._order.length) return undefined;
+    const key = this._order[index] as K;
+    if (!this._map.has(key)) return undefined;
+    return [key, this._map.get(key) as V];
   }
 
   keyAt(index: number): K | undefined {
@@ -59,8 +61,9 @@ export class OrderedMap<K, V> {
   values(): IterableIterator<V> {
     return (function* (order: K[], map: Map<K, V>) {
       for (const k of order) {
-        const v = map.get(k);
-        if (v !== undefined) yield v;
+        // Presence check, not value check: entries storing `undefined` were
+        // silently skipped, making iteration disagree with size.
+        if (map.has(k)) yield map.get(k) as V;
       }
     })(this._order, this._map);
   }
@@ -68,8 +71,7 @@ export class OrderedMap<K, V> {
   entries(): IterableIterator<[K, V]> {
     return (function* (order: K[], map: Map<K, V>) {
       for (const k of order) {
-        const v = map.get(k);
-        if (v !== undefined) yield [k, v];
+        if (map.has(k)) yield [k, map.get(k) as V];
       }
     })(this._order, this._map);
   }
