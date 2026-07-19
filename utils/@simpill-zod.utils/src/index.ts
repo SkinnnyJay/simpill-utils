@@ -3,20 +3,26 @@
  * @see @simpill/zod.utils/shared – runtime-agnostic helpers
  */
 
-export type { ParseResult, ValidationErrorPayload } from "./shared";
+export type { OpenApiMetadata, ParseResult, ValidationErrorPayload } from "./shared";
 export {
   booleanField,
   coerceOptionalString,
+  coerceQueryArray,
   coerceQueryBoolean,
   coerceQueryNumber,
   coerceString,
+  DEFAULT_PAGINATION_LIMIT,
   enumFromList,
   flattenZodError,
+  flattenZodErrorAll,
   formatZodError,
+  getOpenApiMetadata,
   idParamNumber,
   idParamUuid,
   isoDateOnlyString,
   isoDateString,
+  isoDateTimeWithOffset,
+  jsonString,
   limitNumber,
   lowerString,
   nonEmptyString,
@@ -34,5 +40,6 @@ export {
   toValidationError,
   trimString,
   upperString,
+  ValidationError,
   withOpenApiMetadata,
 } from "./shared";
