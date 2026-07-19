@@ -47,7 +47,7 @@ export class EnvManager implements IEnvManager {
     this.options = options;
     loadEnvFiles(this.envCache, this.rawCache, options);
     snapshotProcessEnv(this.envCache, this.rawCache);
-    applyOverrides(this.envCache, options?.overrides);
+    applyOverrides(this.envCache, this.rawCache, options?.overrides);
   }
 
   private static defaultLog(_level: "info" | "warn" | "error", message: string): void {
@@ -126,6 +126,16 @@ export class EnvManager implements IEnvManager {
 
   public static getInstance(options?: EnvManagerOptions): EnvManager {
     if (EnvManager.instance) {
+      // Silent-footgun guard: options passed after the singleton exists
+      // were dropped without a trace, so callers got a manager configured
+      // by whoever ran first. Warn loudly instead of losing the config.
+      if (options !== undefined) {
+        EnvManager.log(
+          "warn",
+          "getInstance(options) called after the instance was created — options ignored. Call resetInstance() first or configure at first use.",
+          { ignoredOptions: Object.keys(options) }
+        );
+      }
       return EnvManager.instance;
     }
     EnvManager.instance = new EnvManager(options);
@@ -136,9 +146,30 @@ export class EnvManager implements IEnvManager {
     EnvManager.instance = null;
   }
 
-  /** @deprecated Use Env class instead */
+  /**
+   * @deprecated Use Env class instead
+   *
+   * Implementation note: the previous `Object.assign(process.env, {...fns})`
+   * was broken in real Node — `process.env`'s setter coerces every assigned
+   * value to a string, so the "methods" were stored as source-code TEXT and
+   * `process.env.getString(...)` threw `TypeError: not a function`. The old
+   * tests only passed because they replaced process.env with a plain object
+   * (`process.env = { ...originalEnv }`), which jest-style setups do too.
+   * Installing the helpers on a dedicated prototype sidesteps the setter,
+   * works on the REAL process.env, and keeps them out of enumeration
+   * (Object.keys/entries and child-process env inheritance stay clean).
+   */
   public static extendProcessEnvPrototype(): void {
-    Object.assign(process.env, {
+    Object.setPrototypeOf(process.env, EnvManager.buildProcessEnvHelperPrototype());
+  }
+
+  /** @internal Restore the default prototype (used by tests/teardown). */
+  public static unextendProcessEnvPrototype(): void {
+    Object.setPrototypeOf(process.env, Object.prototype);
+  }
+
+  private static buildProcessEnvHelperPrototype(): object {
+    return Object.assign(Object.create(Object.prototype), {
       getString: (key: string, defaultValue = "") =>
         EnvManager.getInstance().getString(key, defaultValue),
       getNumber: (key: string, defaultValue = 0) =>
@@ -189,7 +220,7 @@ export class EnvManager implements IEnvManager {
     this.rawCache.clear();
     loadEnvFiles(this.envCache, this.rawCache, this.options);
     snapshotProcessEnv(this.envCache, this.rawCache);
-    applyOverrides(this.envCache, this.options?.overrides);
+    applyOverrides(this.envCache, this.rawCache, this.options?.overrides);
   }
 
   public getCacheSize(): number {

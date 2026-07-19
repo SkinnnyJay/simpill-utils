@@ -3,6 +3,8 @@
  * All errors extend EnvError for unified error handling.
  */
 
+import { redactEnvValue } from "./redact";
+
 export const ENV_ERROR_CODE = {
   /** Base error code for generic env errors */
   ENV_ERROR: "ENV_ERROR",
@@ -14,6 +16,8 @@ export const ENV_ERROR_CODE = {
   ENV_VALIDATION: "ENV_VALIDATION",
   /** Failed to decrypt an encrypted environment variable */
   ENV_DECRYPT: "ENV_DECRYPT",
+  /** One or more variables failed schema validation (createEnv) */
+  ENV_SCHEMA: "ENV_SCHEMA",
 } as const;
 
 export type EnvErrorCode = (typeof ENV_ERROR_CODE)[keyof typeof ENV_ERROR_CODE];
@@ -59,13 +63,17 @@ export class EnvParseError extends EnvError {
   public readonly expectedType: EnvParseType;
 
   constructor(key: string, rawValue: string, expectedType: EnvParseType) {
+    // Secret-like keys are redacted in BOTH the message and the stored
+    // rawValue: serialized errors (logs, crash reporters, monitoring)
+    // must never carry the secret either way.
+    const safeValue = redactEnvValue(key, rawValue);
     super(
-      `Failed to parse environment variable "${key}" as ${expectedType}: got "${rawValue}"`,
+      `Failed to parse environment variable "${key}" as ${expectedType}: got "${safeValue}"`,
       ENV_ERROR_CODE.ENV_PARSE
     );
     this.name = "EnvParseError";
     this.key = key;
-    this.rawValue = rawValue;
+    this.rawValue = String(safeValue);
     this.expectedType = expectedType;
   }
 }
@@ -77,14 +85,52 @@ export class EnvValidationError extends EnvError {
   public readonly reason: string;
 
   constructor(key: string, value: string | number | boolean, reason: string) {
+    // See EnvParseError: secret-like keys redact message AND stored value.
+    const safeValue = redactEnvValue(key, value);
     super(
-      `Environment variable "${key}" failed validation: ${reason} (got ${JSON.stringify(value)})`,
+      `Environment variable "${key}" failed validation: ${reason} (got ${JSON.stringify(safeValue)})`,
       ENV_ERROR_CODE.ENV_VALIDATION
     );
     this.name = "EnvValidationError";
     this.key = key;
-    this.value = value;
+    this.value = safeValue;
     this.reason = reason;
+  }
+}
+
+/** A single issue found by createEnv schema validation. */
+export interface EnvSchemaIssue {
+  readonly key: string;
+  readonly code:
+    | typeof ENV_ERROR_CODE.ENV_MISSING
+    | typeof ENV_ERROR_CODE.ENV_PARSE
+    | typeof ENV_ERROR_CODE.ENV_VALIDATION;
+  /** Human-readable, already secret-redacted. */
+  readonly message: string;
+  /** Raw value as received, secret-redacted. undefined when missing. */
+  readonly received?: string;
+}
+
+/**
+ * Aggregate error thrown by createEnv when any variable fails.
+ * Reports EVERY missing/invalid variable in one shot (envalid-style)
+ * instead of dying on the first, so a broken deploy is fixed in one
+ * iteration rather than N. All values are secret-redacted.
+ */
+export class EnvSchemaError extends EnvError {
+  public readonly issues: readonly EnvSchemaIssue[];
+
+  constructor(issues: readonly EnvSchemaIssue[]) {
+    const lines = issues.map((issue) => `  ${issue.key}: ${issue.message}`);
+    super(
+      `Environment validation failed (${issues.length} issue${issues.length === 1 ? "" : "s"}):\n${lines.join("\n")}`,
+      ENV_ERROR_CODE.ENV_SCHEMA
+    );
+    this.name = "EnvSchemaError";
+    this.issues = issues;
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
   }
 }
 
