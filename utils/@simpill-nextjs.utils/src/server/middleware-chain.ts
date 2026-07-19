@@ -2,25 +2,40 @@ import type { IMiddlewareChain, MiddlewareFn, RequestLike } from "../shared/inte
 
 /**
  * Creates a middleware chain: each fn runs in order; if it returns a Response, that is used;
- * otherwise next() is called. Default implementation runs all fns until one returns or next() is used.
+ * otherwise next() is called. Guarded koa-compose style: calling next() more than once from
+ * the same middleware rejects with TypeError instead of re-running the rest of the chain
+ * (the unguarded version executed the terminal handler TWICE — the double-response class).
+ * The middleware list is snapshotted per run, so use() during a dispatch cannot corrupt it.
  */
 export function createMiddlewareChain(): IMiddlewareChain {
   const fns: MiddlewareFn[] = [];
 
   return {
     use(fn: MiddlewareFn): void {
+      if (typeof fn !== "function") {
+        throw new TypeError("middleware must be a function");
+      }
       fns.push(fn);
     },
-    async run(request: RequestLike, defaultNext: () => Promise<Response>): Promise<Response> {
-      let index = 0;
-      const next = async (): Promise<Response> => {
-        if (index >= fns.length) {
-          return defaultNext();
+    run(request: RequestLike, defaultNext: () => Promise<Response>): Promise<Response> {
+      const stack = fns.slice();
+      let lastIndex = -1;
+      const dispatch = (index: number): Promise<Response> => {
+        if (index <= lastIndex) {
+          return Promise.reject(new TypeError("next() called multiple times"));
         }
-        const fn = fns[index++];
-        return fn(request, next);
+        lastIndex = index;
+        if (index >= stack.length) {
+          return Promise.resolve(defaultNext());
+        }
+        const fn = stack[index];
+        try {
+          return Promise.resolve(fn(request, () => dispatch(index + 1)));
+        } catch (err) {
+          return Promise.reject(err);
+        }
       };
-      return next();
+      return dispatch(0);
     },
   };
 }
