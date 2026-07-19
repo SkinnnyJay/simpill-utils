@@ -8,3 +8,9 @@ export {
   type HttpClient,
 } from "../client";
 export type { FetchLike, HttpRequestOptions, HttpRetryPolicy } from "../shared";
+export {
+  HttpTimeoutError,
+  isRetryableStatus,
+  parseRetryAfterMs,
+  RetryableStatusError,
+} from "../shared";
