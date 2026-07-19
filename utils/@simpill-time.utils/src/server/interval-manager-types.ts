@@ -10,7 +10,15 @@ export type TimerId = ReturnType<typeof setInterval>;
 export interface TimerOptions {
   group?: string;
   ttlMs?: number;
+  /** Unref the underlying timer(s) so they never keep the process alive. */
+  unref?: boolean;
+  /** AbortSignal that clears the timer when aborted. */
+  signal?: AbortSignal;
+  /** Called when the callback throws. Default: swallow (back-compat). */
+  onError?: (error: unknown, info: { id: string; name: string; type: TimerType }) => void;
 }
+
+export type TimerCreateOptions = Pick<TimerOptions, "ttlMs" | "unref" | "signal" | "onError">;
 
 export interface TimerFactoryOptions {
   group?: string;
@@ -23,13 +31,19 @@ export interface TimerFactory {
     name: string,
     callback: () => void,
     intervalMs: number,
-    options?: Pick<TimerOptions, "ttlMs">,
+    options?: TimerCreateOptions,
   ) => () => void;
   createTimeout: (
     name: string,
     callback: () => void,
     timeoutMs: number,
-    options?: Pick<TimerOptions, "ttlMs">,
+    options?: TimerCreateOptions,
+  ) => () => void;
+  createDriftlessInterval: (
+    name: string,
+    callback: () => void,
+    intervalMs: number,
+    options?: TimerCreateOptions,
   ) => () => void;
   destroy: (reason?: "manual" | "idle-ttl") => number;
   getGroup: () => string;
@@ -45,6 +59,8 @@ export interface ManagedInterval {
   type: TimerType;
   ttlMs?: number;
   ttlId?: ReturnType<typeof setTimeout> | null;
+  /** Removes the AbortSignal listener when the timer is cleared. */
+  abortCleanup?: (() => void) | null;
 }
 
 export interface IntervalStats {
@@ -52,5 +68,7 @@ export interface IntervalStats {
   activeTimeouts: number;
   totalCreated: number;
   totalCleared: number;
+  /** Timeouts that fired naturally (ran to completion, not cleared). */
+  totalFired: number;
   byGroup: Record<string, number>;
 }

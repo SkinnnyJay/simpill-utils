@@ -14,6 +14,8 @@ export const MS_PER_MINUTE = SECONDS_PER_MINUTE * MS_PER_SECOND;
 export const MS_PER_HOUR = SECONDS_PER_HOUR * MS_PER_SECOND;
 /** Milliseconds per day. */
 export const MS_PER_DAY = HOURS_PER_DAY * MS_PER_HOUR;
+/** Months per year. */
+export const MONTHS_PER_YEAR = 12;
 
 export const VALUE_0 = 0;
 export const VALUE_1 = 1;
