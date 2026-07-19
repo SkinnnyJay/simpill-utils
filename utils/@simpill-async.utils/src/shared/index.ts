@@ -10,7 +10,7 @@ export {
   withLimit,
 } from "./concurrency.utils";
 export { createDeferred, type Deferred, defer } from "./deferred";
-export { delay } from "./delay";
+export { type DelayOptions, delay } from "./delay";
 export { type FilterOptions, filterAsync, reduceAsync } from "./filter-reduce";
 export {
   createLimit,
@@ -37,7 +37,7 @@ export { promiseProps } from "./props";
 export { createQueue, type Queue, type QueueOptions } from "./queue";
 export { raceWithTimeout } from "./race-with-timeout";
 export { type Reflected, reflect } from "./reflect";
-export { type RetryOptions, retry } from "./retry";
+export { type RetryJitter, type RetryOptions, retry } from "./retry";
 export { mapSeries, series } from "./series";
 export { type SettleResultsOptions, settleResults } from "./settle-results";
 export { type TimedResult, timeAsync, timePromise } from "./time";

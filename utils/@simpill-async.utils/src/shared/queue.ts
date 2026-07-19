@@ -11,6 +11,7 @@ import {
   VALUE_0,
   VALUE_1,
 } from "./constants";
+import { Fifo, type FifoNode } from "./fifo";
 import type { OverflowPolicy } from "./limit";
 
 /** Options for createQueue: concurrency, autoStart, backpressure. */
@@ -41,6 +42,7 @@ type QueueTask<T> = {
   reject: (reason?: unknown) => void;
   signal?: AbortSignal;
   onAbort?: () => void;
+  node?: FifoNode<QueueTask<unknown>>;
 };
 
 const createClearError = (): Error => {
@@ -84,11 +86,11 @@ export function createQueue(options: QueueOptions = {}): Queue {
 
   let activeCount = VALUE_0;
   let paused = options.autoStart === false;
-  const queue: Array<QueueTask<unknown>> = [];
+  const queue = new Fifo<QueueTask<unknown>>();
   const idleResolvers: Array<() => void> = [];
 
   const resolveIdle = (): void => {
-    if (activeCount === VALUE_0 && queue.length === VALUE_0) {
+    if (activeCount === VALUE_0 && queue.size === VALUE_0) {
       const resolvers = idleResolvers.splice(0, idleResolvers.length);
       for (const resolve of resolvers) resolve();
     }
@@ -96,7 +98,7 @@ export function createQueue(options: QueueOptions = {}): Queue {
 
   const runNext = (): void => {
     if (paused) return;
-    while (activeCount < concurrency && queue.length > VALUE_0) {
+    while (activeCount < concurrency && queue.size > VALUE_0) {
       const task = queue.shift();
       if (!task) return;
       if (task.signal?.aborted) {
@@ -128,7 +130,7 @@ export function createQueue(options: QueueOptions = {}): Queue {
     const signal = options?.signal;
     throwIfAborted(signal);
     return new Promise<T>((resolve, reject) => {
-      if (maxQueueSize !== undefined && queue.length >= maxQueueSize) {
+      if (maxQueueSize !== undefined && queue.size >= maxQueueSize) {
         const overflowError = createOverflowError();
         if (onOverflow === OVERFLOW_POLICY_DROP_OLDEST) {
           const dropped = queue.shift();
@@ -151,16 +153,15 @@ export function createQueue(options: QueueOptions = {}): Queue {
       };
       if (signal) {
         const onAbort = (): void => {
-          const index = queue.indexOf(task as QueueTask<unknown>);
-          if (index >= VALUE_0) {
-            queue.splice(index, 1);
+          if (task.node && !task.node.detached) {
+            queue.remove(task.node);
             reject(createAbortError());
           }
         };
         task.onAbort = onAbort;
         signal.addEventListener("abort", onAbort, { once: true });
       }
-      queue.push(task as QueueTask<unknown>);
+      task.node = queue.push(task as QueueTask<unknown>);
       runNext();
     });
   };
@@ -176,7 +177,7 @@ export function createQueue(options: QueueOptions = {}): Queue {
   };
 
   const clear = (options?: { rejectPending?: boolean; error?: Error }): void => {
-    const pending = queue.splice(0, queue.length);
+    const pending = queue.drain();
     for (const task of pending) {
       if (task.signal && task.onAbort) {
         task.signal.removeEventListener("abort", task.onAbort);
@@ -191,7 +192,7 @@ export function createQueue(options: QueueOptions = {}): Queue {
   };
 
   const onIdle = (): Promise<void> => {
-    if (activeCount === VALUE_0 && queue.length === VALUE_0) {
+    if (activeCount === VALUE_0 && queue.size === VALUE_0) {
       return Promise.resolve();
     }
     return new Promise<void>((resolve) => idleResolvers.push(resolve));
@@ -204,7 +205,7 @@ export function createQueue(options: QueueOptions = {}): Queue {
     clear,
     onIdle,
     get size() {
-      return queue.length;
+      return queue.size;
     },
     get activeCount() {
       return activeCount;
