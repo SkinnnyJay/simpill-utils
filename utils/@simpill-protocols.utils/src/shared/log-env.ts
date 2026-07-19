@@ -9,6 +9,7 @@ export const LOG_ENV_KEYS = {
   LOG_TIMESTAMPS: "LOG_TIMESTAMPS",
   LOG_COLORS: "LOG_COLORS",
 } as const;
+Object.freeze(LOG_ENV_KEYS);
 
 export type LogEnvKey = (typeof LOG_ENV_KEYS)[keyof typeof LOG_ENV_KEYS];
 
@@ -16,5 +17,6 @@ export const LOG_FORMAT_VALUES = {
   JSON: "json",
   PRETTY: "pretty",
 } as const;
+Object.freeze(LOG_FORMAT_VALUES);
 
 export type LogFormatValue = (typeof LOG_FORMAT_VALUES)[keyof typeof LOG_FORMAT_VALUES];
