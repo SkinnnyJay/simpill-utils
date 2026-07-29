@@ -20,6 +20,14 @@ export {
   type ThrottleOptions,
   throttle,
 } from "./debounce-throttle";
+export {
+  createMetadataStore,
+  getMetadata,
+  globalMetadataStore,
+  type MetadataKey,
+  type MetadataStore,
+  setMetadata,
+} from "./metadata-store";
 export { noop } from "./noop";
 export { once } from "./once";
 export { compose, composeWith, pipe, pipeWith } from "./pipe-compose";

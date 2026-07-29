@@ -3,6 +3,11 @@ import { ERROR_MAX_SIZE_MUST_BE_POSITIVE, VALUE_0 } from "./constants";
 /**
  * In-memory LRU Map with max size. Runtime-agnostic. Evicts least recently used on overflow.
  * Iteration order is least-recently-used first (eviction order).
+ *
+ * LRUMap uses Map insertion-order for O(n) access reordering (delete + re-insert on get).
+ * For O(1) LRU with a doubly-linked list, use LRUCache (from @simpill/collections.utils,
+ * re-exported from @simpill/cache.utils as LRUCache).
+ *
  * @param maxSize - Maximum number of entries (must be a positive number; NaN rejected)
  * @throws Error if maxSize <= 0 or NaN
  */

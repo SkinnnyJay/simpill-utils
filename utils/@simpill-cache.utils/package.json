@@ -68,6 +68,9 @@
   "author": "@SkinnnyJay",
   "license": "ISC",
   "sideEffects": false,
+  "dependencies": {
+    "@simpill/collections.utils": "file:../@simpill-collections.utils"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
     "@types/jest": "^30.0.0",
