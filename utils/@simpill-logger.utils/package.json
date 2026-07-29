@@ -70,7 +70,7 @@
     "typescript",
     "utilities",
     "type-safe",
-    "esm",
+    "cjs",
     "tree-shakeable",
     "logging",
     "nodejs"

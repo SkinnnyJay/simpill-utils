@@ -2,11 +2,12 @@
 export type Factory<T, TArgs extends unknown[] = []> = (...args: TArgs) => T;
 
 /**
- * Factory Method: create a typed factory function.
+ * Factory Method pattern: wrap a function as a typed Factory<T, TArgs>.
+ * Named createPatternFactory to avoid collision with @simpill/factories.utils#createFactory.
  * @param factory - Function that returns T
  * @returns The same function typed as Factory<T, TArgs>
  */
-export function createFactory<T, TArgs extends unknown[]>(
+export function createPatternFactory<T, TArgs extends unknown[]>(
   factory: Factory<T, TArgs>
 ): Factory<T, TArgs> {
   return factory;

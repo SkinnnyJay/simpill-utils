@@ -15,7 +15,7 @@ import {
   YamlCompressionStrategy,
 } from "../../../src/shared";
 import { analytics } from "../../../src/shared/stubs/analytics";
-import { TokenOptimizer } from "../../../src/shared/tokenOptimizer";
+import { TokenOptimizer } from "../../../src/shared/token-optimizer";
 import { CompressionTypeEnum } from "../../../src/shared/types";
 
 const buildSnapshot = () =>

@@ -12,7 +12,7 @@ import {
   optimizationRequestSchema,
 } from "./token-optimizer.types";
 import type { TokenizerAdapter } from "./tokenizer";
-import type { CompressionValidatorRegistry } from "./validatorRegistry";
+import type { CompressionValidatorRegistry } from "./validator.registry";
 
 const logger = createScopedLogger("TokenOptimizer");
 

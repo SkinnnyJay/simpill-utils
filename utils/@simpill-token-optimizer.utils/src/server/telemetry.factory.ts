@@ -1,4 +1,4 @@
-import { createAnalyticsTelemetryStorage } from "../shared/analyticsTelemetryStorage";
+import { createAnalyticsTelemetryStorage } from "../shared/analytics-telemetry.storage";
 import { ERROR_MESSAGES } from "../shared/constants";
 import { analytics } from "../shared/stubs/analytics";
 import {
@@ -6,7 +6,7 @@ import {
   type TelemetryStorage,
   telemetryStorageKindSchema,
 } from "../shared/telemetry.types";
-import { createJsonTelemetryStorage } from "./telemetryStorage";
+import { createJsonTelemetryStorage } from "./telemetry.storage";
 
 export interface TelemetryFactoryOptions {
   readonly jsonConfig?: JsonTelemetryStorageConfig;

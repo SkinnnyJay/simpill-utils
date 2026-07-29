@@ -1,4 +1,4 @@
-export { type Adapter, adapt, createAdapter } from "./adapter";
+export { type Adapter, adapt, createPatternAdapter } from "./adapter";
 export { type Builder, createBuilder } from "./builder";
 export {
   type ChainHandler,
@@ -26,7 +26,7 @@ export {
 } from "./composite";
 export { type Decorator, decorate } from "./decorator";
 export { createFacade, createFacadeFrom, type Facade } from "./facade";
-export { createFactory, type Factory } from "./factory";
+export { createPatternFactory, type Factory } from "./factory";
 export { createFlyweightFactory, type FlyweightFactory } from "./flyweight";
 export { createMediator, type Mediator, type MediatorHandler } from "./mediator";
 export { createObservable, type Observable, type Observer, type Unsubscribe } from "./observer";

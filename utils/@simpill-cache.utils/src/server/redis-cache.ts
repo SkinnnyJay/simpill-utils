@@ -19,14 +19,21 @@ export class RedisCache<V> {
   private readonly adapter: RedisCacheAdapter;
   private readonly keyPrefix: string;
   private readonly defaultTtlMs: number | undefined;
+  /**
+   * Optional validator applied to every value retrieved from Redis. Without a validator the
+   * return type is an unchecked cast — pass a Zod schema's `.parse` or any `(unknown) => V`
+   * type guard to enable runtime shape validation.
+   */
+  private readonly validate: ((value: unknown) => V) | undefined;
 
   constructor(
     adapter: RedisCacheAdapter,
-    options: { keyPrefix?: string; defaultTtlMs?: number } = {}
+    options: { keyPrefix?: string; defaultTtlMs?: number; validate?: (value: unknown) => V } = {}
   ) {
     this.adapter = adapter;
     this.keyPrefix = options.keyPrefix ?? PREFIX;
     this.defaultTtlMs = options.defaultTtlMs;
+    this.validate = options.validate;
   }
 
   private toKey(id: string): string {
@@ -51,14 +58,18 @@ export class RedisCache<V> {
   }
 
   /**
-   * Get value by key. Return type V is not runtime-validated; ensure stored data matches V or validate at use site.
+   * Get value by key. When constructed with a `validate` option the parsed value is passed
+   * through the validator; otherwise the return type is an unchecked cast — pass a Zod
+   * schema's `.parse` or any `(unknown) => V` type guard via constructor options for safe
+   * runtime validation.
    */
   async get(key: string): Promise<V | undefined> {
     const k = this.toKey(key);
     const raw = await this.adapter.get(k);
     if (raw === null) return undefined;
     try {
-      return JSON.parse(raw) as V;
+      const parsed: unknown = JSON.parse(raw);
+      return this.validate ? this.validate(parsed) : (parsed as V);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       throw new Error(

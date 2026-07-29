@@ -138,13 +138,19 @@ export function toJsonSafe(value: unknown, fallback = ""): string {
 }
 
 /**
- * Safe JSON.parse; returns fallback on error or invalid JSON.
+ * Safe JSON.parse; returns fallback on error or invalid JSON. Without a `validate` function
+ * the return type is an unchecked cast — pass a Zod schema's `.parse` or any `(unknown) => T`
+ * type guard for runtime shape validation.
  * Note: "null" is valid JSON and parses to null (not the fallback).
  */
-export function parseJsonSafe<T = unknown>(value: string, fallback: T): T {
+export function parseJsonSafe<T = unknown>(
+  value: string,
+  fallback: T,
+  validate?: (parsed: unknown) => T
+): T {
   try {
-    const parsed = JSON.parse(value) as T;
-    return parsed;
+    const parsed: unknown = JSON.parse(value);
+    return validate ? validate(parsed) : (parsed as T);
   } catch {
     return fallback;
   }

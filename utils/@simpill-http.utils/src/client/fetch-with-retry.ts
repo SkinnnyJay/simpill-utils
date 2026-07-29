@@ -2,6 +2,8 @@ import type { FetchLike, HttpRetryPolicy } from "../shared";
 import {
   ERROR_REQUEST_ABORTED,
   MAX_RETRY_AFTER_MS_DEFAULT,
+  RETRY_DEFAULT_BACKOFF_MULTIPLIER,
+  RETRY_DEFAULT_DELAY_MS,
   VALUE_0,
   VALUE_1,
   VALUE_3,
@@ -70,7 +72,7 @@ export async function fetchWithRetry(
   const retryableStatuses = policy.retryableStatuses ?? isRetryableStatus;
   const retryableErrors = policy.retryableErrors ?? defaultRetryableErrors;
   const maxAttempts = policy.maxAttempts ?? VALUE_3;
-  const backoffMultiplier = policy.backoffMultiplier ?? VALUE_1;
+  const backoffMultiplier = policy.backoffMultiplier ?? RETRY_DEFAULT_BACKOFF_MULTIPLIER;
   const respectRetryAfter = policy.respectRetryAfter ?? true;
   const maxRetryAfterMs = policy.maxRetryAfterMs ?? MAX_RETRY_AFTER_MS_DEFAULT;
   const signal = init?.signal ?? null;
@@ -82,7 +84,7 @@ export async function fetchWithRetry(
     typeof ReadableStream !== "undefined" && init?.body instanceof ReadableStream;
   const canRetry = methodAllowed && !bodyIsStream;
 
-  let wait = policy.delayMs ?? VALUE_0;
+  let wait = policy.delayMs ?? RETRY_DEFAULT_DELAY_MS;
   let lastError: Error | undefined;
 
   for (let attempt = VALUE_1; attempt <= maxAttempts; attempt++) {

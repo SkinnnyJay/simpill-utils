@@ -1,5 +1,5 @@
 export * from "./analytics";
-export * from "./analyticsTelemetryStorage";
+export * from "./analytics-telemetry.storage";
 export * from "./cleaner";
 export * from "./constants";
 export * from "./logger";
@@ -17,7 +17,7 @@ export * from "./stubs/json";
 export * from "./telemetry.types";
 export * from "./token-optimizer.types";
 export * from "./tokenizer";
-export * from "./tokenOptimizer";
+export * from "./token-optimizer";
 export {
   type CleanApplied,
   COMPRESSION_TYPES,
@@ -33,4 +33,4 @@ export {
   type TokenOptimizationResult,
   type TokenOptimizerCreateOptions,
 } from "./types";
-export * from "./validatorRegistry";
+export * from "./validator.registry";

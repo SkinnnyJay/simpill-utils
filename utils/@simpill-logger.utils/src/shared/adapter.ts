@@ -27,6 +27,11 @@ export interface LoggerAdapterConfig {
    * Compiled once at configuration time; the caller's metadata is never mutated.
    */
   redact?: RedactOptions | readonly string[];
+  /**
+   * Alias for path-array redaction (Wave 2 API). Prefer `redact`.
+   * Equivalent to `redact: redactPaths` when `redact` is unset.
+   */
+  redactPaths?: readonly string[];
   /** Additional adapter-specific options */
   options?: Record<string, unknown>;
 }

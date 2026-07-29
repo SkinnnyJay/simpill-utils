@@ -1,8 +1,8 @@
-import { createFactory } from "../../../src/shared/factory";
+import { createPatternFactory } from "../../../src/shared/factory";
 
-describe("createFactory", () => {
+describe("createPatternFactory", () => {
   it("creates a typed factory function", () => {
-    const userFactory = createFactory((name: string) => ({ name, active: true }));
+    const userFactory = createPatternFactory((name: string) => ({ name, active: true }));
     expect(userFactory("Ada")).toEqual({ name: "Ada", active: true });
   });
 });

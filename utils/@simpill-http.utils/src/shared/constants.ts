@@ -16,3 +16,8 @@ export const MAX_RETRY_AFTER_MS_DEFAULT = 30000;
 export const ERROR_RETRYABLE_STATUS_PREFIX = "Retryable status: " as const;
 /** Fallback abort message when a signal has no reason (very old runtimes). */
 export const ERROR_REQUEST_ABORTED = "Request aborted" as const;
+
+/** Fetch retry: default delay between attempts (ms). Non-zero to reduce thundering herd. */
+export const RETRY_DEFAULT_DELAY_MS = 200;
+/** Fetch retry: default exponential backoff multiplier per attempt. */
+export const RETRY_DEFAULT_BACKOFF_MULTIPLIER = 1.5;

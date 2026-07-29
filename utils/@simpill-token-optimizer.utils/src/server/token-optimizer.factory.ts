@@ -10,13 +10,13 @@ import { YamlCompressionStrategy } from "../shared/strategies/yaml-strategy";
 import type { TelemetryStorage } from "../shared/telemetry.types";
 import { type CompressionType, compressionTypeSchema } from "../shared/token-optimizer.types";
 import { createDefaultTokenizerAdapter, type TokenizerAdapter } from "../shared/tokenizer";
-import { TokenOptimizer } from "../shared/tokenOptimizer";
+import { TokenOptimizer } from "../shared/token-optimizer";
 import { CompressionTypeEnum } from "../shared/types";
 import {
   type CompressionValidatorRegistry,
   createDefaultValidatorRegistry,
-} from "../shared/validatorRegistry";
-import { createTelemetryStorage, type TelemetryFactoryOptions } from "./telemetryFactory";
+} from "../shared/validator.registry";
+import { createTelemetryStorage, type TelemetryFactoryOptions } from "./telemetry.factory";
 
 export interface TokenOptimizerFactoryOptions {
   readonly tokenizer?: TokenizerAdapter;

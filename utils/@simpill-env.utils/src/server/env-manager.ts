@@ -306,12 +306,16 @@ export class EnvManager implements IEnvManager {
     return getArrayFromEnv(this.getValue.bind(this), key, defaultValue, separator);
   }
 
-  public getJson<T = unknown>(key: string, defaultValue?: T): T {
-    return getJsonFromEnv(this.getValue.bind(this), key, defaultValue);
+  public getJson<T = unknown>(key: string, defaultValue?: T, validate?: (value: unknown) => T): T {
+    return getJsonFromEnv(this.getValue.bind(this), key, defaultValue, validate);
   }
 
-  public getRequiredJson<T = unknown>(key: string, errorMessage?: string): T {
-    return getRequiredJsonFromEnv(this.getValue.bind(this), key, errorMessage);
+  public getRequiredJson<T = unknown>(
+    key: string,
+    errorMessage?: string,
+    validate?: (value: unknown) => T
+  ): T {
+    return getRequiredJsonFromEnv(this.getValue.bind(this), key, errorMessage, validate);
   }
 
   public getValidatedString(

@@ -26,7 +26,7 @@ let isEnvConfigApplied = false;
 
 /** (Re)compile the redactor from current config. Throws on malformed paths. */
 function compileRedactor(): void {
-  const redact = globalConfig.redact;
+  const redact = globalConfig.redact ?? globalConfig.redactPaths;
   if (!redact) {
     globalRedactor = null;
     return;

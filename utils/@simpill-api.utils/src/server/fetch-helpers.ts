@@ -1,8 +1,15 @@
-import { TIMEOUT_MS_5000, VALUE_0 } from "../shared/internal-constants";
+import { fetchWithRetry as httpFetchWithRetry } from "@simpill/http.utils";
+import { TIMEOUT_MS_5000 } from "../shared/internal-constants";
 import type { RetryOptions } from "../shared/types";
 
+function noRetryableStatus(): boolean {
+  return false;
+}
+
 /**
- * Fetch with retries. Uses optional custom fetcher; defaults to global fetch.
+ * Fetch with retries. Delegates to @simpill/http.utils fetchWithRetry.
+ * Retries only on thrown errors (not on HTTP status codes) to preserve original semantics.
+ * Uses optional custom fetcher; defaults to global fetch.
  */
 export async function fetchWithRetry(
   input: URL | string,
@@ -10,19 +17,14 @@ export async function fetchWithRetry(
   options: RetryOptions & { fetcher?: typeof fetch } = {}
 ): Promise<Response> {
   const { maxRetries = 3, delayMs = 100, fetcher = fetch } = options;
-  let lastError: unknown;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const res = await fetcher(input, init);
-      return res;
-    } catch (err) {
-      lastError = err;
-      if (attempt < maxRetries && delayMs > VALUE_0) {
-        await new Promise((r) => setTimeout(r, delayMs));
-      }
-    }
-  }
-  throw lastError;
+  return httpFetchWithRetry(input, init, {
+    retry: {
+      maxAttempts: maxRetries + 1,
+      delayMs,
+      retryableStatuses: noRetryableStatus,
+    },
+    fetch: fetcher,
+  });
 }
 
 /**
