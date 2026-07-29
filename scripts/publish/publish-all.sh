@@ -130,7 +130,8 @@ for dir in "${ORDER[@]}"; do
   if [ "$DRY_RUN" = true ]; then
     (cd "$REPO_ROOT/utils/$dir" && npm publish --access public --dry-run)
   else
-    (cd "$REPO_ROOT/utils/$dir" && npm publish --access public ${NPM_OTP:+--otp="$NPM_OTP"})
+    # --provenance requires OIDC token from CI (GitHub Actions with id-token: write permission)
+    (cd "$REPO_ROOT/utils/$dir" && npm publish --access public --provenance ${NPM_OTP:+--otp="$NPM_OTP"})
   fi
   ret=$?
   set -e

@@ -40,6 +40,7 @@
     "use:local": "node scripts/monorepo/use-local-utils-at-root.js && npm install --no-audit --no-fund",
     "install:all": "npm install --ignore-scripts",
     "verify:deps": "node scripts/monorepo/monorepo-verify-deps.js",
+    "check:no-file-deps": "node scripts/ci/check-no-file-deps.js",
     "verify": "npm run verify:deps",
     "utils:verify": "bash scripts/utils/utils-verify-all.sh",
     "utils:prepare": "bash scripts/utils/utils-prepare-all.sh",
