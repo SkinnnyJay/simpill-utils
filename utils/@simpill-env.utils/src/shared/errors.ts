@@ -61,6 +61,11 @@ export class EnvParseError extends EnvError {
   public readonly key: string;
   public readonly rawValue: string;
   public readonly expectedType: EnvParseType;
+  /**
+   * Server-side debug detail containing the raw value. Not included in `.message`
+   * to prevent accidental credential disclosure when errors are serialized to clients.
+   */
+  public readonly detail: string;
 
   constructor(key: string, rawValue: string, expectedType: EnvParseType) {
     // Secret-like keys are redacted in BOTH the message and the stored
@@ -75,6 +80,7 @@ export class EnvParseError extends EnvError {
     this.key = key;
     this.rawValue = String(safeValue);
     this.expectedType = expectedType;
+    this.detail = `Got: ${rawValue}`;
   }
 }
 
@@ -83,6 +89,11 @@ export class EnvValidationError extends EnvError {
   public readonly key: string;
   public readonly value: string | number | boolean;
   public readonly reason: string;
+  /**
+   * Server-side debug detail containing the rejected value. Not included in `.message`
+   * to prevent accidental credential disclosure when errors are serialized to clients.
+   */
+  public readonly detail: string;
 
   constructor(key: string, value: string | number | boolean, reason: string) {
     // See EnvParseError: secret-like keys redact message AND stored value.
@@ -95,6 +106,7 @@ export class EnvValidationError extends EnvError {
     this.key = key;
     this.value = safeValue;
     this.reason = reason;
+    this.detail = `Got: ${JSON.stringify(value)}`;
   }
 }
 

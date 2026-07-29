@@ -33,7 +33,7 @@ export class EnvManager implements IEnvManager {
   private static bootstrapped = false;
   private static logger: EnvLoggerAdapter | null = null;
 
-  readonly envCache: Map<string, string>;
+  private readonly envCache: Map<string, string>;
   readonly rawCache: Map<string, string>;
   private readonly privateKey: string | undefined;
   private readonly dynamic: boolean;
@@ -362,6 +362,10 @@ export class EnvManager implements IEnvManager {
     return parseEncrypted(encryptedValue, privateKey);
   }
 
+  /**
+   * @deprecated This method exposes sensitive key material and will be removed in a future
+   * major version. Use `hasPrivateKey()` to check if a key is loaded without exposing it.
+   */
   public getPrivateKey(): string | undefined {
     return this.privateKey;
   }

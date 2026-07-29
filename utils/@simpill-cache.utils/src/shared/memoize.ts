@@ -1,3 +1,5 @@
+import { LRUMap } from "./lru-map";
+
 /** Cache interface for memoize: get, set, has, optional delete and clear. */
 export interface MemoizeCache<K, V> {
   get(key: K): V | undefined;
@@ -22,8 +24,10 @@ export interface MemoizedFunction<TArgs extends unknown[], TReturn> {
 }
 
 /**
- * Memoize fn with optional key, keySerializer, and cache. Default cache is unbounded; pass LRUMap or bounded cache for long-lived use.
- * NOTE: the default key is the FIRST argument only — for multi-argument functions pass `keySerializer` (e.g. JSON.stringify of args) or a custom `key`.
+ * Memoize fn with optional key, keySerializer, and cache.
+ * Default cache is a bounded LRUMap(1000); pass your own cache instance to override.
+ * NOTE: the default key is the FIRST argument only — for multi-argument functions pass
+ * `keySerializer` (e.g. JSON.stringify of args) or a custom `key`.
  * The returned function exposes `.cache` for invalidation.
  */
 export function memoize<TArgs extends unknown[], TReturn>(
@@ -33,7 +37,7 @@ export function memoize<TArgs extends unknown[], TReturn>(
   const keySerializer = options?.keySerializer;
   const keyFn = options?.key ?? ((...a: unknown[]) => a[0]);
   const cache: MemoizeCache<unknown, TReturn> =
-    options?.cache ?? (new Map() as MemoizeCache<unknown, TReturn>);
+    options?.cache ?? (new LRUMap<unknown, TReturn>(1000) as MemoizeCache<unknown, TReturn>);
 
   const memoized = (...args: TArgs): TReturn => {
     const rawKey = (keyFn as (...a: TArgs) => unknown)(...args);

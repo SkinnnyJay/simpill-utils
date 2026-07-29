@@ -11,4 +11,12 @@ describe("LRUMap", () => {
     expect(map.get("b")).toBe(2);
     expect(map.get("c")).toBe(3);
   });
+
+  it("should return cached undefined value without treating it as a miss", () => {
+    const lru = new LRUMap<string, undefined>(2);
+    lru.set("key", undefined);
+    expect(lru.has("key")).toBe(true);
+    expect(lru.get("key")).toBeUndefined();
+    expect(lru.has("key")).toBe(true);
+  });
 });

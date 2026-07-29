@@ -42,6 +42,11 @@ This monorepo hosts lightweight, type-safe TypeScript utility packages under the
 | `@simpill/zustand.utils` | Zustand store helpers: factory, persist, devtools, slices | New |
 | `@simpill/react.utils` | React hooks: useLatest, createSafeContext, useStableCallback, useLazyState, useDeferredUpdate | New |
 | `@simpill/nextjs.utils` | Next.js: createSafeAction, route helpers, withRequestContext, withCorrelation | New |
+| `@simpill/number.utils` | clamp, lerp, sum, average | New |
+| `@simpill/observability.utils` | setupObservability glue | New |
+| `@simpill/protocols.utils` | HTTP/correlation/env/log constants | New |
+| `@simpill/token-optimizer.utils` | Token cleaning strategies/telemetry | New |
+| `@simpill/enum.utils` | EnumHelper, getEnumValue | New |
 
 ## Project Structure
 

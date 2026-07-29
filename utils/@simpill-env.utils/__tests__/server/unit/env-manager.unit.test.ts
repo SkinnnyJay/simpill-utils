@@ -709,6 +709,38 @@ describe("EnvManager", () => {
     });
   });
 
+  describe("security", () => {
+    it("envCache is private: getCacheSize() is the only public introspection API", () => {
+      const manager = EnvManager.getInstance();
+      // TypeScript's `private` keyword enforces access at compile time.
+      // At runtime we verify no public enumeration escape hatch is exposed:
+      expect(typeof manager.getCacheSize).toBe("function");
+      expect(typeof (manager as unknown as Record<string, unknown>).getCacheSnapshot).toBe(
+        "undefined"
+      );
+    });
+
+    it("hasPrivateKey should return false when no private key is configured", () => {
+      delete process.env.DOTENV_PRIVATE_KEY;
+      const manager = EnvManager.getInstance();
+      expect(manager.hasPrivateKey()).toBe(false);
+    });
+
+    it("hasPrivateKey should return true when private key is set via process.env", () => {
+      process.env.DOTENV_PRIVATE_KEY = "test-private-key-value";
+      const manager = EnvManager.getInstance();
+      expect(manager.hasPrivateKey()).toBe(true);
+      delete process.env.DOTENV_PRIVATE_KEY;
+    });
+
+    it("getPrivateKey should still return the key value for backward compat", () => {
+      process.env.DOTENV_PRIVATE_KEY = "test-private-key-value";
+      const manager = EnvManager.getInstance();
+      expect(manager.getPrivateKey()).toBe("test-private-key-value");
+      delete process.env.DOTENV_PRIVATE_KEY;
+    });
+  });
+
   describe("logger adapter", () => {
     it("should use custom logger when provided", () => {
       const customLogger = {
