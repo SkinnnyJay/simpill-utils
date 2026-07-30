@@ -126,6 +126,14 @@ for dir in "${ORDER[@]}"; do
   cp "$pkg_path" "$backup"
   trap "mv -f '$backup' '$pkg_path'; rm -f '$tmp'" EXIT
   node "$LIB_DIR/publish-order.js" rewrite "$dir" "$REPO_ROOT" > "$tmp" && mv -f "$tmp" "$pkg_path"
+  # Gate: rewritten manifest must not ship file: deps
+  if grep -q '"file:' "$pkg_path"; then
+    echo "ERROR: $name still has file: deps after rewrite — aborting publish"
+    mv -f "$backup" "$pkg_path"
+    trap - EXIT
+    FAILED+=("$name (file: after rewrite)")
+    continue
+  fi
   set +e
   if [ "$DRY_RUN" = true ]; then
     (cd "$REPO_ROOT/utils/$dir" && npm publish --access public --dry-run)

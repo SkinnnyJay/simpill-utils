@@ -1,5 +1,13 @@
 #!/usr/bin/env node
-// check-no-file-deps.js — CI gate that prevents publishing packages with file: dependencies
+/**
+ * check-no-file-deps.js — publish verification helper.
+ *
+ * In this monorepo, inter-package `file:` deps are expected in git (utils CI
+ * and local builds). Publish rewrites them to ^versions; run this against a
+ * rewritten tree, or rely on publish-all.sh's post-rewrite grep gate.
+ *
+ * Exit 1 if any publishable package still has file: in dependencies.
+ */
 const fs = require("fs");
 const path = require("path");
 
@@ -24,7 +32,10 @@ for (const pkg of fs.readdirSync(utilsDir)) {
 if (violations.length > 0) {
   console.error("ERROR: file: dependencies found in publishable packages:");
   violations.forEach((v) => console.error(" ", v));
-  console.error("Run scripts/monorepo/use-local.sh for local dev, not file: in package.json");
+  console.error(
+    "Expected in git for monorepo CI. For publish, rewrite first " +
+      "(scripts/publish/publish-all.sh) then re-run this check."
+  );
   process.exit(1);
 }
 

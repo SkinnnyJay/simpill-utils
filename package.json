@@ -42,7 +42,7 @@
     "install:all": "npm install --ignore-scripts",
     "verify:deps": "node scripts/monorepo/monorepo-verify-deps.js",
     "check:no-file-deps": "node scripts/ci/check-no-file-deps.js",
-    "verify": "npm run check:no-file-deps && npm run utils:verify",
+    "verify": "npm run utils:verify",
     "utils:verify": "bash scripts/utils/utils-verify-all.sh",
     "utils:prepare": "bash scripts/utils/utils-prepare-all.sh",
     "utils:fix-metadata": "node scripts/utils/utils-fix-repo-metadata.js",
@@ -71,7 +71,7 @@
     "glob": "^11.0.0"
   },
   "dependencies": {
-    "@simpill/acp-llm-cli": "^0.1.0",
+    "@simpill/acp-llm-cli": "file:./utils/@simpill-acp-llm-cli.utils",
     "@simpill/adapters.utils": "^1.0.0",
     "@simpill/algorithms.utils": "^1.0.0",
     "@simpill/annotations.utils": "^1.0.0",

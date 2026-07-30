@@ -37,10 +37,10 @@ jobs:
           node-version: "20.x"
           cache: npm
 
-      - name: Check no file: dependencies in publishable packages
-        run: node scripts/ci/check-no-file-deps.js
+      # Inter-package deps use file:../ in-repo (required for utils CI). Publish
+      # rewrites them to ^versions; scripts/publish/publish-all.sh gates that.
 
-      - name: Install root deps (for audit)
+      - name: Install root deps (for audit; acp via submodule file:)
         run: npm ci
 
       - name: Security audit (production deps)

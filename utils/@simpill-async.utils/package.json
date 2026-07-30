@@ -84,8 +84,8 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
-    "@simpill/errors.utils": "^1.0.0",
-    "@simpill/patterns.utils": "^1.0.0",
+    "@simpill/errors.utils": "file:../@simpill-errors.utils",
+    "@simpill/patterns.utils": "file:../@simpill-patterns.utils",
     "zod": "^4.3.6"
   },
   "bugs": {

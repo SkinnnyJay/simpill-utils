@@ -84,7 +84,7 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
-    "@simpill/function.utils": "^1.0.0"
+    "@simpill/function.utils": "file:../@simpill-function.utils"
   },
   "bugs": {
     "url": "https://github.com/SkinnnyJay/time.utils/issues"
