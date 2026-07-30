@@ -21,4 +21,11 @@ describe("errorFactory", () => {
     expect(err.message).toBe("Oops");
     expect((err as Error & { code?: string }).code).toBeUndefined();
   });
+
+  it("should set per-call code when factory has no default code", () => {
+    const create = errorFactory(Error, "Oops");
+    const err = create("something happened", "CUSTOM_CODE");
+    expect(err.message).toBe("something happened");
+    expect((err as Error & { code?: string }).code).toBe("CUSTOM_CODE");
+  });
 });
