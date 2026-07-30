@@ -190,29 +190,25 @@ Test files MUST follow this naming convention:
 
 ### tsconfig.json
 
+All packages extend the shared root `tsconfig.base.json` (ES2022, strict, commonjs). Only
+package-specific overrides belong in the package tsconfig:
+
 ```json
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
-    "lib": ["ES2020"],
     "types": ["node", "jest"],
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node"
+    "lib": ["ES2022"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "__tests__"]
 }
 ```
+
+For packages that target browser/Edge runtimes add `"DOM"` to `lib`. For React packages also
+add `"jsx": "react-jsx"`. Never copy fields that are already in `tsconfig.base.json`.
 
 ### jest.config.js
 
@@ -759,7 +755,7 @@ mkdir -p utils/@simpill-cache.utils/{src/{client,server,shared},__tests__/{clien
 
 # 2. Copy template files from env.utils
 cp utils/@simpill-env.utils/package.json utils/@simpill-cache.utils/
-cp utils/@simpill-env.utils/tsconfig.json utils/@simpill-cache.utils/
+cp utils/@simpill-env.utils/tsconfig.json utils/@simpill-cache.utils/  # then trim to extends pattern
 cp utils/@simpill-env.utils/jest.config.js utils/@simpill-cache.utils/
 cp utils/@simpill-env.utils/biome.json utils/@simpill-cache.utils/
 cp utils/@simpill-env.utils/.gitignore utils/@simpill-cache.utils/
