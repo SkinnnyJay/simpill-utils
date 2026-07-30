@@ -77,7 +77,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@simpill/errors.utils": "file:../@simpill-errors.utils"
+    "@simpill/errors.utils": "^1.0.0"
   },
   "peerDependencies": {
     "typescript": ">=4.0.0"

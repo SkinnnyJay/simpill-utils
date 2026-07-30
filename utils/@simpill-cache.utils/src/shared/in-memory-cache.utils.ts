@@ -1,8 +1,5 @@
 /** In-memory cache with optional TTL and maxSize. When maxSize is set, eviction is LRU (least recently used). Set defaultTtlMs or maxSize to avoid unbounded growth. Expired entries are physically removed by size reads and by capacity sweeps on set (no silent memory growth). */
-import {
-  ERROR_MAX_SIZE_MUST_BE_POSITIVE_FINITE,
-  ERROR_TTL_MS_MUST_BE_A_NUMBER,
-} from "./constants";
+import { ERROR_MAX_SIZE_MUST_BE_POSITIVE_FINITE, ERROR_TTL_MS_MUST_BE_A_NUMBER } from "./constants";
 
 export interface InMemoryCacheOptions {
   defaultTtlMs?: number;

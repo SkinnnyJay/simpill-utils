@@ -103,6 +103,6 @@
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.4",
-    "@simpill/protocols.utils": "file:../@simpill-protocols.utils"
+    "@simpill/protocols.utils": "^1.0.0"
   }
 }

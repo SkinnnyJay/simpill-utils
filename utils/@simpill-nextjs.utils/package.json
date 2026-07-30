@@ -80,10 +80,10 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@simpill/errors.utils": "file:../@simpill-errors.utils",
-    "@simpill/protocols.utils": "file:../@simpill-protocols.utils",
-    "@simpill/request-context.utils": "file:../@simpill-request-context.utils",
-    "@simpill/zod.utils": "file:../@simpill-zod.utils",
+    "@simpill/errors.utils": "^1.0.0",
+    "@simpill/protocols.utils": "^1.0.0",
+    "@simpill/request-context.utils": "^1.0.0",
+    "@simpill/zod.utils": "^1.0.0",
     "zod": "^3.23.0"
   },
   "peerDependencies": {

@@ -76,13 +76,13 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@simpill/async.utils": "file:../@simpill-async.utils",
-    "@simpill/cache.utils": "file:../@simpill-cache.utils",
-    "@simpill/enum.utils": "file:../@simpill-enum.utils",
-    "@simpill/function.utils": "file:../@simpill-function.utils",
-    "@simpill/object.utils": "file:../@simpill-object.utils",
-    "@simpill/time.utils": "file:../@simpill-time.utils",
-    "@simpill/uuid.utils": "file:../@simpill-uuid.utils"
+    "@simpill/async.utils": "^1.0.0",
+    "@simpill/cache.utils": "^1.0.0",
+    "@simpill/enum.utils": "^1.0.0",
+    "@simpill/function.utils": "^1.0.0",
+    "@simpill/object.utils": "^1.0.0",
+    "@simpill/time.utils": "^1.0.0",
+    "@simpill/uuid.utils": "^1.0.0"
   },
   "peerDependencies": {
     "typescript": ">=4.0.0"

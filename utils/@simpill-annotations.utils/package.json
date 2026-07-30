@@ -70,7 +70,7 @@
   "license": "ISC",
   "sideEffects": false,
   "dependencies": {
-    "@simpill/function.utils": "file:../@simpill-function.utils"
+    "@simpill/function.utils": "^1.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",

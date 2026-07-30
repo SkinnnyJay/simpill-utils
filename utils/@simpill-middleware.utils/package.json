@@ -77,9 +77,9 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@simpill/protocols.utils": "file:../@simpill-protocols.utils",
-    "@simpill/request-context.utils": "file:../@simpill-request-context.utils",
-    "@simpill/uuid.utils": "file:../@simpill-uuid.utils"
+    "@simpill/protocols.utils": "^1.0.0",
+    "@simpill/request-context.utils": "^1.0.0",
+    "@simpill/uuid.utils": "^1.0.0"
   },
   "peerDependencies": {
     "typescript": ">=4.0.0"

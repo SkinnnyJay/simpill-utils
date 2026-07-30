@@ -70,8 +70,8 @@
   "license": "ISC",
   "sideEffects": false,
   "dependencies": {
-    "@simpill/http.utils": "file:../@simpill-http.utils",
-    "@simpill/protocols.utils": "file:../@simpill-protocols.utils",
+    "@simpill/http.utils": "^1.0.0",
+    "@simpill/protocols.utils": "^1.0.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
