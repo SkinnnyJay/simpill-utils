@@ -43,7 +43,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build file: dependencies
+      - name: Build local package dependencies
         working-directory: .
         run: node scripts/ci/build-package-deps.js utils/@simpill-nextjs.utils
 

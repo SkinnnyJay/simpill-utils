@@ -37,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build file: dependencies (http, protocols, …)
+      - name: Build local package dependencies (http, protocols, ...)
         working-directory: .
         run: node scripts/ci/build-package-deps.js utils/@simpill-api.utils
 
