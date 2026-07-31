@@ -58,7 +58,9 @@ describe("MissingEnvError", () => {
 describe("EnvParseError", () => {
   it("should create error for number parse failure", () => {
     const error = new EnvParseError("PORT", "not-a-number", "number");
-    expect(error.message).toBe('Failed to parse environment variable "PORT" as number');
+    expect(error.message).toBe(
+      'Failed to parse environment variable "PORT" as number: got "not-a-number"'
+    );
     expect(error.key).toBe("PORT");
     expect(error.rawValue).toBe("not-a-number");
     expect(error.expectedType).toBe("number");
@@ -68,7 +70,9 @@ describe("EnvParseError", () => {
 
   it("should create error for boolean parse failure", () => {
     const error = new EnvParseError("DEBUG", "maybe", "boolean");
-    expect(error.message).toBe('Failed to parse environment variable "DEBUG" as boolean');
+    expect(error.message).toBe(
+      'Failed to parse environment variable "DEBUG" as boolean: got "maybe"'
+    );
     expect(error.expectedType).toBe("boolean");
   });
 
@@ -83,7 +87,7 @@ describe("EnvValidationError", () => {
   it("should create error with string value", () => {
     const error = new EnvValidationError("API_URL", "not-a-url", "must be a valid URL");
     expect(error.message).toBe(
-      'Environment variable "API_URL" failed validation: must be a valid URL'
+      'Environment variable "API_URL" failed validation: must be a valid URL (got "not-a-url")'
     );
     expect(error.key).toBe("API_URL");
     expect(error.value).toBe("not-a-url");
@@ -95,7 +99,7 @@ describe("EnvValidationError", () => {
   it("should create error with number value", () => {
     const error = new EnvValidationError("PORT", 99999, "must be between 1 and 65535");
     expect(error.message).toBe(
-      'Environment variable "PORT" failed validation: must be between 1 and 65535'
+      'Environment variable "PORT" failed validation: must be between 1 and 65535 (got 99999)'
     );
     expect(error.value).toBe(99999);
   });
@@ -158,9 +162,9 @@ describe("EnvParseError security", () => {
     expect(err.detail).toContain("my-secret-value");
   });
 
-  it("should keep raw value accessible via .rawValue property", () => {
+  it("should redact secret-like keys on .rawValue (serialized errors must stay safe)", () => {
     const err = new EnvParseError("SECRET_KEY", "my-secret-value", "number");
-    expect(err.rawValue).toBe("my-secret-value");
+    expect(err.rawValue).toBe("[redacted]");
   });
 });
 
@@ -175,14 +179,14 @@ describe("EnvValidationError security", () => {
     expect(err.detail).toContain("super-secret-token");
   });
 
-  it("should NOT include numeric secret in .message", () => {
-    const err = new EnvValidationError("PORT", 99999, "must be between 1 and 65535");
+  it("should NOT include secret-like numeric values in .message", () => {
+    const err = new EnvValidationError("SECRET_PORT", 99999, "must be between 1 and 65535");
     expect(err.message).not.toContain("99999");
   });
 
-  it("should keep value accessible via .value property", () => {
+  it("should redact secret-like keys on .value (serialized errors must stay safe)", () => {
     const err = new EnvValidationError("API_TOKEN", "super-secret-token", "invalid format");
-    expect(err.value).toBe("super-secret-token");
+    expect(err.value).toBe("[redacted]");
   });
 });
 
