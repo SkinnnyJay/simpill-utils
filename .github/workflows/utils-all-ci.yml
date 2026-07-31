@@ -2,7 +2,7 @@
 name: Utils-all CI
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
   push:
     branches: [main]
     paths:
@@ -33,16 +33,16 @@ jobs:
       # Inter-package deps use file:../ in-repo (required for utils CI). Publish
       # rewrites them to ^versions; scripts/publish/publish-all.sh gates that.
 
-      - name: Install root deps (for audit; acp via submodule file:)
+      - name: Install root deps (for audit)
         run: npm ci
 
       - name: Security audit (production deps)
         run: npm audit --omit=dev --audit-level=critical
 
-      # Root node_modules/@simpill/* are published tarballs. Package CI uses
-      # file: siblings; if root packages remain, tsc/jest resolve the npm
+      # Root node_modules/@simpill packages are published tarballs. Package CI uses
+      # local file siblings; if root packages remain, tsc/jest resolve the npm
       # copies and miss local builds (and base outDir used to emit to root).
-      - name: Clear root install (avoid shadowing local file: packages)
+      - name: Clear root install (avoid shadowing local packages)
         run: rm -rf node_modules
 
       - name: Run utils CI (all packages)
