@@ -10,4 +10,5 @@ export { parseTraceparent, type TraceparentData } from "../shared";
 export {
   type CreateCorrelationMiddlewareOptions,
   createCorrelationMiddleware,
+  sanitizeCorrelationId,
 } from "./correlation-middleware";

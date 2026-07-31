@@ -1,4 +1,8 @@
-import { createPubSub, createTypedPubSub, ChannelWaitTimeoutError } from "../../../src/shared/pubsub.utils";
+import {
+  ChannelWaitTimeoutError,
+  createPubSub,
+  createTypedPubSub,
+} from "../../../src/shared/pubsub.utils";
 
 const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 

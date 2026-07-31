@@ -17,11 +17,11 @@ From `utils/@simpill-observability.utils`:
 
 - **Main / Server**: `@simpill/observability.utils` and `@simpill/observability.utils/server` – identical
 
-| Export | Source package | Description |
-|--------|---------------|-------------|
-| `setupObservability` | `@simpill/logger.utils/server` | Configure and initialize structured logging |
-| `createCorrelationMiddleware` | `@simpill/middleware.utils/server` | Framework-agnostic correlation header middleware |
-| `CreateCorrelationMiddlewareOptions` | `@simpill/middleware.utils/server` | Options type for `createCorrelationMiddleware` |
+| Export | Description |
+|--------|-------------|
+| `setupObservability` | Wires request context into the logger (handles, baseContext, extendContext, W3C-friendly) |
+| `createCorrelationMiddleware` | Re-exported from `@simpill/middleware.utils/server` |
+| `CreateCorrelationMiddlewareOptions` | Options type for `createCorrelationMiddleware` |
 
 > **No client export.** All functionality requires Node.js.
 
@@ -30,31 +30,34 @@ From `utils/@simpill-observability.utils`:
 ```typescript
 import { createCorrelationMiddleware, setupObservability } from "@simpill/observability.utils/server";
 
-// Initialize logger at startup
-setupObservability({ level: "info", format: "json" });
+const obs = setupObservability({
+  baseContext: { service: "api" },
+  onExistingProvider: "replace",
+});
 
-// Wire correlation middleware (e.g. Express)
 app.use(createCorrelationMiddleware({ generateId: () => crypto.randomUUID() }));
+
+// tests / hot-reload
+obs.teardown();
 ```
 
 ## Architecture Notes
 
 - **Runtime**: Node.js only (`server/`). No `client/` or `shared/` exports.
-- `setup-observability.ts` is a re-export facade — the implementation lives in `@simpill/logger.utils/server`. This keeps import paths stable if the underlying package changes.
-- The `server/index.ts` re-exports both `setupObservability` (from `logger.utils`) and `createCorrelationMiddleware` (from `middleware.utils`) so callers import from one place.
+- `setupObservability` is **owned here** — it composes `@simpill/logger.utils` context providers with `@simpill/request-context.utils`.
+- `server/index.ts` also re-exports `createCorrelationMiddleware` from middleware for a single import surface.
 
 ## Dependencies
 
 | Package | Role |
 |---------|------|
-| `@simpill/logger.utils` | Structured logging and `setupObservability` implementation |
-| `@simpill/middleware.utils` | `createCorrelationMiddleware` and related types |
-| `@simpill/request-context.utils` | Declared dependency; provides AsyncLocalStorage request context |
+| `@simpill/logger.utils` | Log context provider APIs used by `setupObservability` |
+| `@simpill/middleware.utils` | `createCorrelationMiddleware` re-export |
+| `@simpill/request-context.utils` | AsyncLocalStorage request context |
 
 ## Key Design Decisions
 
-- **Facade pattern**: this package owns no logic — it only re-exports from specialist packages. This means adding new observability features is done in the respective package, not here.
-- **Thin tsconfig**: `lib: ["ES2022"]`, Node types only; no DOM or browser globals.
-- If you need request-context utilities directly (e.g. `getRequestContext`, `runWithRequestContext`), import from `@simpill/request-context.utils` rather than relying on this package to re-export them.
+- Keep integration logic in this package (not a thin facade) so logger stays free of request-context ownership.
+- Prefer importing request-context helpers directly from `@simpill/request-context.utils` when you need more than logging glue.
 
 Tests in `__tests__/server/unit/*.unit.test.ts`.

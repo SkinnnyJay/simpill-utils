@@ -51,7 +51,11 @@ describe("LRUMap extended", () => {
     map.get("a"); // a becomes MRU
     expect([...map.keys()]).toEqual(["b", "c", "a"]);
     expect([...map.values()]).toEqual([2, 3, 1]);
-    expect([...map]).toEqual([["b", 2], ["c", 3], ["a", 1]]);
+    expect([...map]).toEqual([
+      ["b", 2],
+      ["c", 3],
+      ["a", 1],
+    ]);
   });
 
   it("property: size never exceeds maxSize and matches a reference model", () => {
@@ -60,7 +64,10 @@ describe("LRUMap extended", () => {
     const model: number[] = []; // keys, LRU first
     const values = new Map<number, number>();
     let seed = 42;
-    const rand = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+    const rand = (): number => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed / 2147483648;
+    };
     for (let i = 0; i < 5000; i++) {
       const key = Math.floor(rand() * 20);
       if (rand() < 0.6) {

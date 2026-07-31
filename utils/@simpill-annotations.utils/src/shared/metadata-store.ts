@@ -11,4 +11,4 @@ export {
   type MetadataKey,
   type MetadataStore,
   setMetadata,
-} from "@simpill/function.utils";
+} from "@simpill/function.utils/shared";

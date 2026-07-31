@@ -40,6 +40,17 @@ function defaultIsValidId(id: string): boolean {
   return DEFAULT_ID_RE.test(id);
 }
 
+/**
+ * Returns the id when it passes the default correlation-id rules; otherwise undefined.
+ * Used to reject CR LF, spaces, and oversized values before they enter logs/headers.
+ */
+export function sanitizeCorrelationId(id: string | null | undefined): string | undefined {
+  if (id === null || id === undefined || id === "") {
+    return undefined;
+  }
+  return defaultIsValidId(id) ? id : undefined;
+}
+
 function getHeader(headers: HeadersLike | undefined, name: string): string | undefined {
   if (!headers) return undefined;
   if (typeof (headers as { get?: unknown }).get === "function") {

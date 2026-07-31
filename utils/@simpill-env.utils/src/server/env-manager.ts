@@ -169,7 +169,10 @@ export class EnvManager implements IEnvManager {
   }
 
   private static buildProcessEnvHelperPrototype(): object {
-    return Object.assign(Object.create(Object.prototype), {
+    // Non-enumerable: child_process env serialization and some Object.keys
+    // walks can otherwise leak helper names into spawned environments (CI).
+    const proto = Object.create(Object.prototype) as Record<string, unknown>;
+    const helpers: Record<string, (...args: never[]) => unknown> = {
       getString: (key: string, defaultValue = "") =>
         EnvManager.getInstance().getString(key, defaultValue),
       getNumber: (key: string, defaultValue = 0) =>
@@ -188,7 +191,16 @@ export class EnvManager implements IEnvManager {
       isEncrypted: (key: string) => EnvManager.getInstance().isEncrypted(key),
       getDecrypted: (key: string, privateKey?: string) =>
         EnvManager.getInstance().getDecrypted(key, privateKey),
-    });
+    };
+    for (const [name, fn] of Object.entries(helpers)) {
+      Object.defineProperty(proto, name, {
+        value: fn,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      });
+    }
+    return proto;
   }
 
   public getEnvironment(): string {
