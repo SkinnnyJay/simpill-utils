@@ -18,6 +18,7 @@ export {
   type BooleanFalsyValue,
   type BooleanTruthyValue,
   BUFFERED_ADAPTER_DEFAULTS,
+  DEFAULT_REDACT_PATHS,
   ENV_KEYS,
   type EnvKey,
   ERROR_KEYS,
@@ -42,6 +43,7 @@ export {
   type MetadataKey,
   OUTPUT_CHARS,
   type OutputChar,
+  REDACT_DEFAULTS,
 } from "./constants";
 export {
   clearLogContextProvider,
@@ -104,7 +106,9 @@ export {
   verboseFormatter,
 } from "./formatters";
 export {
+  createDefaultRedactor,
   createRedactor,
+  mergeRedactPaths,
   parseRedactPath,
   type RedactCensor,
   type RedactCensorFn,

@@ -12,7 +12,13 @@ import {
 import { getLogContext } from "./context";
 import { hasEnvConfig, loadAdapterConfigFromEnv } from "./env.config";
 import { VALUE_0 } from "./internal-constants";
-import { createRedactor, type Redactor } from "./redact";
+import {
+  createDefaultRedactor,
+  createRedactor,
+  mergeRedactPaths,
+  type RedactOptions,
+  type Redactor,
+} from "./redact";
 import { safeStringify } from "./safe-stringify";
 import { SimpleLoggerAdapter } from "./simple-adapter";
 import type { LogEntry, Logger, LogMetadata } from "./types";
@@ -24,15 +30,29 @@ let globalRedactor: Redactor | null = null;
 let isMockEnabled = false;
 let isEnvConfigApplied = false;
 
-/** (Re)compile the redactor from current config. Throws on malformed paths. */
+function isRedactOptions(value: RedactOptions | readonly string[]): value is RedactOptions {
+  return typeof value === "object" && value !== null && !Array.isArray(value) && "paths" in value;
+}
+
+/** (Re)compile the redactor from current config. Always includes default sensitive paths. */
 function compileRedactor(): void {
   const redact = globalConfig.redact ?? globalConfig.redactPaths;
   if (!redact) {
-    globalRedactor = null;
+    globalRedactor = createDefaultRedactor();
     return;
   }
-  const paths = Array.isArray(redact) ? redact : (redact as { paths: readonly string[] }).paths;
-  globalRedactor = paths && paths.length > VALUE_0 ? createRedactor(redact) : null;
+  if (Array.isArray(redact)) {
+    globalRedactor = createDefaultRedactor(redact);
+    return;
+  }
+  if (isRedactOptions(redact)) {
+    globalRedactor = createRedactor({
+      paths: mergeRedactPaths(redact.paths),
+      censor: redact.censor,
+    });
+    return;
+  }
+  globalRedactor = createDefaultRedactor();
 }
 
 const loggerCache = new Map<string, Logger>();
@@ -99,8 +119,13 @@ function createLoggerFromAdapter(adapter: LoggerAdapter, name: string): Logger {
 
       let normalizedMetadata = normalizeErrorsInMetadata(mergedMetadata);
 
-      if (globalRedactor && normalizedMetadata) {
-        normalizedMetadata = globalRedactor(normalizedMetadata);
+      if (normalizedMetadata) {
+        if (!globalRedactor) {
+          compileRedactor();
+        }
+        if (globalRedactor) {
+          normalizedMetadata = globalRedactor(normalizedMetadata);
+        }
       }
 
       const entry: LogEntry = {
@@ -241,7 +266,7 @@ export async function resetLoggerFactory(): Promise<void> {
   }
   globalAdapter = null;
   globalConfig = {};
-  globalRedactor = null;
+  globalRedactor = createDefaultRedactor();
   isMockEnabled = false;
   isEnvConfigApplied = false;
   loggerCache.clear();

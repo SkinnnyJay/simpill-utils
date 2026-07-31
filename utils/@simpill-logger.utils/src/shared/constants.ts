@@ -132,6 +132,23 @@ export const REDACT_DEFAULTS = {
   CENSOR: "[REDACTED]",
 } as const;
 
+/**
+ * Sensitive metadata keys always redacted unless callers opt out via a custom
+ * redactor. Matches LoggerOptions.redactPaths documentation.
+ */
+export const DEFAULT_REDACT_PATHS: readonly string[] = [
+  "password",
+  "token",
+  "secret",
+  "authorization",
+  "cookie",
+  "apiKey",
+  "api_key",
+  "accessToken",
+  "refreshToken",
+  "privateKey",
+];
+
 export const FILE_TRANSPORT_DEFAULTS = {
   DIRECTORY: "./logs",
   COMBINED_FILENAME: "combined.log",

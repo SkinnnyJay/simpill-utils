@@ -2,8 +2,13 @@
  * @file Redaction Unit Tests
  */
 
-import { REDACT_DEFAULTS } from "../../../src/shared/constants";
-import { createRedactor, parseRedactPath } from "../../../src/shared/redact";
+import { DEFAULT_REDACT_PATHS, REDACT_DEFAULTS } from "../../../src/shared/constants";
+import {
+  createDefaultRedactor,
+  createRedactor,
+  mergeRedactPaths,
+  parseRedactPath,
+} from "../../../src/shared/redact";
 
 describe("parseRedactPath", () => {
   it("parses dot notation", () => {
@@ -149,6 +154,27 @@ describe("createRedactor", () => {
     const redact = createRedactor(["a.exact", "a.*"]);
     expect(redact({ a: { exact: 1, other: 2 } })).toEqual({
       a: { exact: "[REDACTED]", other: "[REDACTED]" },
+    });
+  });
+});
+
+describe("mergeRedactPaths / createDefaultRedactor", () => {
+  it("includes DEFAULT_REDACT_PATHS", () => {
+    expect(mergeRedactPaths()).toEqual([...DEFAULT_REDACT_PATHS]);
+  });
+
+  it("appends extras without duplicating defaults", () => {
+    expect(mergeRedactPaths(["password", "sessionId"])).toEqual([
+      ...DEFAULT_REDACT_PATHS,
+      "sessionId",
+    ]);
+  });
+
+  it("createDefaultRedactor redacts password by default", () => {
+    const redact = createDefaultRedactor();
+    expect(redact({ password: "x", ok: 1 })).toEqual({
+      password: REDACT_DEFAULTS.CENSOR,
+      ok: 1,
     });
   });
 });

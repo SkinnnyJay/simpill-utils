@@ -18,7 +18,7 @@
  * the caller's object is never mutated.
  */
 
-import { REDACT_DEFAULTS } from "./constants";
+import { DEFAULT_REDACT_PATHS, REDACT_DEFAULTS } from "./constants";
 
 /** Censor function: computes the replacement from the original value + path. */
 export type RedactCensorFn = (value: unknown, path: readonly string[]) => unknown;
@@ -135,6 +135,35 @@ function isPlainContainer(value: unknown): value is Record<string, unknown> | un
   return typeof value === "object" && value !== null;
 }
 
+function isRedactOptions(value: RedactOptions | readonly string[]): value is RedactOptions {
+  return typeof value === "object" && value !== null && !Array.isArray(value) && "paths" in value;
+}
+
+/**
+ * Merge default sensitive paths with optional extra paths (deduped, order preserved).
+ */
+export function mergeRedactPaths(extraPaths?: readonly string[]): readonly string[] {
+  if (!extraPaths || extraPaths.length === 0) {
+    return DEFAULT_REDACT_PATHS;
+  }
+  const seen = new Set<string>(DEFAULT_REDACT_PATHS);
+  const merged: string[] = [...DEFAULT_REDACT_PATHS];
+  for (const path of extraPaths) {
+    if (!seen.has(path)) {
+      seen.add(path);
+      merged.push(path);
+    }
+  }
+  return merged;
+}
+
+/**
+ * Redactor that always includes {@link DEFAULT_REDACT_PATHS}, plus optional extras.
+ */
+export function createDefaultRedactor(extraPaths?: readonly string[]): Redactor {
+  return createRedactor(mergeRedactPaths(extraPaths));
+}
+
 /**
  * Create a compiled redactor. Parsing/validation happens ONCE here (throws on
  * malformed paths); the returned function never throws and never mutates.
@@ -143,15 +172,17 @@ function isPlainContainer(value: unknown): value is Record<string, unknown> | un
  */
 export function createRedactor(options: RedactOptions | readonly string[]): Redactor {
   const opts: RedactOptions = Array.isArray(options)
-    ? { paths: options as readonly string[] }
-    : (options as RedactOptions);
-  const censor = "censor" in opts ? opts.censor : REDACT_DEFAULTS.CENSOR;
+    ? { paths: options }
+    : isRedactOptions(options)
+      ? options
+      : { paths: [] };
+  const censor = opts.censor ?? REDACT_DEFAULTS.CENSOR;
   const plan = buildPlan(opts.paths);
 
   const applyCensor = (value: unknown, pathSegments: string[]): unknown => {
     if (typeof censor === "function") {
       try {
-        return (censor as (v: unknown, p: readonly string[]) => unknown)(value, pathSegments);
+        return censor(value, pathSegments);
       } catch {
         return REDACT_DEFAULTS.CENSOR;
       }

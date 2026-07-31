@@ -324,3 +324,46 @@ describe("EdgeLogger", () => {
     expect(output).toContain("Logger");
   });
 });
+
+describe("edge logger redaction", () => {
+  let consoleInfoSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    consoleInfoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    disableEdgeMockLogger();
+  });
+
+  afterEach(() => {
+    consoleInfoSpy.mockRestore();
+  });
+
+  it("redacts default sensitive metadata keys before console output", () => {
+    const logger = createEdgeLogger("Secure");
+    logger.info("auth", { password: "hunter2", user: "frank", ok: true });
+
+    const output = String(consoleInfoSpy.mock.calls[0][0]);
+    expect(output).toContain("[REDACTED]");
+    expect(output).not.toContain("hunter2");
+    expect(output).toContain('"user":"frank"');
+    expect(output).toContain('"ok":true');
+  });
+
+  it("redacts additional paths from options.redactPaths", () => {
+    const logger = createEdgeLogger("Secure", { redactPaths: ["sessionId"] });
+    logger.info("auth", { sessionId: "abc-123", user: "frank" });
+
+    const output = String(consoleInfoSpy.mock.calls[0][0]);
+    expect(output).toContain("[REDACTED]");
+    expect(output).not.toContain("abc-123");
+    expect(output).toContain('"user":"frank"');
+  });
+
+  it("redacts one-shot edgeLogInfo metadata", () => {
+    edgeLogInfo("OneShot", "msg", { token: "secret-token", safe: 1 });
+
+    const output = String(consoleInfoSpy.mock.calls[0][0]);
+    expect(output).not.toContain("secret-token");
+    expect(output).toContain("[REDACTED]");
+    expect(output).toContain('"safe":1');
+  });
+});

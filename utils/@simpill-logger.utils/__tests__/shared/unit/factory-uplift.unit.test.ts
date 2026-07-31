@@ -112,6 +112,19 @@ describe("factory uplift", () => {
   });
 
   describe("redaction wiring", () => {
+    it("redacts default sensitive keys even without configure redactPaths", () => {
+      const adapter = new CapturingAdapter();
+      setLoggerAdapter(adapter);
+
+      const logger = getLogger("DefaultRedact");
+      logger.info("login", { password: "hunter2", ok: 1 });
+
+      expect(adapter.entries[0].metadata).toEqual({
+        password: "[REDACTED]",
+        ok: 1,
+      });
+    });
+
     it("redacts configured paths before the adapter sees the entry", () => {
       const adapter = new CapturingAdapter();
       setLoggerAdapter(adapter);
