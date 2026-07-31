@@ -11,6 +11,7 @@ This guide explains how to create new packages in the `@simpill` monorepo.
 - [Scripts](#scripts)
 - [Testing Requirements](#testing-requirements)
 - [Code Style](#code-style)
+- [Canonical cache ownership (LRU / TTL / memoize)](#canonical-cache-ownership-lru--ttl--memoize)
 - [Subpath Exports](#subpath-exports)
 - [CI/CD Setup](#cicd-setup)
 - [Checklist](#checklist)
@@ -582,6 +583,33 @@ describe("{FeatureName}", () => {
 
 ---
 
+## Canonical cache ownership (LRU / TTL / memoize)
+
+Several packages expose LRU or TTL helpers. **Do not add new LRU, TTL, or memoize cache implementations outside the canonical homes below.** Extend existing types in those packages instead. Overlapping exports in other packages remain for backward compatibility — document and route new code to the canonical package; do not delete them.
+
+| Need | Canonical package | Symbol(s) | Notes |
+|------|-------------------|-----------|-------|
+| O(1) LRU data structure | `@simpill/collections.utils` | `LRUCache` | Doubly-linked-list LRU; also re-exported from `@simpill/cache.utils` |
+| Simple LRU map (Map insertion order) | `@simpill/cache.utils` | `LRUMap` | O(n) recency reorder; fine for small caches or memoize backing stores |
+| TTL + optional maxSize (structure) | `@simpill/collections.utils` | `TTLCache` | Sync in-memory structure; options `{ ttlMs, maxSize? }` |
+| TTL / in-memory cache abstraction | `@simpill/cache.utils` | `InMemoryCache`, `TTLCache` (server) | Cache-layer API; `InMemoryCache` supports TTL + maxSize (shared) |
+| Redis-backed cache | `@simpill/cache.utils/server` | `RedisCache` | Requires a `RedisCacheAdapter` |
+| Function memoization | `@simpill/cache.utils` | `memoize`, `memoizeAsync` | Not provided by `@simpill/function.utils` |
+| Legacy bounded LRU + optional alerts | `@simpill/object.utils` | `BoundedLRUMap` | Preserved for compatibility; new code should use `LRUMap` or `LRUCache` |
+| Convenience re-exports | `@simpill/misc.utils` | `memoize`, `BoundedLRUMap`, … | Re-exports only; prefer the canonical package when importing one utility |
+
+**Choosing a package**
+
+- **`@simpill/collections.utils`** — LRU/TTL as **collection building blocks** (sync structures alongside Queue, Deque, etc.).
+- **`@simpill/cache.utils`** — **Cache abstractions**: memoization, `InMemoryCache`, server `TTLCache`, `RedisCache`, and `LRUMap`.
+- Prefer **`LRUCache`** (collections) when O(1) get/set recency matters; use **`LRUMap`** (cache.utils) for simplicity or as a memoize backing store.
+
+**Contributor rule:** no new LRU/TTL/memoize implementations in other utils packages. If an existing export overlaps, add a README or JSDoc pointer to the canonical package rather than duplicating logic.
+
+Package READMEs with overlap notes: [cache.utils](./utils/@simpill-cache.utils/README.md), [collections.utils](./utils/@simpill-collections.utils/README.md), [object.utils](./utils/@simpill-object.utils/README.md) (`BoundedLRUMap`), [misc.utils](./utils/@simpill-misc.utils/README.md) (re-export table).
+
+---
+
 ## Subpath Exports
 
 All packages SHOULD support subpath exports for tree-shaking:
@@ -723,7 +751,8 @@ Use this checklist when creating a new package:
 - [ ] `src/server/index.ts` server exports
 - [ ] `src/shared/index.ts` shared exports
 - [ ] Implementation files in appropriate directories
-- [ ] No unbounded caches by default (document or use bounded cache/LRU)
+- [ ] No unbounded caches by default (document or use bounded cache/LRU; see [Canonical cache ownership](#canonical-cache-ownership-lru--ttl--memoize))
+- [ ] No new LRU/TTL/memoize implementations outside `@simpill/collections.utils` or `@simpill/cache.utils`
 - [ ] Timers and event listeners cleaned up in public APIs (e.g. destroy/close)
 
 ### Tests

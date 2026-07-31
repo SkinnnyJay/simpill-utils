@@ -11,8 +11,8 @@ This monorepo hosts lightweight, type-safe TypeScript utility packages under the
 | `@simpill/env.utils` | Type-safe environment variable utilities | Stable |
 | `@simpill/logger.utils` | Structured logging with correlation context | Stable |
 | `@simpill/object.utils` | Object utilities (pick, omit, merge, get/set, guards) | Stable |
-| `@simpill/misc.utils` | Backend misc: singleton, debounce, throttle, LRU, polling, enums, UUID, once, memoize | New |
-| `@simpill/cache.utils` | LRU map, TTL cache, memoize | New |
+| `@simpill/misc.utils` | Convenience re-exports (debounce, memoize, BoundedLRUMap, etc.); not canonical for caches | New |
+| `@simpill/cache.utils` | **Canonical** cache layer: LRUMap, InMemoryCache, memoize/memoizeAsync, server TTLCache, RedisCache; re-exports LRUCache from collections | New |
 | `@simpill/async.utils` | raceWithTimeout, delay, retry | New |
 | `@simpill/function.utils` | debounce, throttle, once, pipe, compose, arguments, annotations | New |
 | `@simpill/string.utils` | formatting, builders, casing, rich text | New |
@@ -32,7 +32,7 @@ This monorepo hosts lightweight, type-safe TypeScript utility packages under the
 | `@simpill/api.utils` | Typed API factory: fetch client, handler registry, Zod, middleware, retry/timeout | New |
 | `@simpill/annotations.utils` | createMetadataStore, getMetadata, setMetadata | New |
 | `@simpill/array.utils` | unique, chunk, compact, groupBy, sortBy, partition, zip, keyBy, countBy, intersection, difference, union, sample, shuffle, take, drop | New |
-| `@simpill/collections.utils` | LinkedList, Vector, Queue, Stack, Deque, CircularBuffer, LRU/TTL cache, MultiMap, BiMap, OrderedMap, TypedSet | New |
+| `@simpill/collections.utils` | Data structures; **canonical** O(1) `LRUCache` and structural `TTLCache` | New |
 | `@simpill/request-context.utils` | AsyncLocalStorage request context (requestId, traceId), runWithRequestContext, getRequestContext | New |
 | `@simpill/http.utils` | Fetch with timeout, retry, createHttpClient, isRetryableStatus | New |
 | `@simpill/resilience.utils` | Circuit breaker, rate limiter, bulkhead, withJitter | New |
@@ -47,6 +47,15 @@ This monorepo hosts lightweight, type-safe TypeScript utility packages under the
 | `@simpill/protocols.utils` | HTTP/correlation/env/log constants | New |
 | `@simpill/token-optimizer.utils` | Token cleaning strategies/telemetry | New |
 | `@simpill/enum.utils` | EnumHelper, getEnumValue | New |
+
+### Canonical cache ownership (LRU / TTL / memoize)
+
+Do **not** add new LRU, TTL, or memoize implementations outside the canonical packages. Full table and contributor rules: [CONTRIBUTING.md — Canonical cache ownership](./CONTRIBUTING.md#canonical-cache-ownership-lru--ttl--memoize).
+
+- **`@simpill/collections.utils`** — structural `LRUCache`, `TTLCache` (sync collection building blocks).
+- **`@simpill/cache.utils`** — `LRUMap`, `InMemoryCache`, `memoize` / `memoizeAsync`, server `TTLCache`, `RedisCache`; re-exports `LRUCache` from collections.
+- **`@simpill/object.utils`** — legacy `BoundedLRUMap` only (prefer cache.utils / collections.utils for new code).
+- **`@simpill/misc.utils`** — re-exports; import from the canonical package when you need a single utility.
 
 ## Project Structure
 
