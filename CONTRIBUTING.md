@@ -33,7 +33,7 @@ Packages live under `utils/@simpill-`; the directory name matches the package su
 
 Some deliverables live **outside** the tracked tree or as **git submodules**:
 
-- **ACP LLM CLI (`@simpill/acp-llm-cli`):** [SkinnnyJay/acp-llm-cli](https://github.com/SkinnnyJay/acp-llm-cli) — **git submodule** at `utils/@simpill-acp-llm-cli.utils/`. After clone run `git submodule update --init --recursive`. Root `package.json` depends on the npm package; CI for that tree runs in the submodule repo.
+- **ACP LLM CLI (`@simpill/acp-llm-cli`):** [SkinnnyJay/acp-llm-cli](https://github.com/SkinnnyJay/acp-llm-cli) — **git submodule** at `utils/@simpill-acp-llm-cli.utils/`. After clone run `git submodule update --init --recursive`. Not a root `package.json` dependency until published to npm; CI for that tree runs in the submodule repo.
 - **Image AI toolkit:** [ai-image-generated-ai-cli](https://github.com/simpill/ai-image-generated-ai-cli) — referenced from this monorepo root `package.json` via `github:simpill/ai-image-generated-ai-cli`; CLI available as `npx ai-image-gen` after `npm install`.
 - **Sandbox apps:** [simpill-sandbox](https://github.com/simpill/simpill-sandbox) — todo-app and other demo apps; **not** referenced from this root (no workspace or dependency). Develop and run in that repo.
 
