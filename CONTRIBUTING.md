@@ -192,7 +192,9 @@ Test files MUST follow this naming convention:
 ### tsconfig.json
 
 All packages extend the shared root `tsconfig.base.json` (ES2022, strict, commonjs). Only
-package-specific overrides belong in the package tsconfig:
+package-specific overrides belong in the package tsconfig. **Always set `"outDir": "dist"` in
+the package** — relative paths in `tsconfig.base.json` resolve against the base file (repo root),
+so putting `outDir` only in the base emits into the monorepo root instead of the package.
 
 ```json
 {
@@ -201,6 +203,7 @@ package-specific overrides belong in the package tsconfig:
   "compilerOptions": {
     "types": ["node", "jest"],
     "rootDir": "./src",
+    "outDir": "dist",
     "lib": ["ES2022"]
   },
   "include": ["src/**/*"],
@@ -209,7 +212,8 @@ package-specific overrides belong in the package tsconfig:
 ```
 
 For packages that target browser/Edge runtimes add `"DOM"` to `lib`. For React packages also
-add `"jsx": "react-jsx"`. Never copy fields that are already in `tsconfig.base.json`.
+add `"jsx": "react-jsx"`. Never copy fields that are already in `tsconfig.base.json` (except
+`outDir`, which must stay package-local).
 
 ### jest.config.js
 

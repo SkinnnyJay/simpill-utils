@@ -1,7 +1,4 @@
-import {
-  createEventEmitter,
-  EventWaitTimeoutError,
-} from "../../../src/shared/events.utils";
+import { createEventEmitter, EventWaitTimeoutError } from "../../../src/shared/events.utils";
 
 type M = { tick: number; msg: string };
 

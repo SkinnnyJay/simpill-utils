@@ -46,5 +46,11 @@ jobs:
       - name: Security audit (production deps)
         run: npm audit --omit=dev --audit-level=critical
 
+      # Root node_modules/@simpill/* are published tarballs. Package CI uses
+      # file: siblings; if root packages remain, tsc/jest resolve the npm
+      # copies and miss local builds (and base outDir used to emit to root).
+      - name: Clear root install (avoid shadowing local file: packages)
+        run: rm -rf node_modules
+
       - name: Run utils CI (all packages)
         run: bash scripts/ci/run-utils-all-ci.sh
