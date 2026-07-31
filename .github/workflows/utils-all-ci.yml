@@ -15,14 +15,6 @@ on:
       - "package-lock.json"
   pull_request:
     branches: [main]
-    paths:
-      - "utils/**"
-      - "scripts/ci/**"
-      - ".github/workflows/utils-all-ci.yml"
-      - ".gitmodules"
-      - "tsconfig.base.json"
-      - "jest.config.base.js"
-      - "package-lock.json"
 
 jobs:
   test:
