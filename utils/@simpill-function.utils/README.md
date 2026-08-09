@@ -41,7 +41,9 @@ const transform2 = compose(capitalize, toLower, trim);
 | **Once** | Run only the first time |
 | **Pipe / Compose** | Left-to-right (pipe) or right-to-left (compose) composition; sync only — use `pipeAsync` from `@simpill/patterns.utils` for async |
 | **Arguments** | spreadArgs, fillArgs, requireArgs, firstArg, lastArg, restArgs |
-| **Annotations** | setAnnotation, getAnnotation, hasAnnotation, deleteAnnotation, getAnnotations — metadata on any object |
+| **Annotations** | setAnnotation, getAnnotation, hasAnnotation, deleteAnnotation, getAnnotations, getInheritedAnnotation, getAnnotationKeys, clearAnnotations, createAnnotationStore — metadata on any object |
+| **Typed metadata keys** | createMetadataKey<T> — symbol keys that carry their value type |
+| **Decorator metadata** | symbolMetadata, getDecoratorMetadata, readDecoratorMetadata, metadataStoreFromDecorator, ensureSymbolMetadata — TC39 Symbol.metadata interop |
 | **noop** | No-op helper |
 
 ---
@@ -66,7 +68,12 @@ import { ... } from "@simpill/function.utils/shared";  // Shared only
 - **compose**(...fns) → composed function (right-to-left). Sync only.
 - **pipeWith** / **composeWith** → typed overloads for pipe/compose with distinct input/output types (inference up to 12 functions for `pipeWith`, 8 for `composeWith`, untyped rest fallback beyond that).
 - **spreadArgs**(args), **fillArgs**(template, values), **requireArgs**(args, count), **firstArg**/ **lastArg**/ **restArgs**(args, from?) — argument helpers (see below).
-- **setAnnotation**(target, key, value), **getAnnotation**(target, key), **hasAnnotation**, **deleteAnnotation**, **getAnnotations** — metadata on objects (validation, DI, plugins).
+- **setAnnotation**(target, key, value), **getAnnotation**(target, key), **hasAnnotation**, **deleteAnnotation**, **getAnnotations** — metadata on objects (validation, DI, plugins). Keys can be strings, symbols, or typed keys.
+- **getInheritedAnnotation** / **hasInheritedAnnotation** — walk the prototype chain, so subclasses see base-class annotations.
+- **getAnnotationKeys**(target), **clearAnnotations**(target) — enumerate or wipe a target's annotations.
+- **createAnnotationStore**() — isolated store (own WeakMap) for scoped or test-isolated state; the module-level functions share one global store registered via `Symbol.for` so duplicate package copies (npm dedup failures, mixed ESM/CJS graphs) still see the same state.
+- **createMetadataKey<T>**(description?) — a symbol key carrying its value type: `store.get(key)` / `getAnnotation(target, key)` infer `T` with no assertions.
+- **symbolMetadata**(), **getDecoratorMetadata**(cls), **readDecoratorMetadata**(cls, key), **metadataStoreFromDecorator**(metadata) — read TC39 decorator metadata (`Symbol.metadata`, TS 5.2+) through the same store API, no reflect-metadata needed. **ensureSymbolMetadata**() is an explicit opt-in polyfill for runtimes without native `Symbol.metadata`.
 - **noop**() → no-op function
 
 ### This binding
