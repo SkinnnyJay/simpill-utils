@@ -23,10 +23,12 @@ import type {
 } from "../shared";
 import {
   ERROR_ARGON2_UNAVAILABLE,
+  ERROR_KDF_PARAM_RANGE,
   ERROR_PHC_FORMAT,
   ERROR_RANDOM_BYTES_LENGTH,
   ERROR_RANDOM_INT_RANGE,
   ERROR_SCRYPT_COST,
+  KDF_BOUNDS,
   VALUE_0,
 } from "../shared/constants";
 
@@ -189,6 +191,62 @@ export function hasArgon2(): boolean {
   return typeof nativeArgon2Sync === "function";
 }
 
+/**
+ * Bounds-check KDF parameters. Used by BOTH hashPassword (where an out-of-range
+ * value is programmer error) and verifyPassword (where it means the stored PHC
+ * string is malformed / hostile). Keeping one definition is what makes
+ * "anything hashPassword emits, verifyPassword accepts" structural rather than
+ * accidental.
+ */
+function checkKdfParams(params: {
+  saltLength?: number;
+  keyLength?: number;
+  scrypt?: { ln: number; r: number; p: number };
+  argon2?: { m: number; t: number; p: number };
+}): string | null {
+  const B = KDF_BOUNDS;
+  const inRange = (v: number, lo: number, hi: number): boolean =>
+    Number.isInteger(v) && v >= lo && v <= hi;
+
+  if (
+    params.saltLength !== undefined &&
+    !inRange(params.saltLength, B.SALT_LENGTH_MIN, B.SALT_LENGTH_MAX)
+  ) {
+    return `saltLength ${params.saltLength} outside [${B.SALT_LENGTH_MIN}, ${B.SALT_LENGTH_MAX}]`;
+  }
+  if (
+    params.keyLength !== undefined &&
+    !inRange(params.keyLength, B.KEY_LENGTH_MIN, B.KEY_LENGTH_MAX)
+  ) {
+    return `keyLength ${params.keyLength} outside [${B.KEY_LENGTH_MIN}, ${B.KEY_LENGTH_MAX}]`;
+  }
+  if (params.scrypt) {
+    const { ln, r, p } = params.scrypt;
+    if (!inRange(ln, B.SCRYPT_LN_MIN, B.SCRYPT_LN_MAX)) {
+      return `scrypt ln ${ln} outside [${B.SCRYPT_LN_MIN}, ${B.SCRYPT_LN_MAX}]`;
+    }
+    if (!inRange(r, B.SCRYPT_R_MIN, B.SCRYPT_R_MAX)) {
+      return `scrypt r ${r} outside [${B.SCRYPT_R_MIN}, ${B.SCRYPT_R_MAX}]`;
+    }
+    if (!inRange(p, B.SCRYPT_P_MIN, B.SCRYPT_P_MAX)) {
+      return `scrypt p ${p} outside [${B.SCRYPT_P_MIN}, ${B.SCRYPT_P_MAX}]`;
+    }
+  }
+  if (params.argon2) {
+    const { m, t, p } = params.argon2;
+    if (!inRange(m, B.ARGON2_M_MIN, B.ARGON2_M_MAX)) {
+      return `argon2id m ${m} outside [${B.ARGON2_M_MIN}, ${B.ARGON2_M_MAX}]`;
+    }
+    if (!inRange(t, B.ARGON2_T_MIN, B.ARGON2_T_MAX)) {
+      return `argon2id t ${t} outside [${B.ARGON2_T_MIN}, ${B.ARGON2_T_MAX}]`;
+    }
+    if (!inRange(p, B.ARGON2_P_MIN, B.ARGON2_P_MAX)) {
+      return `argon2id p ${p} outside [${B.ARGON2_P_MIN}, ${B.ARGON2_P_MAX}]`;
+    }
+  }
+  return null;
+}
+
 const PHC_SCRYPT_RE = /^\$scrypt\$ln=(\d+),r=(\d+),p=(\d+)\$([A-Za-z0-9+/]+)\$([A-Za-z0-9+/]+)$/;
 const PHC_ARGON2ID_RE =
   /^\$argon2id\$v=19\$m=(\d+),t=(\d+),p=(\d+)\$([A-Za-z0-9+/]+)\$([A-Za-z0-9+/]+)$/;
@@ -210,6 +268,12 @@ export function hashPassword(password: string | Buffer, options: HashPasswordOpt
     const memoryCost = options.memoryCost ?? 65536;
     const timeCost = options.timeCost ?? 3;
     const parallelism = options.parallelism ?? 4;
+    const argonErr = checkKdfParams({
+      saltLength,
+      keyLength,
+      argon2: { m: memoryCost, t: timeCost, p: parallelism },
+    });
+    if (argonErr) throw new RangeError(`${ERROR_KDF_PARAM_RANGE}: ${argonErr}`);
     const derived = nativeArgon2Sync("argon2id", {
       message: toBuffer(password),
       nonce: salt,
@@ -224,6 +288,12 @@ export function hashPassword(password: string | Buffer, options: HashPasswordOpt
   const blockSize = options.blockSize ?? 8;
   const parallelism = options.parallelism ?? 1;
   if (cost < 2 || (cost & (cost - 1)) !== 0) throw new RangeError(ERROR_SCRYPT_COST);
+  const scryptErr = checkKdfParams({
+    saltLength,
+    keyLength,
+    scrypt: { ln: Math.log2(cost), r: blockSize, p: parallelism },
+  });
+  if (scryptErr) throw new RangeError(`${ERROR_KDF_PARAM_RANGE}: ${scryptErr}`);
   const derived = scryptDerive(password, salt, keyLength, cost, blockSize, parallelism);
   return `$scrypt$ln=${Math.log2(cost)},r=${blockSize},p=${parallelism}$${b64(salt)}$${b64(derived)}`;
 }
@@ -238,6 +308,17 @@ export function verifyPassword(password: string | Buffer, stored: string): boole
   if (scryptMatch) {
     const [, ln, r, p, saltB64, hashB64] = scryptMatch;
     const expected = unb64(hashB64);
+    // An out-of-range parameter in a STORED string means the value is
+    // malformed or hostile, so it is a format error, not a failed login.
+    if (
+      checkKdfParams({
+        saltLength: unb64(saltB64).length,
+        keyLength: expected.length,
+        scrypt: { ln: Number(ln), r: Number(r), p: Number(p) },
+      })
+    ) {
+      throw new TypeError(ERROR_PHC_FORMAT);
+    }
     const derived = scryptDerive(
       password,
       unb64(saltB64),
@@ -250,9 +331,21 @@ export function verifyPassword(password: string | Buffer, stored: string): boole
   }
   const argonMatch = PHC_ARGON2ID_RE.exec(stored);
   if (argonMatch) {
-    if (!nativeArgon2Sync) throw new Error(ERROR_ARGON2_UNAVAILABLE);
     const [, m, t, p, saltB64, hashB64] = argonMatch;
     const expected = unb64(hashB64);
+    // Format validation precedes the runtime-capability check: a stored string
+    // carrying out-of-range parameters is malformed whether or not this Node
+    // build can compute argon2id.
+    if (
+      checkKdfParams({
+        saltLength: unb64(saltB64).length,
+        keyLength: expected.length,
+        argon2: { m: Number(m), t: Number(t), p: Number(p) },
+      })
+    ) {
+      throw new TypeError(ERROR_PHC_FORMAT);
+    }
+    if (!nativeArgon2Sync) throw new Error(ERROR_ARGON2_UNAVAILABLE);
     const derived = nativeArgon2Sync("argon2id", {
       message: toBuffer(password),
       nonce: unb64(saltB64),
