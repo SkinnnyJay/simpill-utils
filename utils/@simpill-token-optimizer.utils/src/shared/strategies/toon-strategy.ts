@@ -20,9 +20,10 @@ const ensureToonModule = async (): Promise<ToonModule> => {
         const toon = await import("@toon-format/toon");
         return toon as ToonModule;
       } catch {
-        return {
-          encode: (value: unknown) => JSON.stringify(value, null, INDENT_SPACES),
-        };
+        // The encoder is an optional dependency. Falling back to pretty-printed JSON made every
+        // TOON request *expand* the prompt (measured 51 -> 111 chars) while reporting success.
+        // Failing here lets the optimizer substitute its passthrough instead.
+        throw new Error(ERROR_MESSAGES.TOON_ENCODER_UNAVAILABLE);
       }
     })();
   }

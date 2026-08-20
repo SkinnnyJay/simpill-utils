@@ -28,7 +28,13 @@ const trimTransform: CleanerTransform = (text) => {
 };
 
 const collapseWhitespaceTransform: CleanerTransform = (text) => {
-  const collapsed = text.replace(/[\t\f\v ]{2,}/g, " ");
+  // Collapse runs *within* a line but preserve leading indentation. YAML nesting, Markdown list
+  // depth and fenced code blocks are all indentation-significant, and this transform is applied
+  // to every prompt regardless of compression type - flattening them changed their meaning.
+  const collapsed = text.replace(
+    /^([ \t\f\v]*)(.*)$/gm,
+    (_match, indent: string, rest: string) => indent + rest.replace(/[\t\f\v ]{2,}/g, " "),
+  );
   return {
     output: collapsed,
     applied: collapsed !== text,
