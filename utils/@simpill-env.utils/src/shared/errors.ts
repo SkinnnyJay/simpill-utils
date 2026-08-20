@@ -56,16 +56,30 @@ import type { EnvParseType } from "./constants";
 // Re-export for convenience
 export type { EnvParseType } from "./constants";
 
+/**
+ * Attach a value that stays readable but never serializes. Own enumerable properties are what
+ * JSON.stringify emits; `message` is non-enumerable, so a redacted message plus an enumerable
+ * raw-value field means the serialized error carries the secret and not the redaction.
+ */
+function defineNonEnumerable(target: object, key: string, value: string): void {
+  Object.defineProperty(target, key, { value, enumerable: false, writable: false });
+}
+
 /** Error thrown when an environment variable value cannot be parsed. */
 export class EnvParseError extends EnvError {
   public readonly key: string;
   public readonly rawValue: string;
   public readonly expectedType: EnvParseType;
   /**
-   * Server-side debug detail containing the raw value. Not included in `.message`
-   * to prevent accidental credential disclosure when errors are serialized to clients.
+   * Server-side debug detail containing the raw value.
+   *
+   * Defined non-enumerable in the constructor: `Error.prototype.message` is itself
+   * non-enumerable, so `JSON.stringify(err)` drops the redacted message and would otherwise
+   * emit this field verbatim - which is how errors reach log pipelines, crash reporters and
+   * HTTP response bodies. Non-enumerable keeps it available for local debugging while keeping
+   * it out of every serializer.
    */
-  public readonly detail: string;
+  public readonly detail!: string;
 
   constructor(key: string, rawValue: string, expectedType: EnvParseType) {
     // Secret-like keys are redacted in BOTH the message and the stored
@@ -80,7 +94,7 @@ export class EnvParseError extends EnvError {
     this.key = key;
     this.rawValue = String(safeValue);
     this.expectedType = expectedType;
-    this.detail = `Got: ${rawValue}`;
+    defineNonEnumerable(this, "detail", `Got: ${rawValue}`);
   }
 }
 
@@ -90,10 +104,10 @@ export class EnvValidationError extends EnvError {
   public readonly value: string | number | boolean;
   public readonly reason: string;
   /**
-   * Server-side debug detail containing the rejected value. Not included in `.message`
-   * to prevent accidental credential disclosure when errors are serialized to clients.
+   * Server-side debug detail containing the rejected value.
+   * Non-enumerable for the same reason as EnvParseError.detail - see that field.
    */
-  public readonly detail: string;
+  public readonly detail!: string;
 
   constructor(key: string, value: string | number | boolean, reason: string) {
     // See EnvParseError: secret-like keys redact message AND stored value.
@@ -106,7 +120,7 @@ export class EnvValidationError extends EnvError {
     this.key = key;
     this.value = safeValue;
     this.reason = reason;
-    this.detail = `Got: ${JSON.stringify(value)}`;
+    defineNonEnumerable(this, "detail", `Got: ${JSON.stringify(value)}`);
   }
 }
 
