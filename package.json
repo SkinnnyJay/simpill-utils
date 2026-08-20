@@ -28,11 +28,7 @@
     "package.json",
     "README.md",
     "index.ts",
-    "tsconfig.json",
-    "scripts",
-    "docs",
-    "CONTRIBUTING.md",
-    "__tests__"
+    "tsconfig.json"
   ],
   "scripts": {
     "clean": "bash scripts/monorepo/monorepo-clean.sh",
