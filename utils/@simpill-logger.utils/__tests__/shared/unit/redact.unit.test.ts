@@ -178,3 +178,82 @@ describe("mergeRedactPaths / createDefaultRedactor", () => {
     });
   });
 });
+
+describe("default redaction reaches nested and oddly-cased keys", () => {
+  it("censors sensitive keys at any depth, not just the top level", () => {
+    const redact = createDefaultRedactor();
+
+    const result = redact({
+      password: "top",
+      user: { password: "nested" },
+      req: { headers: { cookie: "session=abc" } },
+      keep: "visible",
+    });
+
+    expect(result).toEqual({
+      password: "[REDACTED]",
+      user: { password: "[REDACTED]" },
+      req: { headers: { cookie: "[REDACTED]" } },
+      keep: "visible",
+    });
+  });
+
+  it("matches key names ignoring case and _/- separators", () => {
+    const redact = createDefaultRedactor();
+
+    expect(
+      redact({ Authorization: "Bearer x", API_KEY: "a", "access-token": "t", apiKey: "b" })
+    ).toEqual({
+      Authorization: "[REDACTED]",
+      API_KEY: "[REDACTED]",
+      "access-token": "[REDACTED]",
+      apiKey: "[REDACTED]",
+    });
+  });
+
+  it("censors sensitive keys inside array elements", () => {
+    const redact = createDefaultRedactor();
+
+    expect(redact({ users: [{ name: "a", secret: "s1" }, { secret: "s2" }] })).toEqual({
+      users: [{ name: "a", secret: "[REDACTED]" }, { secret: "[REDACTED]" }],
+    });
+  });
+
+  it("terminates on cyclic metadata instead of recursing forever", () => {
+    const redact = createDefaultRedactor();
+    const node: Record<string, unknown> = { token: "t" };
+    node.self = node;
+
+    const result = redact(node) as Record<string, unknown>;
+
+    expect(result.token).toBe("[REDACTED]");
+  });
+
+  it("redacts a value reachable twice in both places (shared ref, not a cycle)", () => {
+    const redact = createDefaultRedactor();
+    const shared = { secret: "s" };
+
+    const result = redact({ a: shared, b: shared }) as Record<string, Record<string, unknown>>;
+
+    expect(result.a?.secret).toBe("[REDACTED]");
+    expect(result.b?.secret).toBe("[REDACTED]");
+  });
+
+  it("never mutates the caller's object", () => {
+    const redact = createDefaultRedactor();
+    const input = { user: { password: "nested" } };
+
+    redact(input);
+
+    expect(input.user.password).toBe("nested");
+  });
+
+  it("still honours explicit pino-style paths alongside key matching", () => {
+    const redact = createDefaultRedactor(["custom.field"]);
+
+    expect(redact({ custom: { field: "x", other: "y" }, field: "top" })).toEqual({
+      custom: { field: "[REDACTED]", other: "y" },
+      field: "top",
+    });
+  });
+});

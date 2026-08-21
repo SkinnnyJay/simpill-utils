@@ -47,8 +47,11 @@ function compileRedactor(): void {
   }
   if (isRedactOptions(redact)) {
     globalRedactor = createRedactor({
-      paths: mergeRedactPaths(redact.paths),
+      paths: redact.paths,
       censor: redact.censor,
+      // Explicit options still get the built-in key names; opting out is what a
+      // custom redactor is for.
+      sensitiveKeys: mergeRedactPaths(redact.sensitiveKeys),
     });
     return;
   }
