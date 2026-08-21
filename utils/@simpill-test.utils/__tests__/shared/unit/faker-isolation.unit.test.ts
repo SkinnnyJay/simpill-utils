@@ -10,7 +10,6 @@
  * consumer would.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
 import * as path from "node:path";
 
 const pkgRoot = path.resolve(__dirname, "../../..");
@@ -23,9 +22,13 @@ function runNode(script: string): string {
 }
 
 beforeAll(() => {
-  if (!existsSync(path.join(pkgRoot, "dist/shared/faker-wrapper.js"))) {
-    execFileSync("npx", ["tsc"], { cwd: pkgRoot, stdio: "ignore" });
-  }
+  // Always rebuild. Guarding on the file merely EXISTING meant the child process
+  // loaded whatever dist/ happened to be lying around - a build from another
+  // branch, or from before the fix - so this suite could report a pass while
+  // exercising code that still has the seed-bleed bug it exists to pin, or fail
+  // against source that is actually correct. Compiling is cheap next to spawning
+  // a node process per test.
+  execFileSync("npx", ["tsc"], { cwd: pkgRoot, stdio: "ignore" });
 }, 120000);
 
 describe("FakerWrapper instance isolation (real @faker-js/faker via dist)", () => {
