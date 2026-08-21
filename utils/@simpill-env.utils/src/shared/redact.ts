@@ -18,12 +18,13 @@ const MAX_ECHOED_VALUE_LENGTH = 256;
 /**
  * Key-name heuristic for secret-bearing environment variables.
  * Matches: SECRET, TOKEN, PASSWORD/PASSWD/PWD, CREDENTIAL, PRIVATE,
- * AUTH (segment), API_KEY/APIKEY/ACCESS_KEY, SIGNING, *_KEY suffix,
+ * AUTH/AUTHN/AUTHZ/AUTHENTICATION/AUTHORIZATION, API_KEY/APIKEY/ACCESS_KEY, SIGNING,
+ * *_KEY suffix, PASSPHRASE,
  * DSN, DATABASE_URL, CONNECTION_STRING, COOKIE, CERT segments.
  * Deliberately does NOT match bare "KEY", "PORT", or generic "*_URL".
  */
 export const SECRET_KEY_PATTERN =
-  /(SECRET|TOKEN|PASSW(OR)?D|PWD|CREDENTIAL|PRIVATE|(^|_)AUTH(_|$)|API_?KEY|ACCESS_?KEY|SIGNING|_KEY$|(^|_)DSN(_|$)|DATABASE_URL|CONNECTION_STRING|(^|_)COOKIE(_|$)|(^|_)CERT(_|$))/i;
+  /(SECRET|TOKEN|PASSW(OR)?D|PASSPHRASE|PWD|CREDENTIAL|PRIVATE|(^|_)AUTH(N|Z|ENTICATION|ORIZATION)?(_|$)|API_?KEY|ACCESS_?KEY|SIGNING|_KEY$|(^|_)DSN(_|$)|DATABASE_URL|CONNECTION_STRING|(^|_)COOKIE(_|$)|(^|_)CERT(_|$))/i;
 
 /** True when the key name looks like it holds a secret. */
 export function isSecretLikeKey(key: string): boolean {
