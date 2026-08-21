@@ -260,6 +260,22 @@ describe("sum (Neumaier compensated)", () => {
     expect(avg(Array(10).fill(0.1))).toBe(0.1);
     expect(avg([])).toBe(0);
   });
+
+  it("propagates infinities instead of turning them into NaN", () => {
+    // The compensation term is NaN on a non-finite total (Infinity - Infinity), so adding it
+    // unconditionally made this less accurate than a naive reduce on exactly these inputs.
+    expect(sum([Number.POSITIVE_INFINITY])).toBe(Number.POSITIVE_INFINITY);
+    expect(sum([1, Number.POSITIVE_INFINITY])).toBe(Number.POSITIVE_INFINITY);
+    expect(sum([Number.NEGATIVE_INFINITY])).toBe(Number.NEGATIVE_INFINITY);
+    // Overflow to Infinity must survive the same way.
+    expect(sum([Number.MAX_VALUE, Number.MAX_VALUE])).toBe(Number.POSITIVE_INFINITY);
+    expect(avg([Number.POSITIVE_INFINITY])).toBe(Number.POSITIVE_INFINITY);
+  });
+
+  it("still yields NaN for genuinely undefined sums", () => {
+    expect(sum([Number.NaN])).toBeNaN();
+    expect(sum([Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])).toBeNaN();
+  });
 });
 
 describe("sumPrecise (ES2026 Math.sumPrecise semantics)", () => {

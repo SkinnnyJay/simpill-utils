@@ -229,6 +229,22 @@ describe("sumBy — compensated summation", () => {
   it("empty iterable sums to 0", () => {
     expect(sumBy([], (x: number) => x)).toBe(0);
   });
+
+  it("propagates infinities instead of turning them into NaN", () => {
+    // The compensation term is NaN on a non-finite total (Infinity - Infinity), so adding it
+    // unconditionally made this less accurate than a naive reduce on exactly these inputs.
+    const identity = (x: number): number => x;
+    expect(sumBy([Number.POSITIVE_INFINITY], identity)).toBe(Number.POSITIVE_INFINITY);
+    expect(sumBy([1, Number.POSITIVE_INFINITY], identity)).toBe(Number.POSITIVE_INFINITY);
+    expect(sumBy([Number.NEGATIVE_INFINITY], identity)).toBe(Number.NEGATIVE_INFINITY);
+    expect(sumBy([Number.MAX_VALUE, Number.MAX_VALUE], identity)).toBe(Number.POSITIVE_INFINITY);
+  });
+
+  it("still yields NaN for genuinely undefined sums", () => {
+    const identity = (x: number): number => x;
+    expect(sumBy([Number.NaN], identity)).toBeNaN();
+    expect(sumBy([Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY], identity)).toBeNaN();
+  });
 });
 
 describe("range", () => {
