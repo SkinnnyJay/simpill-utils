@@ -11,20 +11,34 @@ export interface WithVersion {
   version?: number;
 }
 
+function finiteOr(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+/**
+ * Stamps createdAt/updatedAt. An existing finite createdAt is preserved —
+ * the original overwrote it, so re-stamping an already-persisted record
+ * silently destroyed its real creation time.
+ */
 export function addCreatedAt<T extends object>(obj: T): T & WithTimestamps {
   const now = Date.now();
-  return { ...obj, createdAt: now, updatedAt: now };
+  const createdAt = finiteOr((obj as WithTimestamps).createdAt, now);
+  return { ...obj, createdAt, updatedAt: now };
 }
 
 export function touchUpdatedAt<T extends WithTimestamps>(obj: T): T {
   return { ...obj, updatedAt: Date.now() };
 }
 
+/**
+ * Non-finite versions (NaN/Infinity) are treated as 0 — the original produced
+ * version: NaN forever once a NaN slipped in (NaN + 1 === NaN).
+ */
 export function withNextVersion<T extends WithVersion>(obj: T): T {
-  const v = (obj.version ?? 0) + 1;
+  const v = finiteOr(obj.version, 0) + 1;
   return { ...obj, version: v };
 }
 
 export function isNewerVersion(a: WithVersion, b: WithVersion): boolean {
-  return (a.version ?? 0) > (b.version ?? 0);
+  return finiteOr(a.version, 0) > finiteOr(b.version, 0);
 }

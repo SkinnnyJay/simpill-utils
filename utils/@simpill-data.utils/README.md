@@ -43,13 +43,13 @@ const merged = mergeConfigLayers([{ port: 3000 }, { host: "localhost" }]);
 
 | Feature | Description |
 |---------|-------------|
-| **Validation** | valid, invalid, validateString, validateNumber, validateRecord, isString, isNumber, isRecord |
+| **Validation** | valid, invalid, validateString, validateNumber, validateBoolean, validateRecord, validateArray, validateEnum, refine, mapResult, andThenResult, isString, isNumber, isRecord |
 | **Prepare** | withDefaults, coerceNumber, coerceBoolean, coerceString, sanitizeForJson |
 | **Config** | mergeConfigLayers, requireKeys, configFromEnv |
 | **Lifecycle** | addCreatedAt, touchUpdatedAt, withNextVersion, isNewerVersion |
 | **Extend** | deepDefaults, getByPath, setByPath |
 | **Utils** | deepClone, pickKeys, omitKeys, ensureKeys |
-| **Search** | searchObject, searchString, StringSearchAlgorithm, ObjectSearchMatch, SearchObjectOptions |
+| **Search** | searchObject, searchString, searchStringAll, StringSearchAlgorithm, ObjectSearchMatch, SearchObjectOptions |
 
 ---
 
@@ -66,22 +66,23 @@ import { ... } from "@simpill/data.utils/shared"; // Shared only
 
 ## API Reference
 
-- **ValidationResult**&lt;T&gt;, **valid**, **invalid**, **validateString**, **validateNumber**, **validateRecord**
+- **ValidationResult**&lt;T&gt;, **Validator**&lt;T&gt;, **valid**, **invalid**, **validateString**, **validateNumber**, **validateBoolean**, **validateRecord**, **validateArray**, **validateEnum**, **refine**, **mapResult**, **andThenResult**
 - **withDefaults**, **coerceNumber**, **coerceBoolean**, **coerceString**, **sanitizeForJson**
 - **mergeConfigLayers**, **requireKeys**, **configFromEnv**
 - **addCreatedAt**, **touchUpdatedAt**, **withNextVersion**, **isNewerVersion**
 - **deepDefaults**, **getByPath**, **setByPath** — **deepDefaults** uses an internal `Record<string, unknown>` implementation; the public API casts at the boundary so callers get **T** back. For custom helpers that merge or extend generics, use the same pattern: cast input to Record for the implementation, cast the result back to **T**.
 - **deepClone**, **pickKeys**, **omitKeys**, **ensureKeys**
-- **searchObject**(obj, options?) — walks object and returns matches (path + value). Options: **maxDepth** (default Infinity; set to limit traversal depth for large or deep trees), **predicate**(path, value). Returns **ObjectSearchMatch[]**.
+- **searchObject**(obj, options?) — iteratively walks an object (stack-safe at any depth) and returns matches (path + value). Options: **maxDepth** (default Infinity), **predicate**(path, key, value), **onCycle** (`"skip"` default — circular references are silently skipped; `"throw"` raises). Returns **ObjectSearchMatch[]**. Predicate receives the real property key, including keys containing dots.
 - **searchString**(haystack, needle, algorithm?) — returns first index of needle or -1. **StringSearchAlgorithm**: IndexOf, Includes, Kmp.
+- **searchStringAll**(haystack, needle, options?) — returns **all** match indices. Options: **overlapping** (default false), **algorithm** (IndexOf default; Kmp available — note native indexOf is faster in practice, KMP is provided for guaranteed O(n+m) worst-case behavior).
 
 ### configFromEnv / requireKeys
 
-**configFromEnv** builds a config object from environment variables (key mapping and optional coercion). **requireKeys**(obj, keys) throws if any of the given keys are missing from the object — use for startup validation of required config. Check package source or tests for exact signatures and error shape.
+**configFromEnv**(env, prefix, options?) builds a config object from environment variables. Options: **nestingSeparator** — `"_"` (default, every underscore nests: `APP_DB_HOST` → `{ db: { host } }`) or `"__"` (double-underscore nests, single underscore stays in the key: `APP_API_KEY` → `{ api_key }`, `APP_DB__HOST` → `{ db: { host } }`, matching the .NET/nconf convention); **keyCase** — `"lower"` (default) or `"preserve"`. Hostile segment names (`__proto__`, `constructor`, `prototype`) are skipped. **requireKeys**(obj, keys) throws if any key is missing; keys may be dotted paths (`"db.host"` checks the nested value). A literal top-level key containing a dot is checked first before path traversal.
 
 ### deepClone / sanitizeForJson
 
-**deepClone** performs a deep copy; behavior with circular references, non-JSON values (Date, Map, Set), or functions is implementation-dependent — validate for your use case. **sanitizeForJson** prepares values for JSON serialization; see implementation for how non-serializable or circular values are handled.
+**deepClone** performs a safe deep copy: circular references and shared sub-objects are preserved (not crashed on, not duplicated), traversal is iterative (no stack overflow at any depth), and Date, RegExp, Map, Set, ArrayBuffer, TypedArrays and DataView are cloned with their types intact. Class instances keep their prototype. Functions and symbols are copied by reference. **sanitizeForJson** guarantees `JSON.stringify` cannot throw on its output: honors `toJSON`, converts Map → plain object and Set → array, bigint → string, NaN/Infinity → null, drops functions/symbols/undefined from objects (null in arrays), and cuts circular references with `"[Circular]"`.
 
 ### Schema validation layer (Zod / Joi)
 
@@ -89,7 +90,13 @@ This package does **not** integrate with Zod or Joi. It provides **ValidationRes
 
 ### Array and enum validators
 
-There are **no** dedicated **validateArray** or **validateEnum** helpers. For arrays, use **validateRecord** on objects or implement a small predicate (e.g. **Array.isArray** + element checks). For enums, use a record check or a Zod enum. The package stays minimal; combine with your schema lib as needed.
+**validateArray**(value, elementValidator?) validates arrays, optionally running a validator against each element and reporting the failing index in the message. **validateEnum**(value, allowed) validates membership against a readonly tuple and narrows to the literal union when called with `as const`:
+
+```ts
+const status = validateEnum(input, ["draft", "live"] as const);
+// status: ValidationResult<"draft" | "live">
+const ports = validateArray(input, refine(validateNumber, (n) => n > 0, "Expected positive"));
+```
 
 ### Validation errors
 
@@ -97,7 +104,12 @@ There are **no** dedicated **validateArray** or **validateEnum** helpers. For ar
 
 ### Refine / composition helpers
 
-There are **no** built-in **refine** or **compose** helpers for validators. Chain validations manually (e.g. validateString then check format) or use Zod’s **.refine()** / **.transform()**. This package focuses on simple predicates and result wrappers.
+**refine**(validator, predicate, message) wraps a validator with an extra predicate. **mapResult**(result, fn) transforms the value of a valid result. **andThenResult**(result, fn) chains a result into another validation. All are plain functions over **ValidationResult** — no schema layer required:
+
+```ts
+const validatePort = refine(validateNumber, (n) => n > 0 && n < 65536, "Expected port");
+const parsed = andThenResult(validateString(raw), (s) => validatePort(Number(s)));
+```
 
 ### Merge strategy (config layers)
 
@@ -110,9 +122,7 @@ There are **no** built-in **refine** or **compose** helpers for validators. Chai
 ### What we don't provide
 
 - **Zod/Joi integration** — No schema layer; use **ValidationResult** and simple validators, or Zod/Joi directly and wrap with **valid**/**invalid** if needed.
-- **validateArray / validateEnum** — Use **validateRecord** or custom predicates; for enums use a record or Zod enum.
-- **Rich validation errors** — Only **message** string on invalid; for field paths or multiple issues use Zod’s **.flatten()** or similar.
-- **refine / compose** — Chain validations manually or use Zod’s **.refine()** / **.transform()**.
+- **Rich validation errors** — Only **message** string on invalid (element index included for **validateArray**); for field paths or multiple issues use Zod’s **.flatten()** or similar.
 - **deleteByPath / updateByPath** — Use **getByPath** to parent and delete the key, or **setByPath** for updates.
 - **Merge strategy options** — **mergeConfigLayers** uses right-wins deep merge; for “replace key” or “concat arrays” preprocess layers or merge in custom order.
 
@@ -120,12 +130,12 @@ There are **no** built-in **refine** or **compose** helpers for validators. Chai
 
 | Use case | Recommendation |
 |----------|----------------|
-| Simple runtime checks (string, number, record) | Use **validateString** / **validateNumber** / **validateRecord** and **valid** / **invalid**. |
+| Simple runtime checks (string, number, boolean, record, array, enum) | Use **validateString** / **validateNumber** / **validateBoolean** / **validateRecord** / **validateArray** / **validateEnum**; compose with **refine** / **mapResult** / **andThenResult**. |
 | Layered config (defaults + env) | Use **mergeConfigLayers** and **configFromEnv**; **requireKeys** for startup checks. |
 | Lifecycle timestamps / versions | Use **addCreatedAt**, **touchUpdatedAt**, **withNextVersion**, **isNewerVersion**. |
 | Nested path read/write | Use **getByPath** / **setByPath** (no delete helper). |
 | Full schema validation | Use **Zod** (or Joi) and optionally wrap with this package’s result type. |
-| Search in objects/strings | Use **searchObject** / **searchString** with optional algorithm. |
+| Search in objects/strings | Use **searchObject** (cycle-safe, any depth) / **searchString** / **searchStringAll**. |
 
 ---
 

@@ -59,9 +59,12 @@ describe("coerceBoolean", () => {
   });
 
   it("falls back for anything else", () => {
-    expect(coerceBoolean("yes", true)).toBe(true);
-    expect(coerceBoolean("yes", false)).toBe(false);
+    // "yes"/"on"/"1" are recognised truthy spellings, so the unrecognised case
+    // needs a word that is not one of them.
+    expect(coerceBoolean("maybe", true)).toBe(true);
+    expect(coerceBoolean("maybe", false)).toBe(false);
     expect(coerceBoolean(null, true)).toBe(true);
+    expect(coerceBoolean({}, false)).toBe(false);
   });
 });
 
