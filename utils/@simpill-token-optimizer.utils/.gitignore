@@ -28,3 +28,7 @@ npm-debug.log*
 # Lock files (use package-lock.json)
 yarn.lock
 pnpm-lock.yaml
+
+# Telemetry written at runtime by the default JSON store (contains raw prompts).
+# Scoped to telemetry: data/benchmark/ holds tracked fixtures.
+data/telemetry/

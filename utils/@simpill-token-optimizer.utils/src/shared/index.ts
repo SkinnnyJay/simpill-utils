@@ -15,9 +15,9 @@ export * from "./strategies/yaml-strategy";
 export * from "./stubs/analytics";
 export * from "./stubs/json";
 export * from "./telemetry.types";
+export * from "./token-optimizer";
 export * from "./token-optimizer.types";
 export * from "./tokenizer";
-export * from "./token-optimizer";
 export {
   type CleanApplied,
   COMPRESSION_TYPES,
