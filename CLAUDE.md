@@ -36,8 +36,10 @@ This is a monorepo containing utility packages under the `@simpill` namespace.
 | `@simpill/acp-llm-cli` | Git submodule: `utils/@simpill-acp-llm-cli.utils/` → [acp-llm-cli](https://github.com/SkinnnyJay/acp-llm-cli) (`git submodule update --init`) | New |
 | `@simpill/algorithms.utils` | `utils/@simpill-algorithms.utils/` | New |
 | `@simpill/annotations.utils` | `utils/@simpill-annotations.utils/` | New |
+| `@simpill/api.utils` | `utils/@simpill-api.utils/` | New |
 | `@simpill/array.utils` | `utils/@simpill-array.utils/` | New |
 | `@simpill/collections.utils` | `utils/@simpill-collections.utils/` | New |
+| `@simpill/enum.utils` | `utils/@simpill-enum.utils/` | New |
 | `@simpill/http.utils` | `utils/@simpill-http.utils/` | New |
 | `@simpill/middleware.utils` | `utils/@simpill-middleware.utils/` | New |
 | `@simpill/nextjs.utils` | `utils/@simpill-nextjs.utils/` | New |
