@@ -40,14 +40,16 @@ close(); // stop reconnecting and close
 
 ## API
 
-- **createReconnectingWebSocket(url, options?)** — Returns **{ ws, reconnect(), close(), open(), getState(), send(data) }**. Options: **reconnect**, **heartbeat**, **WebSocketCtor**, **signal**, **autoConnect**, **hooks**, **limits**, **queue**, **retryPolicy**, **message**.
+- **createReconnectingWebSocket(url, options?)** — **url** is a string or a (sync or async) provider function called before every connection attempt (fresh auth tokens on reconnect). Returns **{ ws, reconnect(), close(code?, reason?), open(), getState(), send(data) }**. **send** returns **true** when the data was sent or queued, **false** when it was dropped. Options: **reconnect**, **heartbeat**, **WebSocketCtor**, **signal**, **autoConnect**, **hooks**, **limits**, **queue**, **retryPolicy**, **message**, **protocols** (WebSocket subprotocols).
 - **ReconnectOptions, HeartbeatOptions, ReconnectingWebSocketHooks, MessageQueueOptions, RetryPolicyOptions, MessageHelpersOptions, ReconnectingWebSocketState** — Shared types.
 
 ### Reconnect options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| **maxAttempts** | number | 10 | Stop reconnecting after this many attempts. |
+| **maxAttempts** | number | 10 | Stop reconnecting after this many consecutive failed attempts. The counter resets after the connection stays open for **minUptimeMs**. |
+| **minUptimeMs** | number | 5000 | How long a connection must stay open before the attempt counter resets. Prevents a flapping server from defeating backoff, while a stable connection never exhausts its retry budget across separate outages. |
+| **connectTimeoutMs** | number | — | Abort an attempt still CONNECTING after this long and retry (stuck TCP/TLS handshakes). Off by default. |
 | **initialDelayMs** | number | 1000 | Delay before first reconnect. |
 | **maxDelayMs** | number | 30000 | Cap on delay between attempts. |
 | **backoffMultiplier** | number | 1.5 | Multiply delay by this after each attempt. |
@@ -62,7 +64,7 @@ Use **retryPolicy.maxElapsedMs** and **retryPolicy.shouldReconnect** to cap by t
 |--------|------|---------|-------------|
 | **intervalMs** | number | (required) | Send ping at this interval while open. |
 | **message** | string \| () => string | "" | Ping payload; empty string skips send. |
-| **timeoutMs** | number | — | Optional; when expectPong, **pongTimeoutMs** is used for pong wait. |
+| **timeoutMs** | number | — | Alias for **pongTimeoutMs** (used when pongTimeoutMs is unset). |
 | **expectPong** | boolean | false | When true, expect pong and close after maxMisses without pong. |
 | **pongTimeoutMs** | number | 5000 | Time to wait for pong before counting a miss. |
 | **maxMisses** | number | 3 | Close and reconnect after this many missed pongs. |
@@ -70,7 +72,7 @@ Use **retryPolicy.maxElapsedMs** and **retryPolicy.shouldReconnect** to cap by t
 
 ### Send queue and backpressure
 
-When **queue.enabled** is true, **send(data)** while the socket is not **open** pushes messages into an outbound queue. When the socket opens, the queue is flushed (oldest first). **queue.maxSize** caps the queue; exceeding it drops the oldest messages and calls **queue.onDrop(count)**. **queue.ttlMs** drops messages older than that when flushing. There is **no** backpressure API (e.g. callback when send is safe); use **getState().status === "open"** or **queue.onDrop** to react.
+When **queue.enabled** is true, **send(data)** while the socket is not **open** pushes messages into an outbound queue (O(1) enqueue/dequeue). When the socket opens, the queue is flushed (oldest first). **queue.maxSize** caps the queue; exceeding it drops the oldest messages and calls **queue.onDrop(count)** with the exact number evicted (**maxSize: 0** rejects every push). **queue.ttlMs** drops messages older than that (checked on push and flush). **getState().queuedCount** exposes the live queue depth. Without a queue, **send** returns **false** instead of dropping silently.
 
 ### Typed message codecs
 
@@ -78,7 +80,7 @@ When **queue.enabled** is true, **send(data)** while the socket is not **open** 
 
 ### Heartbeat semantics
 
-**heartbeat.intervalMs** and **heartbeat.message** (string or function) send a ping on that interval while **open**. If **heartbeat.expectPong** is true, the client expects a pong reply; **heartbeat.isPong(data)** (default: string `"pong"` or object `{ type: "pong" }`) detects it. If no pong is received within **heartbeat.pongTimeoutMs** (default 5000), a “miss” is counted; after **heartbeat.maxMisses** (default 3) the socket is closed so reconnect can run. So heartbeat both keeps the connection alive and can detect dead connections when the server stops replying.
+**heartbeat.intervalMs** and **heartbeat.message** (string or function) send a ping on that interval while **open**. If **heartbeat.expectPong** is true, the client expects a pong reply; **heartbeat.isPong(data)** (default: string `"pong"` or object `{ type: "pong" }`) detects it. A pong deadline is armed when a ping goes out and is only cleared by a pong (it is **not** re-armed by later pings, so detection works for any interval/timeout combination). If no pong arrives within **heartbeat.pongTimeoutMs** (default 5000), a “miss” is counted; after **heartbeat.maxMisses** (default 3) the socket is closed so reconnect can run. So heartbeat both keeps the connection alive and detects dead connections when the server stops replying.
 
 ### Backoff jitter
 
@@ -127,7 +129,7 @@ close();
 
 ### Retry cap guidance
 
-Reconnects are limited by **reconnect.maxAttempts** (default 10) and optionally by **retryPolicy.maxElapsedMs** (stop after total time since first connect) and **retryPolicy.shouldReconnect({ attempt, closeEvent })** (return false to stop). For “infinite” retries use a high **maxAttempts** and/or omit **maxElapsedMs** and **shouldReconnect**; cap by time or close code in **shouldReconnect** to avoid endless reconnect loops (e.g. 401/403 or server “go away” close code).
+Reconnects are limited by **reconnect.maxAttempts** (default 10) and optionally by **retryPolicy.maxElapsedMs** (stop after this much time has passed in the *current* outage — measured from when the reconnect sequence began, not from the first-ever connect) and **retryPolicy.shouldReconnect({ attempt, closeEvent })** (return false to stop). For “infinite” retries use a high **maxAttempts** and/or omit **maxElapsedMs** and **shouldReconnect**; cap by time or close code in **shouldReconnect** to avoid endless reconnect loops (e.g. 401/403 or server “go away” close code).
 
 ### What we don't provide
 

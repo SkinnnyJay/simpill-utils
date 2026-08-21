@@ -1,7 +1,12 @@
 import { HTTP_METHOD } from "@simpill/protocols.utils";
 import {
+  CONTENT_TYPE_HEADER,
+  CONTENT_TYPE_HEADER_LOWER,
+  CONTENT_TYPE_JSON,
   ERROR_HTTP_RESPONSE_PREFIX,
   ERROR_HTTP_RESPONSE_SEP,
+  ERROR_MISSING_PATH_PARAM_PREFIX,
+  ERROR_MISSING_PATH_PARAM_SUFFIX,
   VALUE_0,
 } from "../shared/internal-constants";
 import type { ClientCallOptions, RouteEntry } from "./api-factory-types";
@@ -30,7 +35,20 @@ export function getClientCallOptions(options: Record<string, unknown>): ClientCa
 }
 
 export function substitutePath(pathPattern: string, params: Record<string, string>): string {
-  return pathPattern.replace(/:([^/]+)/g, (_, key) => params[key] ?? `:${key}`);
+  // Values are encoded, matching buildQuery below. Unencoded, a caller-supplied id could
+  // reroute the request entirely - "../admin" resolves to a different endpoint once fetch
+  // normalises the URL - or inject a query string into a URL buildQuery believes it owns.
+  //
+  // The key pattern is also anchored to word characters. `[^/]+` was greedy to the end of the
+  // segment, so "/files/:name.json" parsed the key as "name.json", missed, and emitted a URL
+  // containing a literal ":name.json" instead of raising.
+  return pathPattern.replace(/:([A-Za-z0-9_]+)/g, (match, key: string) => {
+    const value = params[key];
+    if (value === undefined) {
+      throw new Error(`${ERROR_MISSING_PATH_PARAM_PREFIX}${key}${ERROR_MISSING_PATH_PARAM_SUFFIX}`);
+    }
+    return encodeURIComponent(value);
+  });
 }
 
 export function buildQuery(query: Record<string, string | number | boolean>): string {
@@ -74,11 +92,25 @@ export function buildClient(
     clientMap[r.key] = async (options = {}) => {
       const { params, query, body, headers: extraHeaders } = getClientCallOptions(options);
       const url = `${baseUrl}${substitutePath(r.path, params)}${buildQuery(query)}`;
+      const mergedHeaders = { ...headers, ...extraHeaders };
+      const sendsBody = body !== undefined && r.method !== HTTP_METHOD.GET;
+      // Content-Type used to be appended AFTER the caller's headers, so a client
+      // configured for form data, NDJSON or a +json media type had its choice
+      // silently replaced with application/json - and the header went out even on
+      // bodyless GETs, provoking CORS preflights for nothing. It is now a default
+      // applied only when there is a body and the caller has not set one (header
+      // names are case-insensitive, so "content-type" counts too).
+      const hasContentType = Object.keys(mergedHeaders).some(
+        (key) => key.toLowerCase() === CONTENT_TYPE_HEADER_LOWER
+      );
       const init: RequestInit = {
         method: r.method,
-        headers: { ...headers, ...extraHeaders, "Content-Type": "application/json" },
+        headers:
+          sendsBody && !hasContentType
+            ? { ...mergedHeaders, [CONTENT_TYPE_HEADER]: CONTENT_TYPE_JSON }
+            : mergedHeaders,
       };
-      if (body !== undefined && r.method !== HTTP_METHOD.GET) {
+      if (sendsBody) {
         init.body = JSON.stringify(body);
       }
       logging.onRequest?.({ method: r.method, url, routeKey: r.key });

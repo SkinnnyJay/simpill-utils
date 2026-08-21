@@ -1,16 +1,5 @@
 /** Shared constants for patterns.utils (literal audit). */
 export const VALUE_0 = 0;
-export const VALUE_1 = 1;
-export const VALUE_2 = 2;
-export const VALUE_3 = 3;
-export const VALUE_4 = 4;
-export const VALUE_5 = 5;
-export const VALUE_6 = 6;
-export const VALUE_8 = 8;
-export const VALUE_10 = 10;
-export const VALUE_11 = 11;
-export const VALUE_42 = 42;
-export const VALUE_80 = 80;
 
 /** Strategy selector: unknown strategy key (append key). */
 export const ERROR_STRATEGY_UNKNOWN_PREFIX = "Unknown strategy: " as const;
@@ -22,6 +11,10 @@ export const ERROR_CHAIN_NO_HANDLER_HANDLED = "No handler handled the input." as
 export const ERROR_STATE_MACHINE_NO_TRANSITION_PREFIX = "No transition for event: " as const;
 /** Default mapError message for unknown error. */
 export const ERROR_UNKNOWN_ERROR = "Unknown error" as const;
+/** unwrap() called on an Err holding a non-Error value. */
+export const ERROR_UNWRAP_ERR = "Called unwrap on an Err result" as const;
+/** unwrapErr() called on an Ok. */
+export const ERROR_UNWRAP_ERR_OK = "Called unwrapErr on an Ok result" as const;
 /** raceOk: default message when no result succeeded. */
 export const ERROR_RACE_OK_NO_RESULT = "No successful result" as const;
 /** raceOk: empty array. */

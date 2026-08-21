@@ -36,9 +36,13 @@ export {
 } from "@simpill/uuid.utils";
 export {
   assert,
+  assertDefined,
+  assertNever,
   coalesce,
   identity,
   isBoolean,
+  isDefined,
+  noop,
   parseJsonSafe,
   type ToBooleanOptions,
   toBoolean,

@@ -11,4 +11,4 @@ export {
   RedisCache,
   type RedisCacheAdapter,
 } from "./redis-cache";
-export { TTLCache, type TTLEntry } from "./ttl-cache";
+export { TTLCache, type TTLCacheOptions, type TTLEntry } from "./ttl-cache";

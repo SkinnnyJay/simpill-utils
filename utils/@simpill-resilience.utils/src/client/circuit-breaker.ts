@@ -1,5 +1,5 @@
 import type { Gate, RunOptions } from "@simpill/async.utils";
-import type { CircuitBreakerOptions, CircuitState } from "../shared";
+import type { CircuitBreakerMetrics, CircuitBreakerOptions, CircuitState } from "../shared";
 import {
   CIRCUIT_BREAKER_DEFAULT_FAILURE_THRESHOLD,
   CIRCUIT_BREAKER_DEFAULT_HALF_OPEN_MAX_CALLS,
@@ -8,12 +8,18 @@ import {
   CIRCUIT_BREAKER_ERROR,
   CLOSED,
   ERROR_NAME_ABORT,
-  ERROR_OPERATION_ABORTED,
   HALF_OPEN,
   OPEN,
+  VALUE_0,
 } from "../shared/constants";
+import { CircuitOpenError, throwIfAborted } from "../shared/errors";
 
 export type { CircuitState } from "../shared";
+export { CircuitOpenError } from "../shared/errors";
+
+/** Default failure filter: everything counts except caller-side aborts. */
+const defaultShouldCountError = (error: unknown): boolean =>
+  !(error instanceof Error && error.name === ERROR_NAME_ABORT);
 
 export class CircuitBreaker implements Gate {
   private state: CircuitState = CLOSED;
@@ -26,6 +32,7 @@ export class CircuitBreaker implements Gate {
   private readonly openMs: number;
   private readonly halfOpenMaxCalls: number;
   private readonly onStateChange?: (state: CircuitState, previousState: CircuitState) => void;
+  private readonly shouldCountError: (error: unknown) => boolean;
 
   constructor(options: CircuitBreakerOptions = {}) {
     this.failureThreshold = options.failureThreshold ?? CIRCUIT_BREAKER_DEFAULT_FAILURE_THRESHOLD;
@@ -33,6 +40,7 @@ export class CircuitBreaker implements Gate {
     this.openMs = options.openMs ?? CIRCUIT_BREAKER_DEFAULT_OPEN_MS;
     this.halfOpenMaxCalls = options.halfOpenMaxCalls ?? CIRCUIT_BREAKER_DEFAULT_HALF_OPEN_MAX_CALLS;
     this.onStateChange = options.onStateChange;
+    this.shouldCountError = options.shouldCountError ?? defaultShouldCountError;
   }
 
   private setState(next: CircuitState): void {
@@ -51,29 +59,57 @@ export class CircuitBreaker implements Gate {
     return this.state;
   }
 
+  /** Snapshot of internals for metrics/observability. */
+  getMetrics(): CircuitBreakerMetrics {
+    return {
+      state: this.getState(),
+      failureCount: this.failureCount,
+      successCount: this.successCount,
+      halfOpenInFlight: this.halfOpenCalls,
+      openUntil: this.openUntil,
+    };
+  }
+
+  /** Manually trip the breaker open for openMs (or the configured default). */
+  open(openMs?: number): void {
+    this.openUntil = Date.now() + (openMs ?? this.openMs);
+    this.setState(OPEN);
+  }
+
+  /** Manually close the breaker and reset all counters. */
+  close(): void {
+    this.failureCount = VALUE_0;
+    this.successCount = VALUE_0;
+    this.halfOpenCalls = VALUE_0;
+    this.setState(CLOSED);
+  }
+
   async run<T>(fn: () => Promise<T>, options?: RunOptions): Promise<T> {
-    if (options?.signal?.aborted) {
-      const error = new Error(ERROR_OPERATION_ABORTED);
-      error.name = ERROR_NAME_ABORT;
-      throw error;
-    }
+    throwIfAborted(options?.signal);
     const state = this.getState();
     if (state === OPEN) {
-      throw new Error(CIRCUIT_BREAKER_ERROR.OPEN);
+      throw new CircuitOpenError(CIRCUIT_BREAKER_ERROR.OPEN, OPEN);
     }
     if (state === HALF_OPEN && this.halfOpenCalls >= this.halfOpenMaxCalls) {
-      throw new Error(CIRCUIT_BREAKER_ERROR.HALF_OPEN_MAX_CALLS);
+      throw new CircuitOpenError(CIRCUIT_BREAKER_ERROR.HALF_OPEN_MAX_CALLS, HALF_OPEN);
     }
 
-    if (this.state === HALF_OPEN) this.halfOpenCalls++;
+    // In half-open, halfOpenCalls tracks IN-FLIGHT probes: incremented on
+    // start, released on settle. The pre-fix code never decremented, turning
+    // the documented concurrency cap into a one-shot budget (deadlock when
+    // successThreshold > halfOpenMaxCalls).
+    const probing = this.state === HALF_OPEN;
+    if (probing) this.halfOpenCalls++;
 
     try {
       const result = await fn();
       this.recordSuccess();
       return result;
     } catch (err) {
-      this.recordFailure();
+      if (this.shouldCountError(err)) this.recordFailure();
       throw err;
+    } finally {
+      if (probing) this.halfOpenCalls = Math.max(VALUE_0, this.halfOpenCalls - 1);
     }
   }
 

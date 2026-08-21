@@ -12,6 +12,10 @@ import type { CompressionOutcome, CompressionStrategy } from "./base";
 type XmlTree = Record<string, unknown> | Array<unknown> | string | number | boolean | null;
 
 const parser = new XMLParser({
+  // Without this the declaration is retained as a node, so the builder re-emits it and
+  // applyXmlDeclaration prepends a second one - producing output that is not well-formed XML.
+  // It also inflated elementCount/attributeCount by counting `?xml` and its version attribute.
+  ignoreDeclaration: true,
   ignoreAttributes: false,
   attributeNamePrefix: "@_",
   trimValues: true,
@@ -99,6 +103,15 @@ export class XmlCompressionStrategy implements CompressionStrategy {
     const hasDeclaration = /^<\?xml/i.test(cleanedInput.trimStart());
     const payload = collectXmlStats(parsed as XmlTree, hasDeclaration);
     const normalizedWithoutDeclaration = builder.build(parsed);
+
+    // fast-xml-parser is lenient: plain prose parses to {} and builds back to "", so the catch
+    // above never fires and the caller is handed an empty prompt reported as a 100% reduction.
+    // Treat "input had content, output has none" as a strategy failure so the optimizer's
+    // passthrough fallback engages instead.
+    if (cleanedInput.trim().length > 0 && normalizedWithoutDeclaration.trim().length === 0) {
+      throw new Error(ERROR_MESSAGES.XML_INVALID);
+    }
+
     const normalized = applyXmlDeclaration(cleanedInput, normalizedWithoutDeclaration);
 
     return {

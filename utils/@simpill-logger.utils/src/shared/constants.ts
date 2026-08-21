@@ -60,6 +60,7 @@ export const ERROR_MESSAGES = {
   MULTI_ADAPTER_REQUIRES_ONE: "MultiTransportAdapter requires at least one adapter",
   FLUSH_FAILED: "Flush failed",
   ENTRIES_LOST: "entries lost",
+  BUFFER_OVERFLOW: "Buffered adapter overflow: oldest entries dropped (inner adapter failing)",
 } as const;
 
 export type ErrorMessage = (typeof ERROR_MESSAGES)[keyof typeof ERROR_MESSAGES];
@@ -117,6 +118,36 @@ export const ANSI_COLORS = {
 } as const;
 
 export type AnsiColor = (typeof ANSI_COLORS)[keyof typeof ANSI_COLORS];
+
+export const SAFE_STRINGIFY_TOKENS = {
+  CIRCULAR: "[Circular]",
+  DEPTH: "[MaxDepth]",
+  UNSERIALIZABLE_PREFIX: "[Unserializable: ",
+  NULL: "null",
+} as const;
+
+export type SafeStringifyToken = (typeof SAFE_STRINGIFY_TOKENS)[keyof typeof SAFE_STRINGIFY_TOKENS];
+
+export const REDACT_DEFAULTS = {
+  CENSOR: "[REDACTED]",
+} as const;
+
+/**
+ * Sensitive metadata keys always redacted unless callers opt out via a custom
+ * redactor. Matches LoggerOptions.redactPaths documentation.
+ */
+export const DEFAULT_REDACT_PATHS: readonly string[] = [
+  "password",
+  "token",
+  "secret",
+  "authorization",
+  "cookie",
+  "apiKey",
+  "api_key",
+  "accessToken",
+  "refreshToken",
+  "privateKey",
+];
 
 export const FILE_TRANSPORT_DEFAULTS = {
   DIRECTORY: "./logs",

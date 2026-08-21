@@ -1,8 +1,8 @@
 import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createTelemetryStorage } from "../../../src/server/telemetryFactory";
-import { createJsonTelemetryStorage } from "../../../src/server/telemetryStorage";
+import { createTelemetryStorage } from "../../../src/server/telemetry.factory";
+import { createJsonTelemetryStorage } from "../../../src/server/telemetry.storage";
 import { buildAnalyticsSnapshot } from "../../../src/shared/analytics";
 
 const buildSnapshot = () =>

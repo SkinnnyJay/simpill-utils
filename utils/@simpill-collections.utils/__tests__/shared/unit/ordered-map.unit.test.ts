@@ -80,3 +80,23 @@ describe("OrderedMap", () => {
     ]);
   });
 });
+
+describe("OrderedMap (uplift)", () => {
+  it("keeps entries with stored undefined values visible", () => {
+    const m = new OrderedMap<string, number | undefined>();
+    m.set("a", 1);
+    m.set("b", undefined);
+    m.set("c", 3);
+    // Previously "b" was silently skipped, making iteration disagree with size.
+    expect(m.size).toBe(3);
+    expect([...m.entries()]).toEqual([
+      ["a", 1],
+      ["b", undefined],
+      ["c", 3],
+    ]);
+    expect([...m.values()]).toEqual([1, undefined, 3]);
+    expect(m.getAt(1)).toEqual(["b", undefined]);
+    expect(m.valueAt(1)).toBeUndefined();
+    expect(m.getAt(5)).toBeUndefined();
+  });
+});

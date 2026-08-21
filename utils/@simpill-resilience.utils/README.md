@@ -42,23 +42,26 @@ const delayMs = withJitter(1000, { factor: 0.2, maxMs: 2000 });
 
 ## API
 
-- **CircuitBreaker(options)** — run(fn), getState(): 'closed' | 'open' | 'half-open'; options: failureThreshold, successThreshold, openMs, halfOpenMaxCalls, **onStateChange(state, previousState)**
-- **RateLimiter(options)** — run(fn), fixed-window rate limit
-- **createBulkhead(limit)** — returns { run(fn) }, limits concurrent executions
+- **CircuitBreaker(options)** — run(fn), getState(), getMetrics(), open(ms?), close(); options: failureThreshold, successThreshold, openMs, halfOpenMaxCalls, **onStateChange(state, previousState)**, **shouldCountError(error)**. Rejections are **CircuitOpenError** (instanceof-checkable).
+- **RateLimiter(options)** — run(fn), fixed-window rate limit; waiting is abort-aware (AbortSignal cancels the wait immediately)
+- **TokenBucketRateLimiter(options)** — run(fn), tryAcquire(), getAvailableTokens(); options: capacity (burst), refillPerSecond (sustained rate). No fixed-window boundary bursts.
+- **createBulkhead(limit, options?)** — returns { run(fn) }, limits concurrent executions; optional **maxQueue** rejects overflow fast with **BulkheadRejectedError**
 - **withJitter(ms, options?)** — returns jittered ms; options: factor, maxMs
+- **fullJitter(attempt, options?)** — AWS full jitter: random(0, min(capMs, baseMs·2^attempt))
+- **createDecorrelatedJitter(options?)** — AWS decorrelated jitter: returns next() yielding min(capMs, random(baseMs, prev·3))
 - **retryResult(fn, options?)** — retries fn via @simpill/async.utils retry; returns **Result&lt;T, AppError&gt;** (Ok/Err) with optional **mapError**
 
 ### Circuit breaker: metrics and events
 
-Use optional **onStateChange(state, previousState)** in the constructor to observe state transitions (e.g. for metrics or logging). **getState()** returns the current state (`'closed' | 'open' | 'half-open'`). For production metrics, call **onStateChange** from your monitoring integration.
+Use optional **onStateChange(state, previousState)** in the constructor to observe state transitions (e.g. for metrics or logging). **getState()** returns the current state (`'closed' | 'open' | 'half-open'`); **getMetrics()** returns a snapshot ({ state, failureCount, successCount, halfOpenInFlight, openUntil }). **open(ms?)** / **close()** trip or reset the breaker manually. In half-open, **halfOpenMaxCalls** caps **concurrent in-flight** probes; slots are released when a probe settles.
 
 ### Bulkhead: queueing
 
-**createBulkhead(limit)** uses a **Semaphore** from @simpill/async.utils. There is **no separate queue**: callers that call **run(fn)** wait until a slot is free, then **fn** runs. Concurrency is limited to **limit**; extra calls block (await) until a slot opens. No configurable queue size or reject-overflow behavior.
+**createBulkhead(limit, { maxQueue })** limits concurrency to **limit**; callers wait (abort-aware) until a slot frees. With **maxQueue** set, at most that many calls wait — further calls reject immediately with **BulkheadRejectedError** (fast-fail load shedding). Omit **maxQueue** for the original unbounded-wait behavior.
 
 ### Token bucket / leaky bucket
 
-Only a **fixed-window** rate limiter is provided (**RateLimiter**). For **token bucket** or **leaky bucket** algorithms use another library or implement on top of **withJitter** and your own state.
+**TokenBucketRateLimiter({ capacity, refillPerSecond })** provides a token bucket: bursts up to **capacity**, sustained admission at **refillPerSecond**, continuous refill (no window boundaries — a fixed window can admit 2x its limit across a boundary; the bucket cannot). **tryAcquire()** is the non-blocking form; **run(fn)** waits (abort-aware) for a token. Leaky bucket (queue-and-smooth) is not provided.
 
 ### Redis rate limiting
 
@@ -74,7 +77,7 @@ CircuitBreaker, RateLimiter, and Bulkhead have **no per-call overrides** (e.g. d
 
 ### Error counting (circuit breaker)
 
-**CircuitBreaker** treats **any** thrown error from **run(fn)** as a **failure**: it calls **recordFailure()** in the catch path. Success is when **fn** resolves without throwing. There is no option to classify errors (e.g. retryable vs non-retryable); wrap **fn** to throw only for failures you want to count if needed.
+By default **CircuitBreaker** counts every thrown error as a failure **except AbortError** — a caller cancelling its own request is not evidence the dependency is unhealthy. Pass **shouldCountError(error) => boolean** to classify errors yourself (e.g. don't count 4xx validation errors, only 5xx/network). Errors that don't count are still rethrown; they just don't move the breaker.
 
 ### retryResult
 
@@ -102,14 +105,14 @@ Or pass a **custom fetch** to createHttpClient that runs through the breaker. Ra
 |-----------|---------|----------|
 | **CircuitBreaker** | failureThreshold, successThreshold, openMs, halfOpenMaxCalls | Start with failureThreshold 5–10, openMs 30–60s; halfOpenMaxCalls 1–3 to test recovery. |
 | **RateLimiter** | maxRequests, windowMs | Match downstream limits (e.g. API 100/min → maxRequests 100, windowMs 60_000). Fixed window can allow bursts at boundary. |
-| **createBulkhead** | limit | Set to max concurrent calls the backend can handle; too low increases latency, too high can overload. |
+| **TokenBucketRateLimiter** | capacity, refillPerSecond | capacity = tolerable burst, refillPerSecond = sustained rate; prefer over fixed window when boundary bursts hurt. |
+| **createBulkhead** | limit, maxQueue | Set limit to max concurrent calls the backend can handle; set maxQueue to shed load fast instead of building a hidden backlog. |
 | **withJitter** | factor, maxMs | factor 0.2–0.3 and maxMs cap avoid thundering herd; use in retry delayMs. |
+| **fullJitter / createDecorrelatedJitter** | baseMs, capMs | AWS-recommended retry backoff; fullJitter gives the lowest load on a recovering upstream. |
 
 ### What we don't provide
 
-- **Circuit breaker metrics / events** — No callbacks or metrics; poll **getState()** or wrap **run()** to observe.
-- **Bulkhead queue** — Callers **await** until a slot is free; no separate queue or reject-overflow option.
-- **Token bucket / leaky bucket** — Only fixed-window **RateLimiter**; use another library for other algorithms.
+- **Leaky bucket** — Token bucket and fixed window are provided; queue-and-smooth output shaping is not.
 - **Redis / distributed rate limiting** — In-memory only; use a dedicated solution for multi-process or Redis.
 - **Timeout wrapper** — Use **@simpill/async.utils** **raceWithTimeout** or **@simpill/http.utils** **fetchWithTimeout**.
 - **Per-call overrides** — Options are per instance; use separate instances for different limits per backend/tenant.
@@ -120,9 +123,10 @@ Or pass a **custom fetch** to createHttpClient that runs through the breaker. Ra
 |----------|----------------|
 | Stop calling a failing dependency | **CircuitBreaker** with run() around the call. |
 | Cap requests per time window (single process) | **RateLimiter** with maxRequests/windowMs. |
-| Limit concurrent executions | **createBulkhead(limit)** and run(fn). |
+| Sustained rate + bursts, no boundary leaks | **TokenBucketRateLimiter** with capacity/refillPerSecond. |
+| Limit concurrent executions | **createBulkhead(limit)** and run(fn); add maxQueue to shed overflow fast. |
 | Retry with Result instead of throw | **retryResult(fn, options)** with mapError if needed. |
-| Backoff jitter | **withJitter(ms, { factor, maxMs })** and pass result to retry delayMs. |
+| Backoff jitter | **fullJitter(attempt)** (AWS-recommended) or **withJitter(ms, { factor, maxMs })** in retry delayMs. |
 | Distributed / Redis rate limit | Use a dedicated library; RateLimiter is in-memory only. |
 | Timeout around a call | Use **@simpill/async.utils** raceWithTimeout or **@simpill/http.utils** fetchWithTimeout. |
 

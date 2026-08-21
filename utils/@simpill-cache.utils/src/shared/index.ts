@@ -1,4 +1,5 @@
 export { InMemoryCache, type InMemoryCacheOptions } from "./in-memory-cache.utils";
+export { LRUCache, type LRUCacheOptions } from "./lru-cache-alias";
 export { LRUMap } from "./lru-map";
-export { type MemoizeCache, type MemoizeOptions, memoize } from "./memoize";
+export { type MemoizeCache, type MemoizedFunction, type MemoizeOptions, memoize } from "./memoize";
 export { type MemoizeAsyncOptions, memoizeAsync } from "./memoize-async";

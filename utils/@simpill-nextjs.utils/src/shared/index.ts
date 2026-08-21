@@ -1,3 +1,13 @@
+export type { ParsedTraceparent } from "./ids";
+export {
+  CORRELATION_ID_PATTERN,
+  formatTraceparent,
+  generateSpanId,
+  generateTraceId,
+  isValidCorrelationId,
+  parseTraceparent,
+  randomId,
+} from "./ids";
 export type {
   IAnnotations,
   IApiHelpers,
@@ -9,6 +19,7 @@ export type {
   IRequestHelpers,
   IResponseHelpers,
   IRouteDefinition,
+  IRouteMatch,
   IRouteRegistry,
   MiddlewareFn,
   ParseSearchParamsResult,

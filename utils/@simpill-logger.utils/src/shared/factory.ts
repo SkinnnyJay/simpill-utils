@@ -12,14 +12,51 @@ import {
 import { getLogContext } from "./context";
 import { hasEnvConfig, loadAdapterConfigFromEnv } from "./env.config";
 import { VALUE_0 } from "./internal-constants";
+import {
+  createDefaultRedactor,
+  createRedactor,
+  mergeRedactPaths,
+  type RedactOptions,
+  type Redactor,
+} from "./redact";
+import { safeStringify } from "./safe-stringify";
 import { SimpleLoggerAdapter } from "./simple-adapter";
 import type { LogEntry, Logger, LogMetadata } from "./types";
 import { normalizeErrorsInMetadata } from "./types";
 
 let globalAdapter: LoggerAdapter | null = null;
 let globalConfig: LoggerAdapterConfig = {};
+let globalRedactor: Redactor | null = null;
 let isMockEnabled = false;
 let isEnvConfigApplied = false;
+
+function isRedactOptions(value: RedactOptions | readonly string[]): value is RedactOptions {
+  return typeof value === "object" && value !== null && !Array.isArray(value) && "paths" in value;
+}
+
+/** (Re)compile the redactor from current config. Always includes default sensitive paths. */
+function compileRedactor(): void {
+  const redact = globalConfig.redact ?? globalConfig.redactPaths;
+  if (!redact) {
+    globalRedactor = createDefaultRedactor();
+    return;
+  }
+  if (Array.isArray(redact)) {
+    globalRedactor = createDefaultRedactor(redact);
+    return;
+  }
+  if (isRedactOptions(redact)) {
+    globalRedactor = createRedactor({
+      paths: redact.paths,
+      censor: redact.censor,
+      // Explicit options still get the built-in key names; opting out is what a
+      // custom redactor is for.
+      sensitiveKeys: mergeRedactPaths(redact.sensitiveKeys),
+    });
+    return;
+  }
+  globalRedactor = createDefaultRedactor();
+}
 
 const loggerCache = new Map<string, Logger>();
 
@@ -53,13 +90,34 @@ function logAdapterError(adapterError: unknown, entry: LogEntry): void {
     process.stderr.write(
       `${LOG_PREFIX.LOGGER_ERROR} ${ERROR_MESSAGES.ADAPTER_FAILED}: ${errorMsg}\n`
     );
-    process.stderr.write(`${LOG_PREFIX.FALLBACK} ${JSON.stringify(entry)}\n`);
+    // safeStringify: a circular metadata object must not take down the
+    // last-resort fallback too (JSON.stringify here used to throw, and the
+    // entry was silently lost on BOTH streams)
+    process.stderr.write(`${LOG_PREFIX.FALLBACK} ${safeStringify(entry)}\n`);
   } catch {
     // Never throw from logger
   }
 }
 
+/**
+ * Redaction runs on per-call metadata inside the log methods, but default and child metadata is
+ * merged back in by the adapter *after* that point - so a secret bound once at logger creation
+ * was emitted verbatim on every line the logger ever wrote. Redact it up front instead.
+ */
+function redactBoundMetadata(metadata?: LogMetadata): LogMetadata | undefined {
+  if (!metadata) {
+    return metadata;
+  }
+  if (!globalRedactor) {
+    compileRedactor();
+  }
+  return globalRedactor ? globalRedactor(metadata) : metadata;
+}
+
 function createLoggerFromAdapter(adapter: LoggerAdapter, name: string): Logger {
+  // Bound once per logger; a disabled level then costs one call + one branch
+  const levelGate = adapter.isLevelEnabled ? adapter.isLevelEnabled.bind(adapter) : null;
+
   const createLogMethod =
     (level: LogLevel) =>
     (message: string, metadata?: LogMetadata): void => {
@@ -67,10 +125,26 @@ function createLoggerFromAdapter(adapter: LoggerAdapter, name: string): Logger {
         return;
       }
 
+      // Fast level gate BEFORE any entry construction (pino's core principle:
+      // disabled levels should be near-noops). Opt-in via adapter.isLevelEnabled
+      // so custom adapters keep their exact previous behavior.
+      if (levelGate && !levelGate(level)) {
+        return;
+      }
+
       const context = getLogContext();
       const mergedMetadata = context ? { ...context, ...metadata } : metadata;
 
-      const normalizedMetadata = normalizeErrorsInMetadata(mergedMetadata);
+      let normalizedMetadata = normalizeErrorsInMetadata(mergedMetadata);
+
+      if (normalizedMetadata) {
+        if (!globalRedactor) {
+          compileRedactor();
+        }
+        if (globalRedactor) {
+          normalizedMetadata = globalRedactor(normalizedMetadata);
+        }
+      }
 
       const entry: LogEntry = {
         level,
@@ -87,12 +161,29 @@ function createLoggerFromAdapter(adapter: LoggerAdapter, name: string): Logger {
       }
     };
 
-  return {
+  const logger: Logger = {
     info: createLogMethod(LOG_LEVEL.INFO),
     warn: createLogMethod(LOG_LEVEL.WARN),
     debug: createLogMethod(LOG_LEVEL.DEBUG),
     error: createLogMethod(LOG_LEVEL.ERROR),
+    child(nameOrMetadata: string | LogMetadata, metadata?: LogMetadata): Logger {
+      const childName = typeof nameOrMetadata === "string" ? `${name}.${nameOrMetadata}` : name;
+      const childMetadata =
+        typeof nameOrMetadata === "string" ? metadata : (nameOrMetadata as LogMetadata);
+      return createLoggerFromAdapter(
+        adapter.child(childName, redactBoundMetadata(childMetadata)),
+        childName
+      );
+    },
+    isLevelEnabled(level: LogLevel): boolean {
+      if (isMockEnabled) {
+        return false;
+      }
+      return levelGate ? levelGate(level) : true;
+    },
   };
+
+  return logger;
 }
 
 /** Set adapter and/or config; clears cache when adapter changes. */
@@ -111,6 +202,8 @@ export function configureLoggerFactory(options: {
   if (options.config) {
     globalConfig = { ...globalConfig, ...options.config };
   }
+
+  compileRedactor();
 
   if (globalAdapter) {
     globalAdapter.initialize(globalConfig);
@@ -134,7 +227,7 @@ export function getLogger(name: string, defaultMetadata?: LogMetadata): Logger {
   }
 
   const adapter = getAdapterInternal();
-  const childAdapter = adapter.child(name, defaultMetadata);
+  const childAdapter = adapter.child(name, redactBoundMetadata(defaultMetadata));
   const logger = createLoggerFromAdapter(childAdapter, name);
 
   if (!defaultMetadata) {
@@ -194,6 +287,7 @@ export async function resetLoggerFactory(): Promise<void> {
   }
   globalAdapter = null;
   globalConfig = {};
+  globalRedactor = createDefaultRedactor();
   isMockEnabled = false;
   isEnvConfigApplied = false;
   loggerCache.clear();

@@ -5,7 +5,7 @@ import type { ICollection, IIndexable } from "../contracts";
  * Dynamic array (Vector) with explicit capacity and index access.
  */
 export class Vector<T> implements ICollection<T>, IIndexable<T> {
-  private _buffer: T[] = [];
+  private _buffer: (T | undefined)[] = [];
   private _length = VALUE_0;
 
   constructor(initialCapacity = VALUE_0) {
@@ -28,21 +28,17 @@ export class Vector<T> implements ICollection<T>, IIndexable<T> {
   }
 
   toArray(): T[] {
-    return this._buffer.slice(0, this._length);
+    return this._buffer.slice(0, this._length) as T[];
   }
 
-  [Symbol.iterator](): Iterator<T> {
-    return this.toArray()[Symbol.iterator]();
+  *[Symbol.iterator](): IterableIterator<T> {
+    // Lazy: no full-array copy per iteration. Do not mutate while iterating.
+    for (let i = 0; i < this._length; i++) yield this._buffer[i] as T;
   }
 
   get(index: number): T | undefined {
     if (index < 0 || index >= this._length) return undefined;
-    return this._buffer[index];
-  }
-
-  set(index: number, value: T): void {
-    if (index < 0 || index >= this._length) return;
-    this._buffer[index] = value;
+    return this._buffer[index] as T;
   }
 
   at(index: number): T | undefined {
@@ -57,12 +53,18 @@ export class Vector<T> implements ICollection<T>, IIndexable<T> {
 
   pop(): T | undefined {
     if (this._length === VALUE_0) return undefined;
-    return this._buffer[--this._length];
+    const value = this._buffer[--this._length] as T;
+    this._buffer[this._length] = undefined; // release the reference for GC
+    return value;
   }
 
   insertAt(index: number, value: T): void {
     if (index <= VALUE_0) {
-      this._buffer.unshift(value);
+      // copyWithin keeps the buffer length (capacity) stable; Array#unshift grew
+      // the raw buffer past the reserved capacity, breaking capacity() invariants.
+      this.ensureCapacity(this._length + 1);
+      this._buffer.copyWithin(1, 0, this._length);
+      this._buffer[0] = value;
       this._length++;
       return;
     }
@@ -78,9 +80,10 @@ export class Vector<T> implements ICollection<T>, IIndexable<T> {
 
   removeAt(index: number): T | undefined {
     if (index < 0 || index >= this._length) return undefined;
-    const value = this._buffer[index];
+    const value = this._buffer[index] as T;
     this._buffer.copyWithin(index, index + 1, this._length);
     this._length--;
+    this._buffer[this._length] = undefined; // clear the duplicated tail slot
     return value;
   }
 
@@ -90,7 +93,7 @@ export class Vector<T> implements ICollection<T>, IIndexable<T> {
 
   reserve(capacity: number): void {
     if (capacity > this._buffer.length) {
-      const newBuffer = new Array(capacity);
+      const newBuffer: (T | undefined)[] = new Array(capacity);
       for (let i = 0; i < this._length; i++) newBuffer[i] = this._buffer[i];
       this._buffer = newBuffer;
     }
@@ -100,6 +103,11 @@ export class Vector<T> implements ICollection<T>, IIndexable<T> {
     if (this._buffer.length > this._length) {
       this._buffer = this._buffer.slice(0, this._length);
     }
+  }
+
+  set(index: number, value: T): void {
+    if (index < 0 || index >= this._length) return;
+    this._buffer[index] = value;
   }
 
   private ensureCapacity(required: number): void {

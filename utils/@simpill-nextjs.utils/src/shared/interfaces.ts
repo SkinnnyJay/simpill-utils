@@ -14,11 +14,19 @@ export interface IRouteDefinition {
   metadata?: Record<string, unknown>;
 }
 
-/** Registry of route definitions (define, get, list). */
+/** A matched route plus decoded `:param` path parameters. */
+export interface IRouteMatch {
+  route: IRouteDefinition;
+  params: Record<string, string>;
+}
+
+/** Registry of route definitions (define, get, list, match). */
 export interface IRouteRegistry {
   define(route: IRouteDefinition): void;
   get(path: string, method: string): IRouteDefinition | undefined;
   list(): IRouteDefinition[];
+  /** Resolve a request path against registered routes, including `:param` patterns (static routes win). */
+  match?(path: string, method: string): IRouteMatch | undefined;
 }
 
 /** Request-like shape for parsing (url, nextUrl.searchParams, headers). */
@@ -38,6 +46,12 @@ export interface RequestContextOptions {
   requestIdHeader?: string;
   traceIdHeader?: string;
   getHeaders?: () => Headers | Promise<Headers>;
+  /** Reflect incoming header ids verbatim without validation. Default false. */
+  trustIncomingIds?: boolean;
+  /** Pattern incoming ids must match when not trusted. */
+  idPattern?: RegExp;
+  /** Read the W3C `traceparent` trace-id when no trace-id header is present. Default true. */
+  readTraceparent?: boolean;
 }
 
 /** Helpers for request parsing and context. */

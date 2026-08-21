@@ -160,6 +160,10 @@ it("runs without log spam", () => {
 | **Structured Logging** | JSON-compatible output with metadata |
 | **Multiple Formatters** | Simple, JSON, colored, and custom formats |
 | **Mock Logger** | Silent tests with one line |
+| **Redaction** | Zero-dep pino-style path redaction (`redact: ["user.token", "users[*].password"]`), non-mutating |
+| **Fast Level Gate** | Disabled levels cost ~6 ns/call — the entry is never built (adapters opt in via `isLevelEnabled`) |
+| **Child Loggers** | `logger.child("db", { tenant })` on every factory logger |
+| **Crash-Proof Serialization** | Circular refs / BigInt / throwing toJSON never lose a log entry |
 | **Zero Dependencies** | Default adapter has no external dependencies |
 | **Environment Config** | Auto-configures from `LOG_LEVEL`, `LOG_FORMAT`, etc. |
 
@@ -263,7 +267,7 @@ logger.info("Handling request"); // metadata will include requestId if provider 
 
 ## Buffered adapter and shutdown
 
-`BufferedLoggerAdapter` batches entries and flushes on an interval or when the buffer is full. It **never blocks** the caller; if the inner adapter is slow, the buffer may grow and on overflow (maxBufferSize) the oldest entries are flushed synchronously. There is no backpressure API; for very high throughput consider a bounded buffer and onFlushError handling. To avoid losing logs on exit:
+`BufferedLoggerAdapter` batches entries and flushes on an interval or when the buffer is full. It **never blocks** the caller. On a mid-batch flush failure, only the entries the inner adapter did **not** accept are re-queued (no duplicate delivery), and while the inner adapter keeps failing the retry buffer is bounded at 2× `maxBufferSize` — beyond that the oldest entries are dropped and reported via `onFlushError`, so a dead sink cannot grow memory without limit. Concurrent `flush()` calls are serialized: awaiting `flush()` during an in-flight flush waits for that delivery to finish. To avoid losing logs on exit:
 
 - Call **`flushLogs()`** (or `adapter.flush()`) in a shutdown hook before process exit.
 - Call **`destroy()`** on the adapter to stop the timer and perform a final flush. This is **required for cleanup** (clears the flush timer and flushes remaining entries); without it the timer may keep the process alive or drop buffered logs.
@@ -280,11 +284,30 @@ Besides the built-in **Pino** adapter, you can implement `LoggerAdapter` to wrap
 
 ## Redaction and PII
 
-This package does not redact fields automatically. To avoid logging PII:
+Built-in, zero-dependency path-based redaction (pino-style paths), applied centrally before any adapter sees the entry:
 
-- Do not put secrets or raw PII in `message` or `metadata`.
-- Redact in a custom formatter (e.g. replace `password`, `token` with `[REDACTED]`) or sanitize metadata before calling `logger.info(message, metadata)`.
-- Use structured metadata only for non-sensitive identifiers (e.g. requestId, userId) when needed for tracing.
+```ts
+import { configureLoggerFactory } from "@simpill/logger.utils";
+
+configureLoggerFactory({
+  config: {
+    redact: ["password", "user.token", "users[*].password", "headers['set-cookie']", "config.*"],
+  },
+});
+
+// or with a custom censor
+configureLoggerFactory({
+  config: { redact: { paths: ["cc"], censor: "####" } },
+});
+```
+
+- Paths follow pino / fast-redact syntax: dot paths, bracket notation, `[*]` array wildcards, single-level `*` wildcards, and terminal `.*`.
+- Paths are compiled ONCE at configure time (malformed paths throw immediately, not at log time).
+- The caller's metadata object is **never mutated**: only branches on a redacted path are cloned; untouched branches keep their original references, and metadata with no matches is passed through zero-copy.
+- Redaction runs after correlation-context merge, so context-provided fields (e.g. a session token) are redacted too.
+- A standalone `createRedactor(paths | options)` is exported for use outside the logger.
+
+Paths are configuration — never build them from user input.
 
 ---
 
@@ -360,7 +383,6 @@ LoggerFactory.setAdapter(new MyCustomAdapter());
 
 - **ECS/Pino-style schema** — The **LoggerAdapter** contract is **debug/info/warn/error**(message, ...args). Structure (e.g. ECS fields, level, timestamp) is the adapter’s responsibility; implement it in your adapter or use one that matches your format.
 - **Sampling / rate limiting** — No built-in sample rate or log throttling; implement in the adapter (e.g. drop or queue in adapter.info) if needed.
-- **Redaction / PII** — No built-in redaction; sanitize in the adapter or before calling logger methods.
 - **File / transport implementations** — Only the adapter interface; use **@simpill/adapters.utils** **consoleLoggerAdapter** or wire Pino/Winston/etc. via a custom adapter.
 
 ---
@@ -402,6 +424,18 @@ interface Logger {
   warn(message: string, metadata?: LogMetadata): void;
   debug(message: string, metadata?: LogMetadata): void;
   error(message: string, metadata?: LogMetadata): void;
+  // present on every factory-created logger:
+  child?(nameOrMetadata: string | LogMetadata, metadata?: LogMetadata): Logger;
+  isLevelEnabled?(level: LogLevel): boolean;
+}
+
+// child loggers
+const auth = getLogger("Auth");
+const db = auth.child?.("db", { pool: "primary" }); // name "Auth.db", metadata inherited
+
+// guard expensive metadata construction
+if (logger.isLevelEnabled?.("DEBUG")) {
+  logger.debug("state dump", buildExpensiveSnapshot());
 }
 ```
 

@@ -1,8 +1,20 @@
-import { ERROR_TTL_CACHE_TTL_MS, VALUE_0 } from "../constants";
+import { ERROR_TTL_CACHE_TTL_MS, VALUE_0, VALUE_1 } from "../constants";
 
 /**
  * TTL cache: entries expire after a TTL in ms. Optional max size with LRU eviction.
- * Expired entries are pruned on set(), get(key), and size to avoid unbounded growth.
+ *
+ * Performance model (all O(1) amortized; previously set() scanned the whole map and
+ * recency used Array#indexOf/splice, making bulk workloads O(n^2)):
+ * - Recency is the Map's own insertion order (delete + re-set moves an entry to the
+ *   back, the standard ES Map LRU technique). Front of the map = least recently used.
+ * - Expiry is checked lazily on get/has, and a full expiry sweep runs at most once
+ *   per TTL window (so stale memory is bounded to one TTL period of writes).
+ * - `size` remains exact: it forces a sweep first (O(n), matching original semantics).
+ *
+ * Behavioral notes vs the previous implementation (previously unspecified/untested):
+ * - has() no longer refreshes recency (standard cache convention) and now works
+ *   correctly for stored `undefined` values.
+ * - set() on an existing key refreshes its recency (true LRU; previously only get did).
  */
 export interface TTLCacheOptions {
   ttlMs: number;
@@ -17,8 +29,9 @@ interface Entry<V> {
 export class TTLCache<K, V> {
   private readonly _ttlMs: number;
   private readonly _maxSize: number | undefined;
+  /** Recency-ordered: least recently used at the front. */
   private readonly _map = new Map<K, Entry<V>>();
-  private readonly _keyOrder: K[] = [];
+  private _nextSweepAt = VALUE_0;
 
   constructor(options: TTLCacheOptions) {
     this._ttlMs = options.ttlMs;
@@ -27,7 +40,7 @@ export class TTLCache<K, V> {
   }
 
   get size(): number {
-    this.prune();
+    this.sweep(Date.now());
     return this._map.size;
   }
 
@@ -36,61 +49,94 @@ export class TTLCache<K, V> {
     if (!entry) return undefined;
     if (Date.now() > entry.expiresAt) {
       this._map.delete(key);
-      const i = this._keyOrder.indexOf(key);
-      if (i !== -1) this._keyOrder.splice(i, 1);
       return undefined;
     }
     if (this._maxSize !== undefined) {
-      const i = this._keyOrder.indexOf(key);
-      if (i !== -1) {
-        this._keyOrder.splice(i, 1);
-        this._keyOrder.push(key);
-      }
+      // Touch: move to the back (most recently used) in O(1).
+      this._map.delete(key);
+      this._map.set(key, entry);
     }
     return entry.value;
   }
 
+  /** Like get(), but never refreshes recency. */
+  peek(key: K): V | undefined {
+    const entry = this._map.get(key);
+    if (!entry || Date.now() > entry.expiresAt) return undefined;
+    return entry.value;
+  }
+
+  /** Remaining lifetime in ms, or undefined if absent/expired. */
+  getRemainingTTL(key: K): number | undefined {
+    const entry = this._map.get(key);
+    if (!entry) return undefined;
+    const remaining = entry.expiresAt - Date.now();
+    return remaining < VALUE_0 ? undefined : remaining;
+  }
+
   set(key: K, value: V): void {
-    this.prune();
     const now = Date.now();
-    const expiresAt = now + this._ttlMs;
-    const had = this._map.has(key);
-    this._map.set(key, { value, expiresAt });
-    if (!had && this._maxSize !== undefined) {
-      this._keyOrder.push(key);
-      while (this._keyOrder.length > this._maxSize) {
-        const k = this._keyOrder.shift();
-        if (k !== undefined) this._map.delete(k);
+    this.maybeSweep(now);
+    // delete + set keeps updated keys at the back (most recent) of the map.
+    this._map.delete(key);
+    this._map.set(key, { value, expiresAt: now + this._ttlMs });
+    if (this._maxSize !== undefined) {
+      while (this._map.size > this._maxSize) {
+        const oldest = this._map.keys().next().value as K;
+        this._map.delete(oldest);
       }
     }
   }
 
   has(key: K): boolean {
-    return this.get(key) !== undefined;
+    const entry = this._map.get(key);
+    if (!entry) return false;
+    if (Date.now() > entry.expiresAt) {
+      this._map.delete(key);
+      return false;
+    }
+    return true;
   }
 
   delete(key: K): boolean {
-    const ok = this._map.delete(key);
-    if (ok && this._maxSize !== undefined) {
-      const i = this._keyOrder.indexOf(key);
-      if (i !== -1) this._keyOrder.splice(i, 1);
-    }
-    return ok;
+    return this._map.delete(key);
   }
 
   clear(): void {
     this._map.clear();
-    this._keyOrder.length = 0;
+    this._nextSweepAt = VALUE_0;
   }
 
-  private prune(): void {
+  /** Live entries, least recently used first. Expired entries are skipped. */
+  *entries(): IterableIterator<[K, V]> {
     const now = Date.now();
-    for (const [k, entry] of this._map.entries()) {
-      if (now > entry.expiresAt) {
-        this._map.delete(k);
-        const i = this._keyOrder.indexOf(k);
-        if (i !== -1) this._keyOrder.splice(i, 1);
-      }
+    for (const [key, entry] of this._map) {
+      if (now <= entry.expiresAt) yield [key, entry.value];
+    }
+  }
+
+  *keys(): IterableIterator<K> {
+    for (const [key] of this.entries()) yield key;
+  }
+
+  *values(): IterableIterator<V> {
+    for (const [, value] of this.entries()) yield value;
+  }
+
+  [Symbol.iterator](): IterableIterator<[K, V]> {
+    return this.entries();
+  }
+
+  /** Full expiry sweep, at most once per TTL window (amortized O(1) per op). */
+  private maybeSweep(now: number): void {
+    if (now < this._nextSweepAt) return;
+    this._nextSweepAt = now + Math.max(this._ttlMs, VALUE_1);
+    this.sweep(now);
+  }
+
+  private sweep(now: number): void {
+    for (const [key, entry] of this._map) {
+      if (now > entry.expiresAt) this._map.delete(key);
     }
   }
 }

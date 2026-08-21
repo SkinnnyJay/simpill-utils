@@ -296,8 +296,73 @@ describe("FileLoggerAdapter", () => {
 
       adapter.log({ level: LOG_LEVEL.INFO, message: "Test", name: "Test" });
 
-      // Should delete .2 (oldest when maxFiles=3)
-      expect(mockFs.unlinkSync).toHaveBeenCalledWith(expect.stringContaining("combined.log.2"));
+      // maxFiles=3 keeps .1/.2/.3, so .3 is the oldest and the only one dropped.
+      // This previously deleted .2, leaving maxFiles - 1 archives on disk.
+      expect(mockFs.unlinkSync).toHaveBeenCalledWith(expect.stringContaining("combined.log.3"));
+      expect(mockFs.unlinkSync).not.toHaveBeenCalledWith(expect.stringContaining("combined.log.2"));
+    });
+
+    it("keeps exactly maxFiles archives", () => {
+      mockFs.statSync.mockReturnValue(createMockStats({ size: 15 * 1024 * 1024 }));
+      mockFs.existsSync.mockReturnValue(true);
+
+      const adapter = new FileLoggerAdapter({
+        directory: "./logs",
+        maxFileSize: 10 * 1024 * 1024,
+        maxFiles: 3,
+      });
+      adapter.initialize({});
+
+      adapter.log({ level: LOG_LEVEL.INFO, message: "Test", name: "Test" });
+
+      const renames = mockFs.renameSync.mock.calls.map((c) => String(c[1]));
+      expect(renames.some((p) => p.endsWith("combined.log.3"))).toBe(true);
+      expect(renames.some((p) => p.endsWith("combined.log.4"))).toBe(false);
+    });
+
+    it("keeps no archives when maxFiles is 0", () => {
+      mockFs.statSync.mockReturnValue(createMockStats({ size: 15 * 1024 * 1024 }));
+      mockFs.existsSync.mockReturnValue(true);
+
+      const adapter = new FileLoggerAdapter({
+        directory: "./logs",
+        maxFileSize: 10 * 1024 * 1024,
+        maxFiles: 0,
+      });
+      adapter.initialize({});
+
+      adapter.log({ level: LOG_LEVEL.INFO, message: "Test", name: "Test" });
+
+      expect(mockFs.renameSync).not.toHaveBeenCalled();
+      expect(mockFs.unlinkSync).toHaveBeenCalledWith(expect.stringContaining("combined.log"));
+    });
+
+    it("does not let metadata overwrite the reserved log fields", () => {
+      const adapter = new FileLoggerAdapter({ directory: "./logs", format: "json" });
+      adapter.initialize({});
+
+      adapter.log({
+        level: LOG_LEVEL.ERROR,
+        message: "real message",
+        name: "real-name",
+        timestamp: "2026-01-01T00:00:00.000Z",
+        metadata: {
+          level: LOG_LEVEL.DEBUG,
+          message: "forged message",
+          name: "forged-name",
+          timestamp: "1999-01-01T00:00:00.000Z",
+          requestId: "req-1",
+        },
+      });
+
+      const written = mockFs.appendFileSync.mock.calls.map((c) => String(c[1])).join("");
+      const line = JSON.parse(written.trim().split("\n")[0] as string) as Record<string, unknown>;
+      expect(line.level).toBe(LOG_LEVEL.ERROR);
+      expect(line.message).toBe("real message");
+      expect(line.name).toBe("real-name");
+      expect(line.timestamp).toBe("2026-01-01T00:00:00.000Z");
+      // Non-colliding metadata still rides along.
+      expect(line.requestId).toBe("req-1");
     });
 
     it("should not rotate if file does not exist", () => {

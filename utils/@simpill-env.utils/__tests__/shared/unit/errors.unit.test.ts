@@ -151,6 +151,62 @@ describe("ENV_ERROR_CODE", () => {
   });
 });
 
+describe("EnvParseError security", () => {
+  it("should NOT include raw value in .message", () => {
+    const err = new EnvParseError("SECRET_KEY", "my-secret-value", "number");
+    expect(err.message).not.toContain("my-secret-value");
+  });
+
+  it("should include raw value in .detail for server-side debugging", () => {
+    const err = new EnvParseError("SECRET_KEY", "my-secret-value", "number");
+    expect(err.detail).toContain("my-secret-value");
+  });
+
+  it("should redact secret-like keys on .rawValue (serialized errors must stay safe)", () => {
+    const err = new EnvParseError("SECRET_KEY", "my-secret-value", "number");
+    expect(err.rawValue).toBe("[redacted]");
+  });
+
+  it("should not leak the raw value through JSON.stringify", () => {
+    // Error.prototype.message is non-enumerable, so serializing drops the redacted message.
+    // If .detail is enumerable the serialized error carries the secret and not the redaction -
+    // which is how errors reach log pipelines, crash reporters and HTTP response bodies.
+    const err = new EnvParseError("API_KEY", "sk-live-SUPERSECRET-1234", "number");
+    expect(JSON.stringify(err)).not.toContain("sk-live-SUPERSECRET-1234");
+    expect(Object.keys(err)).not.toContain("detail");
+    // Still readable for local debugging.
+    expect(err.detail).toContain("sk-live-SUPERSECRET-1234");
+  });
+});
+
+describe("EnvValidationError security", () => {
+  it("should NOT include raw value in .message", () => {
+    const err = new EnvValidationError("API_TOKEN", "super-secret-token", "invalid format");
+    expect(err.message).not.toContain("super-secret-token");
+  });
+
+  it("should not leak the rejected value through JSON.stringify", () => {
+    const err = new EnvValidationError("DATABASE_URL", "postgres://user:pw@host/db", "bad");
+    expect(JSON.stringify(err)).not.toContain("pw@host");
+    expect(err.detail).toContain("pw@host");
+  });
+
+  it("should include raw value in .detail for server-side debugging", () => {
+    const err = new EnvValidationError("API_TOKEN", "super-secret-token", "invalid format");
+    expect(err.detail).toContain("super-secret-token");
+  });
+
+  it("should NOT include secret-like numeric values in .message", () => {
+    const err = new EnvValidationError("SECRET_PORT", 99999, "must be between 1 and 65535");
+    expect(err.message).not.toContain("99999");
+  });
+
+  it("should redact secret-like keys on .value (serialized errors must stay safe)", () => {
+    const err = new EnvValidationError("API_TOKEN", "super-secret-token", "invalid format");
+    expect(err.value).toBe("[redacted]");
+  });
+});
+
 describe("Error discrimination", () => {
   it("should allow catching specific error types", () => {
     const errors: EnvError[] = [

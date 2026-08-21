@@ -6,8 +6,8 @@ import { describe, expect, it } from "vitest";
 
 // token-optimizer.utils omitted: it depends on ESM-only "marked", which breaks under CJS resolution in this test.
 // It is covered by its own package tests.
+// acp-llm-cli omitted: git submodule only until published to npm (not a root dependency).
 const PACKAGES_TO_RESOLVE: Array<{ name: string; loader: () => Promise<Record<string, unknown>> }> = [
-  { name: "acp-llm-cli", loader: () => import("@simpill/acp-llm-cli") },
   { name: "adapters.utils", loader: () => import("@simpill/adapters.utils") },
   { name: "algorithms.utils", loader: () => import("@simpill/algorithms.utils") },
   { name: "annotations.utils", loader: () => import("@simpill/annotations.utils") },

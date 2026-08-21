@@ -1,3 +1,5 @@
+> **Deprecated:** Prefer [`@simpill/function.utils`](https://www.npmjs.com/package/@simpill/function.utils) (`createMetadataStore`, `getMetadata`, `setMetadata`). This package remains a stable re-export for existing consumers.
+
 ## Install
 
 <p align="center">

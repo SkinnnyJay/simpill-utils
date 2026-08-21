@@ -38,11 +38,13 @@ import {
 
 ## API Reference
 
-- **Clamp / range:** `clamp`, `isInRange` (with `IsInRangeOptions`)
-- **Rounding:** `roundTo`
-- **Parsing:** `toInt`, `toFloat`
-- **Math:** `lerp`, `sum`, `avg`
+- **Clamp / range:** `clamp` (TC39 Math.clamp semantics: NaN propagates, `min > max` throws RangeError), `isInRange` (with `IsInRangeOptions`)
+- **Rounding:** `roundTo` — exponent-shift rounding, so `roundTo(1.005, 2) === 1.01`; supports negative decimals (`roundTo(4560, -2) === 4600`) and banker's rounding via `{ mode: "half-even" }` (`RoundToOptions`)
+- **Parsing:** `toInt`, `toFloat` — accept numbers, numeric strings, and exact bigints; `""`, `null`, arrays, booleans, and objects hit the fallback instead of coercing to `0`/`1`; `toInt` truncates toward zero
+- **Interpolation:** `lerp` (C++20 `std::lerp` guarantees: exact at `t=0`/`t=1`, monotonic, bounded), `inverseLerp`, `remap`
+- **Summation:** `sum` (Neumaier compensated — `sum(Array(10).fill(0.1)) === 1`), `sumPrecise` (correctly rounded, ES2026 `Math.sumPrecise` semantics; native when available), `avg`
+- **Comparison:** `approxEqual` (PEP 485 `math.isclose` semantics, `ApproxEqualOptions`)
 - **Guards:** `isInteger`, `isFiniteNumber`
-- **Random:** `randomInt`
+- **Random:** `randomInt` — validated bounds (RangeError on empty/reversed integer ranges); `Math.random`-based, not for security
 
 Subpath exports: `@simpill/number.utils`, `@simpill/number.utils/client`, `@simpill/number.utils/server`, `@simpill/number.utils/shared`.

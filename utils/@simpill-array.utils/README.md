@@ -45,13 +45,17 @@ import {
 ## API Reference
 
 - **Unique / compact:** `unique`, `uniqueBy`, `compact`
-- **Chunking / flatten:** `chunk`, `flattenOnce`
+- **Chunking / flatten / windows:** `chunk`, `flattenOnce`, `windowed`
 - **Grouping / keying:** `groupBy`, `keyBy`, `countBy`
-- **Sorting:** `sortBy` (with `SortOrder`)
-- **Partition / zip:** `partition`, `zip`, `unzip`
-- **Set-like:** `intersection`, `difference`, `union`
-- **Sampling / slice:** `sample`, `shuffle`, `take`, `takeRight`, `drop`, `dropRight`
+- **Sorting:** `sortBy` (stable, single or multi-key, with `SortOrder`)
+- **Partition / zip:** `partition`, `zip`, `zipWith`, `unzip`
+- **Set-like:** `intersection`, `difference`, `union`, `symmetricDifference`
+- **Aggregation:** `minBy`, `maxBy`, `sumBy`
+- **Sampling / slice:** `sample`, `sampleSize`, `shuffle` (all take an optional seeded rng), `take`, `takeRight`, `drop`, `dropRight`
+- **Generation:** `range`
 - **First / last:** `first`, `last`
 - **Guards:** `isArrayLike`, `isNonEmptyArray`, `ensureArray`
+
+`unique`, `uniqueBy`, `compact`, `flattenOnce`, `groupBy`, `keyBy`, `countBy`, `partition`, `minBy`, `maxBy` and `sumBy` accept any `Iterable<T>` (arrays, generators, Sets), not just arrays.
 
 Subpath exports: `@simpill/array.utils`, `@simpill/array.utils/client`, `@simpill/array.utils/server`, `@simpill/array.utils/shared`.

@@ -11,7 +11,9 @@ class Node<T> {
 }
 
 /**
- * Doubly linked list. O(1) insert/remove at head/tail; O(n) by index.
+ * Doubly linked list. O(1) insert/remove at head/tail; O(n/2) by index
+ * (walks from whichever end is closer). Iteration is lazy (no full-array copy);
+ * do not mutate the list while iterating.
  */
 export class LinkedList<T> implements ICollection<T> {
   private _head: Node<T> | null = null;
@@ -42,8 +44,21 @@ export class LinkedList<T> implements ICollection<T> {
     return out;
   }
 
-  [Symbol.iterator](): Iterator<T> {
-    return this.toArray()[Symbol.iterator]();
+  *[Symbol.iterator](): IterableIterator<T> {
+    let node = this._head;
+    while (node) {
+      yield node.value;
+      node = node.next;
+    }
+  }
+
+  /** Lazy reverse iteration, tail to head. */
+  *reversed(): IterableIterator<T> {
+    let node = this._tail;
+    while (node) {
+      yield node.value;
+      node = node.prev;
+    }
   }
 
   push(value: T): void {
@@ -60,12 +75,13 @@ export class LinkedList<T> implements ICollection<T> {
 
   pop(): T | undefined {
     if (!this._tail) return undefined;
-    const value = this._tail.value;
-    this._tail = this._tail.prev;
+    const node = this._tail;
+    this._tail = node.prev;
     if (this._tail) this._tail.next = null;
     else this._head = null;
+    node.prev = null;
     this._size--;
-    return value;
+    return node.value;
   }
 
   unshift(value: T): void {
@@ -82,12 +98,13 @@ export class LinkedList<T> implements ICollection<T> {
 
   shift(): T | undefined {
     if (!this._head) return undefined;
-    const value = this._head.value;
-    this._head = this._head.next;
+    const node = this._head;
+    this._head = node.next;
     if (this._head) this._head.prev = null;
     else this._tail = null;
+    node.next = null;
     this._size--;
-    return value;
+    return node.value;
   }
 
   get(index: number): T | undefined {
@@ -120,15 +137,23 @@ export class LinkedList<T> implements ICollection<T> {
     this._size++;
   }
 
+  /**
+   * Remove the element at index. Out-of-range indices return undefined.
+   * (Previously removeAt(-1) removed the head and removeAt(size + n) removed
+   * the tail — silent data loss on bad indices.)
+   */
   removeAt(index: number): T | undefined {
-    if (index <= VALUE_0) return this.shift();
-    if (index >= this._size - 1) return this.pop();
+    if (index < VALUE_0 || index >= this._size) return undefined;
+    if (index === VALUE_0) return this.shift();
+    if (index === this._size - 1) return this.pop();
     const node = this.getNodeAt(index);
     if (!node) return undefined;
     const prev = node.prev;
     const next = node.next;
     if (prev) prev.next = next;
     if (next) next.prev = prev;
+    node.prev = null;
+    node.next = null;
     this._size--;
     return node.value;
   }
@@ -139,8 +164,14 @@ export class LinkedList<T> implements ICollection<T> {
 
   private getNodeAt(index: number): Node<T> | null {
     if (index < VALUE_0 || index >= this._size) return null;
-    let node = this._head;
-    for (let i = 0; i < index && node; i++) node = node.next;
+    // Walk from the closer end.
+    if (index <= this._size >> 1) {
+      let node = this._head;
+      for (let i = 0; i < index && node; i++) node = node.next;
+      return node;
+    }
+    let node = this._tail;
+    for (let i = this._size - 1; i > index && node; i--) node = node.prev;
     return node;
   }
 

@@ -45,7 +45,7 @@ useEffect(() => {
 Context that throws if used outside the provider.
 
 ```tsx
-const { Provider, useCtx } = createSafeContext<AuthState>("Auth");
+const { Provider, useCtx, useMaybeCtx } = createSafeContext<AuthState>("Auth");
 
 function App() {
   return (
@@ -83,10 +83,12 @@ const [index, setIndex] = useLazyState(() => buildSearchIndex(items));
 
 ### useDeferredUpdate
 
-State setter that wraps updates in `startTransition` for non-urgent updates.
+State setter that wraps updates in a transition for non-urgent updates. The
+setter is identity-stable (safe in dependency arrays) and `isPending` is
+available as an optional third tuple element.
 
 ```tsx
-const [scrollY, setScrollY] = useDeferredUpdate(0);
+const [scrollY, setScrollY, isPending] = useDeferredUpdate(0);
 useEffect(() => {
   const handler = () => setScrollY(window.scrollY);
   window.addEventListener("scroll", handler, { passive: true });
@@ -98,12 +100,14 @@ useEffect(() => {
 
 | Export | Description |
 |--------|-------------|
-| `useLatest(value)` | Ref that always holds latest value |
-| `createSafeContext(displayName?)` | `{ Provider, useCtx }`; useCtx throws outside provider |
-| `useSafeContext(context)` | Hook that throws if context is null |
-| `useStableCallback(fn)` | Stable callback that invokes latest fn |
+| `useLatest(value)` | Ref that always holds latest value (`current: T`, synced before layout effects) |
+| `createSafeContext(displayName?)` | `{ Provider, useCtx, useMaybeCtx }`; useCtx throws outside provider; `null`/`undefined` are valid values |
+| `useSafeContext(context)` | Hook that throws if context is null (null-sentinel contexts) |
+| `useStableCallback(fn)` | Stable callback that invokes latest fn; parameter/return types preserved; `this` forwarded |
+| `useEffectEvent(fn)` | React 19.2 `useEffectEvent` ponyfill (native passthrough when available) |
+| `useIsomorphicLayoutEffect` | `useLayoutEffect` in the browser, `useEffect` on the server (no SSR warning) |
 | `useLazyState(initializer)` | Lazy useState initializer |
-| `useDeferredUpdate(initial)` | [state, setState] with setState in startTransition |
+| `useDeferredUpdate(initial)` | `[state, setState, isPending]`; stable setter, updates in a transition |
 
 ### What we don't provide
 

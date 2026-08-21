@@ -5,6 +5,7 @@
 
 import type { LogLevel } from "./constants";
 import type { FormatterAdapter } from "./formatters/formatter.adapter";
+import type { RedactOptions } from "./redact";
 import type { LogEntry, LogMetadata } from "./types";
 
 /**
@@ -19,6 +20,18 @@ export interface LoggerAdapterConfig {
   prettyPrint?: boolean;
   /** Custom formatter adapter for controlling output format */
   formatter?: FormatterAdapter;
+  /**
+   * Redact sensitive metadata before it reaches any adapter.
+   * Either an array of paths ("password", "user.token", "users[*].password",
+   * "config.*") or a full RedactOptions with a custom censor.
+   * Compiled once at configuration time; the caller's metadata is never mutated.
+   */
+  redact?: RedactOptions | readonly string[];
+  /**
+   * Alias for path-array redaction (Wave 2 API). Prefer `redact`.
+   * Equivalent to `redact: redactPaths` when `redact` is unset.
+   */
+  redactPaths?: readonly string[];
   /** Additional adapter-specific options */
   options?: Record<string, unknown>;
 }
@@ -74,6 +87,15 @@ export interface LoggerAdapter {
    * @param defaultMetadata - Optional metadata to include in all logs from this child
    */
   child(name: string, defaultMetadata?: LogMetadata): LoggerAdapter;
+
+  /**
+   * Fast level gate (optional). When implemented, the factory calls this
+   * BEFORE building the log entry — a disabled level then costs a single
+   * method call instead of context lookup + metadata merge + Date + entry
+   * allocation. Adapters that don't implement it keep the previous behavior
+   * exactly (every entry is built and passed to log()).
+   */
+  isLevelEnabled?(level: LogLevel): boolean;
 
   /**
    * Flush any buffered logs (optional)

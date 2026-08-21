@@ -6,3 +6,7 @@ export const ERROR_VALIDATION_FAILED = "Validation failed" as const;
 export const ERROR_CODE_VALIDATION = "VALIDATION_ERROR" as const;
 /** Default error code for server errors. */
 export const ERROR_CODE_SERVER = "SERVER_ERROR" as const;
+/** Generic client-facing message when handler output fails outputSchema. */
+export const ERROR_OUTPUT_VALIDATION_FAILED = "Output validation failed" as const;
+/** Error code when handler output fails outputSchema. */
+export const ERROR_CODE_OUTPUT_VALIDATION = "OUTPUT_VALIDATION_ERROR" as const;
