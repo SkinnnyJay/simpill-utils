@@ -2,8 +2,14 @@
  * Typed file I/O utilities using Node.js fs (sync) and fs.promises (async).
  * Server/Node only. Async functions use UTF-8 by default.
  *
- * For untrusted path input (e.g. user-provided paths), use `resolvePathUnderRoot(rootDir, path)`
- * from `./path.utils` before calling read/write to prevent path traversal.
+ * For untrusted path input (e.g. user-provided paths), resolve it under a root
+ * before calling read/write, using `./path.utils`:
+ *
+ * - `resolvePathUnderRootReal` (or the *Sync variant) when the directory could
+ *   contain symlinks, which is the normal assumption for untrusted input. It
+ *   resolves symlinks, so a link inside rootDir pointing outside it is rejected.
+ * - `resolvePathUnderRoot` only when the tree is known to be symlink-free. It is
+ *   a purely lexical check and a symlink escape passes it.
  */
 
 import { randomBytes } from "node:crypto";
