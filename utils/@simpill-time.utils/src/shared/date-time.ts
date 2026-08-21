@@ -1,5 +1,11 @@
 /** Date/time arithmetic and comparison; pure, runtime-agnostic. */
-import { MS_PER_DAY, MS_PER_HOUR, MS_PER_MINUTE, MS_PER_SECOND } from "./constants";
+import {
+  MONTHS_PER_YEAR,
+  MS_PER_DAY,
+  MS_PER_HOUR,
+  MS_PER_MINUTE,
+  MS_PER_SECOND,
+} from "./constants";
 
 export type DateInput = Date | number;
 
@@ -49,18 +55,39 @@ export function addWeeks(date: DateInput, amount: number): Date {
   return addDays(date, amount * 7);
 }
 
-/** Adds months to a date; returns new Date (immutable). */
+/**
+ * Adds months to a date; returns new Date (immutable).
+ *
+ * Clamps to the end of the target month instead of letting the day-of-month
+ * overflow: Jan 31 + 1 month = Feb 29/28 (NOT Mar 2/3). Time-of-day is
+ * preserved. Negative amounts clamp the same way (Mar 31 - 1 month = Feb 29,
+ * not Mar 2).
+ */
 export function addMonths(date: DateInput, amount: number): Date {
   const d = new Date(toDate(date).getTime());
-  d.setMonth(d.getMonth() + amount);
+  if (Number.isNaN(amount)) return new Date(Number.NaN);
+  if (!amount) return d;
+  const dayOfMonth = d.getDate();
+  // Day 0 of month M+1 is the last day of month M — this is the end of the
+  // desired month regardless of its length (28/29/30/31).
+  const endOfDesiredMonth = new Date(d.getTime());
+  endOfDesiredMonth.setMonth(d.getMonth() + amount + 1, 0);
+  const daysInTargetMonth = endOfDesiredMonth.getDate();
+  if (dayOfMonth >= daysInTargetMonth) {
+    // Original day doesn't exist in the target month: clamp to its last day
+    // (endOfDesiredMonth already carries the original time-of-day).
+    return endOfDesiredMonth;
+  }
+  d.setFullYear(endOfDesiredMonth.getFullYear(), endOfDesiredMonth.getMonth(), dayOfMonth);
   return d;
 }
 
-/** Adds years to a date; returns new Date (immutable). */
+/**
+ * Adds years to a date; returns new Date (immutable).
+ * Clamps Feb 29 to Feb 28 on non-leap target years (NOT Mar 1).
+ */
 export function addYears(date: DateInput, amount: number): Date {
-  const d = new Date(toDate(date).getTime());
-  d.setFullYear(d.getFullYear() + amount);
-  return d;
+  return addMonths(date, amount * MONTHS_PER_YEAR);
 }
 
 /** Adds hours to a date; returns new Date (immutable). */
@@ -124,14 +151,14 @@ export function deltaStructured(from: DateInput, to: DateInput): DeltaResult {
 /**
  * Adds a duration to a date. Returns a new Date (immutable).
  * Order of application: years → months → weeks → days → hours → minutes → seconds → ms.
+ * Years and months are applied together through end-of-month clamping
+ * (Jan 31 + {months: 1} = Feb 29/28, not Mar 2/3).
  */
 export function add(date: DateInput, duration: Duration): Date {
-  const d = new Date(toDate(date).getTime());
-  if (duration.years !== undefined) {
-    d.setFullYear(d.getFullYear() + duration.years);
-  }
-  if (duration.months !== undefined) {
-    d.setMonth(d.getMonth() + duration.months);
+  let d = new Date(toDate(date).getTime());
+  const totalMonths = (duration.years ?? 0) * MONTHS_PER_YEAR + (duration.months ?? 0);
+  if (totalMonths !== 0) {
+    d = addMonths(d, totalMonths);
   }
   if (duration.weeks !== undefined) {
     d.setDate(d.getDate() + duration.weeks * 7);
@@ -166,6 +193,39 @@ export function endOfDay(date: DateInput): Date {
   const d = new Date(toDate(date).getTime());
   d.setHours(23, 59, 59, 999);
   return d;
+}
+
+/** Start of month (1st, 00:00:00.000) in local time. */
+export function startOfMonth(date: DateInput): Date {
+  const d = new Date(toDate(date).getTime());
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** End of month (last day, 23:59:59.999) in local time. */
+export function endOfMonth(date: DateInput): Date {
+  const d = new Date(toDate(date).getTime());
+  d.setMonth(d.getMonth() + 1, 0);
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
+
+/** Number of days in the date's month (28-31, leap-aware). */
+export function daysInMonth(date: DateInput): number {
+  const d = toDate(date);
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+}
+
+/** True if both dates fall on the same local calendar day. */
+export function isSameDay(a: DateInput, b: DateInput): boolean {
+  const da = toDate(a);
+  const db = toDate(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
 }
 
 /** True if value is a valid Date (instance of Date and not Invalid Date). */

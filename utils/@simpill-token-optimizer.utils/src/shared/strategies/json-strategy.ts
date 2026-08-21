@@ -53,7 +53,9 @@ const stringifyDeterministic = (value: JsonValue): string => {
   if (isJsonObject(value)) {
     const entries = Object.entries(value)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, entryValue]) => `"${key}":${stringifyDeterministic(entryValue)}`);
+      // JSON.stringify escapes quotes, backslashes and control characters in the key; raw
+      // interpolation produced unparseable output for any key containing them.
+      .map(([key, entryValue]) => `${JSON.stringify(key)}:${stringifyDeterministic(entryValue)}`);
 
     return `{${entries.join(",")}}`;
   }

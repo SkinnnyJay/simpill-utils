@@ -9,7 +9,10 @@ export const TIMER_TYPE = {
 
 export const TIMER_ID_PREFIX_INTERVAL = "interval_";
 export const TIMER_ID_PREFIX_TIMEOUT = "timeout_";
+export const TIMER_ID_PREFIX_DRIFTLESS = "driftless_";
 export const TIMER_ID_PREFIX_FACTORY = "factory_";
+
+export const SHUTDOWN_SIGNALS = ["SIGTERM", "SIGINT"] as const;
 
 export const DEFAULT_GROUP_UNGROUPED = "ungrouped";
 export const DEFAULT_GROUP_TIMERS = "timers";

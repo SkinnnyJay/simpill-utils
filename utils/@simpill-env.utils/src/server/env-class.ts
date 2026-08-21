@@ -64,12 +64,16 @@ export class Env {
     return EnvManager.getInstance().getArray(key, defaultValue, separator);
   }
 
-  static getJson<T = unknown>(key: string, defaultValue?: T): T {
-    return EnvManager.getInstance().getJson(key, defaultValue);
+  static getJson<T = unknown>(key: string, defaultValue?: T, validate?: (value: unknown) => T): T {
+    return EnvManager.getInstance().getJson(key, defaultValue, validate);
   }
 
-  static getRequiredJson<T = unknown>(key: string, errorMessage?: string): T {
-    return EnvManager.getInstance().getRequiredJson(key, errorMessage);
+  static getRequiredJson<T = unknown>(
+    key: string,
+    errorMessage?: string,
+    validate?: (value: unknown) => T
+  ): T {
+    return EnvManager.getInstance().getRequiredJson(key, errorMessage, validate);
   }
 
   static getValidatedString(

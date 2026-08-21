@@ -19,6 +19,10 @@ export type SomeResult<T> = {
 };
 
 const createAggregateError = (errors: unknown[], message: string): Error => {
+  // Native AggregateError (ES2021, Node >=15): instanceof AggregateError works.
+  if (typeof AggregateError !== "undefined") {
+    return new AggregateError(errors, message);
+  }
   const error = new Error(message);
   error.name = ERROR_NAME_AGGREGATE;
   (error as Error & { errors?: unknown[] }).errors = errors;

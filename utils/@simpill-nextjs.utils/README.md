@@ -31,6 +31,10 @@ import type { ActionResult } from "@simpill/nextjs.utils/shared";
 ### createSafeAction
 
 Wraps a server function with Zod input validation; returns `{ data, error }` (errors as data).
+Next.js control-flow errors (`redirect()`, `notFound()`, `unauthorized()`, `forbidden()`) are
+**rethrown**, so navigation works inside handlers instead of being swallowed into an error result.
+`<form action={...}>` submissions work too: FormData that fails direct validation is converted to a
+plain object (repeated fields become arrays, Next's `$ACTION_*` internals dropped) and re-validated.
 
 ```ts
 "use server";
@@ -40,6 +44,12 @@ import { createSafeAction } from "@simpill/nextjs.utils";
 const Schema = z.object({ name: z.string().min(1) });
 export const submitAction = createSafeAction(Schema, async (input) => {
   return { id: "1", name: input.name };
+});
+
+// Options: validate output, observe failures
+export const audited = createSafeAction(Schema, handler, {
+  outputSchema: z.object({ id: z.string() }), // invalid output -> generic OUTPUT_VALIDATION_ERROR
+  onError: (err) => logger.error("action failed", { err }), // never sees redirect()/notFound()
 });
 
 // In a client component:
@@ -87,6 +97,11 @@ export async function POST(request: Request) {
 ### withCorrelation (middleware, Edge-safe)
 
 Get correlation headers to set on the response. Use **CORRELATION_HEADERS** from `@simpill/protocols.utils` for consistent header names.
+Incoming ids are validated against `CORRELATION_ID_PATTERN` (`[A-Za-z0-9._~-]{1,128}`) before being
+reflected — oversized or log-injecting values are regenerated, not echoed. Pass
+`{ trustIncomingIds: true }` to restore verbatim reflection for trusted internal hops. When no
+trace-id header is present, a valid W3C `traceparent` header supplies the trace id
+(`{ readTraceparent: false }` to disable). `withRequestContext` applies the same rules server-side.
 
 ```ts
 import { NextResponse } from "next/server";
@@ -141,17 +156,21 @@ Server code is organized by concern: **route** (route-helpers, route-registry), 
 | Export | Description |
 |--------|-------------|
 | `createNextApp(options?)` | Factory returning INextApp (routes, middleware, request, response, api, logging, annotations, lifecycle) |
-| `createSafeAction(inputSchema, handler)` | Server action with Zod validation; returns `{ data?, error? }` |
-| `parseSearchParams(request, schema)` | Parse and validate search params with Zod |
+| `createSafeAction(inputSchema, handler, options?)` | Server action with Zod validation; returns `{ data?, error? }`; rethrows Next.js redirect/notFound; FormData-aware; `outputSchema`/`onError` options |
+| `isNextFrameworkError(err)` | True for Next.js control-flow errors (digest-based); rethrow these in your own catch blocks |
+| `parseSearchParams(request, schema, options?)` | Parse and validate search params with Zod; `{ repeated: "array" }` preserves repeated keys |
+| `searchParamsToObject(params, options?)` | URLSearchParams -> plain object with repeated-key control |
 | `jsonResponse(data, status?)` | `Response` with JSON body |
 | `errorResponse(err, status?)` | JSON error response (serializes for 5xx) |
+| `problemResponse(status, problem?)` | RFC 9457 `application/problem+json` response; caller-supplied fields only, cannot leak Error internals |
 | `withRequestContext(handler, options?)` | Run handler inside request context |
 | `withCorrelation(request, options?)` | Read/generate x-request-id, x-trace-id (Edge-safe) |
-| `createRouteRegistry()` | In-memory IRouteRegistry |
-| `createMiddlewareChain()` | Composable IMiddlewareChain |
-| `createInitShutdown()` | IInitShutdown (onInit, onShutdown, init(), shutdown()) |
+| `createRouteRegistry(options?)` | In-memory IRouteRegistry; O(1) `get`, `match()` resolves `:param` patterns, `{ onDuplicate: "throw" }` surfaces shadowed routes |
+| `createMiddlewareChain()` | Composable IMiddlewareChain; guarded — double `next()` rejects instead of re-running the terminal handler |
+| `createInitShutdown(options?)` | IInitShutdown; `init()` is connect-once (shared in-flight, failed init retries); `shutdown()` runs ALL callbacks (aggregating failures), `{ shutdownOrder: "lifo" }` for teardown order |
 | `createAnnotationsAdapter(store)` / `createNoopAnnotations()` | IAnnotations adapter |
-| `createLoggingIntegration(options?)` | ILoggingIntegration (console + optional context provider) |
+| `createLoggingIntegration(options?)` | ILoggingIntegration (console + optional context provider); `minLevel` drops below-threshold calls before any work |
+| `CORRELATION_ID_PATTERN` / `isValidCorrelationId` / `parseTraceparent` / `formatTraceparent` / `generateTraceId` / `generateSpanId` | Edge-safe correlation + W3C Trace Context primitives (from `/shared`) |
 
 ### What we don't provide
 

@@ -77,8 +77,13 @@ export function buildHandlers(
     handlerMap[r.key] = async (req) => {
       logging.onRequest?.({ method: r.method, url: req.url, routeKey: r.key });
       const start = Date.now();
-      let currentCtx = buildHandlerContext(r, req);
+      // Built inside the try: buildHandlerContext runs schema validation and URL parsing, so a
+      // ZodError from params/query/body - the most common failure mode of a validating API -
+      // was thrown before the try was entered, bypassing logging.onError and both middleware
+      // onError hooks entirely.
+      let currentCtx: ReturnType<typeof buildHandlerContext>;
       try {
+        currentCtx = buildHandlerContext(r, req);
         if (globalMiddleware.before) {
           currentCtx = await globalMiddleware.before(currentCtx);
         }

@@ -17,16 +17,9 @@ const nameSlice = createSlice({ name: "" }, (set) => ({
 
 const combined = combineSlices(counterSlice, nameSlice);
 
-type State = ReturnType<typeof combined.getInitialState> & ReturnType<typeof combined.getActions>;
-
-const useAppStore = create<State>()(
-  persist(
-    (set) => ({
-      ...combined.getInitialState(),
-      ...combined.getActions(set),
-    }),
-    withPersist("app-store", { version: 1 })
-  )
+// Fully inferred: State = { count: number; name: string } & actions — no casts.
+const useAppStore = create(
+  persist(combined.toStateCreator(), withPersist("app-store", { version: 1 }))
 );
 
 // With devtools: wrap with devtools(..., withDevtools('AppStore'))

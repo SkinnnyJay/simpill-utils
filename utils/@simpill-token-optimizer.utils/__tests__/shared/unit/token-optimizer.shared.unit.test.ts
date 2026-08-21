@@ -14,8 +14,9 @@ import {
   XmlCompressionStrategy,
   YamlCompressionStrategy,
 } from "../../../src/shared";
+import { ERROR_MESSAGES } from "../../../src/shared/constants";
 import { analytics } from "../../../src/shared/stubs/analytics";
-import { TokenOptimizer } from "../../../src/shared/tokenOptimizer";
+import { TokenOptimizer } from "../../../src/shared/token-optimizer";
 import { CompressionTypeEnum } from "../../../src/shared/types";
 
 const buildSnapshot = () =>
@@ -92,19 +93,24 @@ describe("token-optimizer shared utilities", () => {
     });
     expect(csvResult.optimizedText).toContain("a,b");
 
+    // TONL and TOON require optional encoder packages. When they are absent the strategy must
+    // fail so the optimizer substitutes passthrough - the previous JSON fallback reported a
+    // successful compression while actually expanding the prompt.
     const tonlStrategy = new TonlCompressionStrategy();
-    const tonlResult = await tonlStrategy.format('{"a":1}', {
-      prompt: "",
-      compressionType: CompressionTypeEnum.TONL,
-    });
-    expect(tonlResult.optimizedText).toContain("{");
+    await expect(
+      tonlStrategy.format('{"a":1}', {
+        prompt: "",
+        compressionType: CompressionTypeEnum.TONL,
+      }),
+    ).rejects.toThrow(ERROR_MESSAGES.TONL_ENCODER_UNAVAILABLE);
 
     const toonStrategy = new ToonCompressionStrategy();
-    const toonResult = await toonStrategy.format('{"a":1}', {
-      prompt: "",
-      compressionType: CompressionTypeEnum.TOON,
-    });
-    expect(toonResult.optimizedText).toContain("{");
+    await expect(
+      toonStrategy.format('{"a":1}', {
+        prompt: "",
+        compressionType: CompressionTypeEnum.TOON,
+      }),
+    ).rejects.toThrow(ERROR_MESSAGES.TOON_ENCODER_UNAVAILABLE);
   });
 
   it("supports passthrough strategy", () => {

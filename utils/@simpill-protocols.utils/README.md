@@ -33,10 +33,15 @@ import {
 
 ## Exports
 
-- **HTTP**: `HTTP_METHOD`, `HttpMethod` — GET, POST, PUT, PATCH, DELETE
-- **Correlation**: `CORRELATION_HEADERS` — `x-request-id`, `x-trace-id`
-- **Env boolean**: `ENV_BOOLEAN_PARSING` — strict truthy `["true","1"]`, falsy `["false","0"]`
+- **HTTP methods**: `HTTP_METHOD`, `HttpMethod` — GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, QUERY (RFC 10008)
+- **HTTP method registry**: `HTTP_METHOD_PROPERTIES`, `AnyHttpMethod` — IANA `safe`/`idempotent` columns for all ten registered methods (RFC 9110, RFC 5789, RFC 10008)
+- **Retry/cache primitives**: `SAFE_HTTP_METHODS`, `IDEMPOTENT_HTTP_METHODS` (+ `SafeHttpMethod`, `IdempotentHttpMethod`) — the canonical inputs for HTTP client retry policies
+- **Correlation**: `CORRELATION_HEADERS` — `x-request-id`, `x-trace-id`; `CORRELATION_ID_PATTERN` — canonical id shape `[A-Za-z0-9._~-]{1,128}` (do not reflect non-matching incoming ids)
+- **W3C Trace Context**: `TRACE_CONTEXT_HEADERS` (`traceparent`, `tracestate`), `TRACE_CONTEXT_VERSION`, `TRACEPARENT_PATTERN` (strict version-00 shape, all-zero ids rejected). Kept separate from `CORRELATION_HEADERS` so the `CorrelationHeaderName` union stays stable for consumers keying `Record`s off it.
+- **Env boolean**: `ENV_BOOLEAN_PARSING` — strict truthy `["true","1"]`, falsy `["false","0"]`; `ENV_BOOLEAN_PARSING_EXTENDED` — yn-convention sets (`yes/no`, `y/n`, `on/off`) for query strings and CLI flags
 - **Log env**: `LOG_ENV_KEYS`, `LOG_FORMAT_VALUES` — keys and values for logger configuration
+
+All exported constants are `Object.freeze`d: a stray runtime assignment can no longer silently corrupt the fleet-wide source of truth (TypeScript's `as const` only protects at compile time).
 
 ## Subpath exports
 
@@ -47,8 +52,8 @@ import {
 
 ### What we don't provide
 
-- **Runtime behavior** — Constants and types only; no env parsing, no HTTP client, no logger implementation. Use **@simpill/env.utils**, **@simpill/http.utils**, **@simpill/logger.utils** for behavior.
-- **Additional protocols** — Only HTTP methods, correlation headers, env boolean parsing, and log env keys; extend or use other packages for more.
+- **Runtime behavior** — Constants, types, and validation patterns only; no env parsing, no HTTP client, no logger implementation. Use **@simpill/env.utils**, **@simpill/http.utils**, **@simpill/logger.utils** for behavior.
+- **Additional protocols** — Only HTTP methods (and their IANA registry properties), correlation / W3C Trace Context header names and patterns, env boolean parsing policies, and log env keys; extend or use other packages for more.
 
 ## Migration
 

@@ -43,8 +43,12 @@ export interface IEnvManager {
   getNumberStrict(key: string, errorMessage?: string): number;
   getBooleanStrict(key: string, errorMessage?: string): boolean;
   getArray(key: string, defaultValue?: string[], separator?: string): string[];
-  getJson<T = unknown>(key: string, defaultValue?: T): T;
-  getRequiredJson<T = unknown>(key: string, errorMessage?: string): T;
+  getJson<T = unknown>(key: string, defaultValue?: T, validate?: (value: unknown) => T): T;
+  getRequiredJson<T = unknown>(
+    key: string,
+    errorMessage?: string,
+    validate?: (value: unknown) => T
+  ): T;
   getValidatedString(
     key: string,
     validator: (value: string) => boolean | string,

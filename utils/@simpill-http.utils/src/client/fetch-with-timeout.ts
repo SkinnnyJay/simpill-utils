@@ -1,12 +1,16 @@
-import { raceWithTimeout } from "@simpill/async.utils";
 import type { FetchLike } from "../shared";
+import { HttpTimeoutError } from "../shared/errors";
 
 export interface FetchWithTimeoutInit extends RequestInit {
   timeoutMs: number;
 }
 
 /**
- * Fetch with a timeout. Uses AbortController to abort the request when the timeout fires.
+ * Fetch with a timeout. Aborts the underlying request at the deadline (with the
+ * timeout error as the abort reason) and throws HttpTimeoutError (name "TimeoutError").
+ * A caller-provided signal is composed: its abort reason is propagated to the request.
+ * Note: manual AbortController composition is used deliberately — AbortSignal.any()
+ * has known reliability issues with fetch in Node (nodejs/node#57736).
  */
 export async function fetchWithTimeout(
   input: RequestInfo | URL,
@@ -15,30 +19,33 @@ export async function fetchWithTimeout(
 ): Promise<Response> {
   const { timeoutMs, signal: inputSignal, ...rest } = init;
   const controller = new AbortController();
-  const timeoutSignal = controller.signal;
+  const timeoutError = new HttpTimeoutError(timeoutMs);
+
   let abortListener: (() => void) | null = null;
   if (inputSignal) {
     if (inputSignal.aborted) {
-      controller.abort();
+      controller.abort(inputSignal.reason);
     } else {
-      abortListener = () => controller.abort();
+      abortListener = () => controller.abort(inputSignal.reason);
       inputSignal.addEventListener("abort", abortListener, { once: true });
     }
   }
-  const mergedInit: RequestInit = { ...rest, signal: timeoutSignal };
 
-  const promise = fetchFn(input, mergedInit);
-  const timeoutError = new Error(`Request timed out after ${timeoutMs}ms`);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort(timeoutError);
+      reject(timeoutError);
+    }, timeoutMs);
+    // Do not keep the Node event loop alive just for this deadline.
+    (timer as unknown as { unref?: () => void }).unref?.();
+  });
 
+  const mergedInit: RequestInit = { ...rest, signal: controller.signal };
   try {
-    const response = await raceWithTimeout(promise, timeoutMs, timeoutError);
-    return response;
-  } catch (err) {
-    controller.abort();
-    throw err;
+    return await Promise.race([fetchFn(input, mergedInit), timeoutPromise]);
   } finally {
-    if (abortListener) {
-      inputSignal?.removeEventListener("abort", abortListener);
-    }
+    if (timer !== undefined) clearTimeout(timer);
+    if (abortListener) inputSignal?.removeEventListener("abort", abortListener);
   }
 }

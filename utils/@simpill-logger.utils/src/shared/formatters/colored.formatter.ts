@@ -2,6 +2,7 @@
 
 import { ANSI_COLORS, LOG_LEVEL } from "../constants";
 import { VALUE_0 } from "../internal-constants";
+import { safeStringify } from "../safe-stringify";
 import type { FormattedOutput, FormatterAdapter, FormatterContext } from "./formatter.adapter";
 
 /** @deprecated Use ANSI_COLORS from constants.ts instead */
@@ -71,7 +72,7 @@ export class ColoredFormatterAdapter implements FormatterAdapter {
       context.metadata &&
       Object.keys(context.metadata).length > VALUE_0
     ) {
-      parts.push(this.colorize(JSON.stringify(context.metadata), this.config.colors.metadata));
+      parts.push(this.colorize(safeStringify(context.metadata), this.config.colors.metadata));
     }
 
     return parts.join(" ");

@@ -15,8 +15,10 @@ export function createFlyweightFactory<K, V>(
   return {
     get: (key) => {
       const id = keyToId(key);
-      const cached = cache.get(id);
-      if (cached) return cached;
+      // has(), not truthiness: falsy instances (0, "", false, null) were
+      // re-created on EVERY get, silently breaking the same-key-same-instance
+      // contract and defeating the cache entirely for those values.
+      if (cache.has(id)) return cache.get(id) as V;
       const value = create(key);
       cache.set(id, value);
       return value;

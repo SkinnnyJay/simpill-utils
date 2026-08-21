@@ -1,5 +1,5 @@
-# @simpill monolith – run from repo root
-# Utils are installed from GitHub (see package.json dependencies). No local utils/ folder required.
+# @simpill monorepo – run from repo root
+# Utils live in utils/@simpill-*.utils/ (local development) and are published as npm packages.
 # Sandbox: github:simpill/simpill-sandbox. Each util package: its own GitHub repo.
 
 SHELL := /bin/bash

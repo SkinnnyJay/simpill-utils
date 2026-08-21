@@ -43,12 +43,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build dependencies (protocols, errors, request-context, zod)
+      - name: Build local package dependencies
         working-directory: .
-        run: |
-          for d in utils/@simpill-protocols.utils utils/@simpill-errors.utils utils/@simpill-request-context.utils utils/@simpill-zod.utils; do
-            (cd "$d" && npm ci && npm run build)
-          done
+        run: node scripts/ci/build-package-deps.js utils/@simpill-nextjs.utils
 
       - name: Run linter
         run: npm run lint

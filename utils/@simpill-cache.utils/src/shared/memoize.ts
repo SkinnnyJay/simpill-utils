@@ -1,9 +1,12 @@
-/** Cache interface for memoize: get, set, has, optional delete. */
+import { LRUMap } from "./lru-map";
+
+/** Cache interface for memoize: get, set, has, optional delete and clear. */
 export interface MemoizeCache<K, V> {
   get(key: K): V | undefined;
   set(key: K, value: V): void;
   has(key: K): boolean;
   delete?(key: K): boolean;
+  clear?(): void;
 }
 
 export interface MemoizeOptions<TArgs extends unknown[], TReturn> {
@@ -13,22 +16,39 @@ export interface MemoizeOptions<TArgs extends unknown[], TReturn> {
   cache?: MemoizeCache<unknown, TReturn>;
 }
 
-/** Memoize fn with optional key, keySerializer, and cache. Default cache is unbounded; pass LRUMap or bounded cache for long-lived use. */
+/** Memoized function with its backing cache exposed for inspection/invalidation (lodash-style). */
+export interface MemoizedFunction<TArgs extends unknown[], TReturn> {
+  (...args: TArgs): TReturn;
+  /** The backing cache; use cache.delete?.(key) / cache.clear?.() to invalidate. */
+  cache: MemoizeCache<unknown, TReturn>;
+}
+
+/**
+ * Memoize fn with optional key, keySerializer, and cache.
+ * Default cache is a bounded LRUMap(1000); pass your own cache instance to override.
+ * NOTE: the default key is the FIRST argument only — for multi-argument functions pass
+ * `keySerializer` (e.g. JSON.stringify of args) or a custom `key`.
+ * The returned function exposes `.cache` for invalidation.
+ */
 export function memoize<TArgs extends unknown[], TReturn>(
   fn: (...args: TArgs) => TReturn,
   options?: MemoizeOptions<TArgs, TReturn>
-): (...args: TArgs) => TReturn {
+): MemoizedFunction<TArgs, TReturn> {
   const keySerializer = options?.keySerializer;
   const keyFn = options?.key ?? ((...a: unknown[]) => a[0]);
   const cache: MemoizeCache<unknown, TReturn> =
-    options?.cache ?? (new Map() as MemoizeCache<unknown, TReturn>);
+    options?.cache ?? (new LRUMap<unknown, TReturn>(1000) as MemoizeCache<unknown, TReturn>);
 
-  return (...args: TArgs): TReturn => {
+  const memoized = (...args: TArgs): TReturn => {
     const rawKey = (keyFn as (...a: TArgs) => unknown)(...args);
     const key = keySerializer ? keySerializer(...args) : rawKey;
-    if (cache.has(key)) return cache.get(key) as TReturn;
+    // Single-lookup fast path: only fall back to has() when the hit is `undefined`.
+    const hit = cache.get(key);
+    if (hit !== undefined || cache.has(key)) return hit as TReturn;
     const value = fn(...args);
     cache.set(key, value);
     return value;
   };
+  (memoized as MemoizedFunction<TArgs, TReturn>).cache = cache;
+  return memoized as MemoizedFunction<TArgs, TReturn>;
 }

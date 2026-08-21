@@ -15,12 +15,31 @@ export function safeParseResult<Schema extends z.ZodType>(
   return { success: false, error: result.error };
 }
 
-/** Flatten Zod error to path -> message record. */
+/**
+ * Flatten Zod error to path -> message record. When a path has multiple
+ * issues, the FIRST issue wins (previously the LAST silently overwrote,
+ * hiding the primary failure). Use flattenZodErrorAll to keep every message.
+ */
 export function flattenZodError(error: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};
   for (const issue of error.issues) {
     const path = issue.path.length > 0 ? issue.path.join(".") : "_";
-    out[path] = issue.message;
+    if (!(path in out)) {
+      out[path] = issue.message;
+    }
+  }
+  return out;
+}
+
+/** Flatten Zod error keeping ALL messages per path (path -> string[]). */
+export function flattenZodErrorAll(error: z.ZodError): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const issue of error.issues) {
+    const path = issue.path.length > 0 ? issue.path.join(".") : "_";
+    if (!(path in out)) {
+      out[path] = [];
+    }
+    out[path].push(issue.message);
   }
   return out;
 }

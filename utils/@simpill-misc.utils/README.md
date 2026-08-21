@@ -52,7 +52,7 @@ This package re-exports from canonical packages. Prefer importing from the canon
 | BoundedArray, BoundedLRUMap | `@simpill/object.utils` (server) |
 | IntervalManager, createManagedInterval, createManagedTimeout, createTimerFactory | `@simpill/time.utils` (server) |
 | PollingManager | `@simpill/async.utils` |
-| assert, coalesce, identity, isBoolean, parseJsonSafe, toBoolean, toJsonSafe, toggle | local (misc.utils) |
+| assert, assertDefined, assertNever, coalesce, identity, isBoolean, isDefined, noop, parseJsonSafe, toBoolean, toJsonSafe, toggle | local (misc.utils) |
 
 ## Features
 
@@ -66,7 +66,8 @@ This package re-exports from canonical packages. Prefer importing from the canon
 | **generateUUID** / **validateUUID** / **isUUID** / **compareUUIDs** | UUID helpers (from uuid.utils) |
 | **BoundedArray** / **BoundedLRUMap** | Server-only bounded structures (from object.utils) |
 | **IntervalManager** / **PollingManager** | Server-only timers and polling (from time.utils, async.utils) |
-| **assert** / **coalesce** / **toBoolean** / **parseJsonSafe** | Local primitive helpers |
+| **assert** / **coalesce** / **toBoolean** / **parseJsonSafe** | Local primitive helpers. `assert` accepts any truthy value and lazy messages (tiny-invariant convention); `toBoolean` uses yn-style truthy/falsy sets (`y`/`n`/`on`/`off` included) with O(1) lookup; `toJsonSafe` never returns `undefined` (functions/symbols fall back). |
+| **isDefined** / **assertDefined** / **assertNever** / **noop** | Local guards: non-nullable type guard (pairs with `coalesce` and `Array.filter`), non-null assertion, exhaustiveness check, no-op callback. |
 
 ---
 
@@ -88,7 +89,7 @@ import { ... } from "@simpill/misc.utils/shared";  // Shared only
 - **once**, **memoize**, **raceWithTimeout**
 - **getEnumValue**, **isValidEnumValue**
 - **generateUUID**, **validateUUID**, **isUUID**, **compareUUIDs**
-- **assert**, **coalesce**, **identity**, **isBoolean**, **parseJsonSafe**, **toBoolean**, **toJsonSafe**, **toggle**
+- **assert**, **assertDefined**, **assertNever**, **coalesce**, **identity**, **isBoolean**, **isDefined**, **noop**, **parseJsonSafe**, **toBoolean**, **toJsonSafe**, **toggle**
 - **BoundedArray**, **BoundedLRUMap** (server)
 - **IntervalManager**, **createManagedInterval**, **createManagedTimeout**, **createTimerFactory** (server)
 - **PollingManager** (server)

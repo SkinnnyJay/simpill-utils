@@ -1,16 +1,21 @@
 export type { ValidationErrorPayload } from "./api-errors";
-export { parseOrThrowValidation, toValidationError } from "./api-errors";
+export { parseOrThrowValidation, toValidationError, ValidationError } from "./api-errors";
 export {
   coerceString,
   enumFromList,
   isoDateOnlyString,
   isoDateString,
+  isoDateTimeWithOffset,
+  jsonString,
   nonEmptyString,
 } from "./common-schemas";
-export { withOpenApiMetadata } from "./openapi";
+export type { OpenApiMetadata } from "./openapi";
+export { getOpenApiMetadata, withOpenApiMetadata } from "./openapi";
 export {
+  coerceQueryArray,
   coerceQueryBoolean,
   coerceQueryNumber,
+  DEFAULT_PAGINATION_LIMIT,
   idParamNumber,
   idParamUuid,
   limitNumber,
@@ -21,6 +26,7 @@ export {
 export type { ParseResult } from "./safe-parse";
 export {
   flattenZodError,
+  flattenZodErrorAll,
   formatZodError,
   parseOrThrow,
   safeParseResult,

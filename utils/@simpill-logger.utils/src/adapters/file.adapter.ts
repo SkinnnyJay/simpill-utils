@@ -29,6 +29,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import type { LoggerAdapter, LoggerAdapterConfig } from "../shared/adapter";
 import { FILE_TRANSPORT_DEFAULTS, LOG_LEVEL, type LogLevel } from "../shared/constants";
+import { safeStringify } from "../shared/safe-stringify";
 import type { LogEntry, LogMetadata } from "../shared/types";
 import { LOG_LEVEL_PRIORITY } from "../shared/types";
 
@@ -81,6 +82,14 @@ export class FileLoggerAdapter implements LoggerAdapter {
   private name = "";
   private defaultMetadata?: LogMetadata;
   private initialized = false;
+  /**
+   * Cached size per log file. The frozen implementation issued existsSync +
+   * statSync on EVERY write (two extra sync syscalls per log line). We stat a
+   * file once on first write and then track appended bytes in memory; the
+   * cache resets to 0 after rotation. If an external process appends to the
+   * same file, rotation happens late by that delta (documented trade-off).
+   */
+  private fileSizes = new Map<string, number>();
 
   /**
    * Create a new FileLoggerAdapter
@@ -135,6 +144,11 @@ export class FileLoggerAdapter implements LoggerAdapter {
     return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[this.minLevel];
   }
 
+  /** Fast level gate for the factory (skips entry construction entirely). */
+  isLevelEnabled(level: LogLevel): boolean {
+    return this.shouldLog(level);
+  }
+
   /**
    * Get the full path for a log file
    */
@@ -156,12 +170,17 @@ export class FileLoggerAdapter implements LoggerAdapter {
     };
 
     if (this.config.format === "json") {
-      return JSON.stringify({
+      // safeStringify: circular/BigInt metadata must not throw (entry loss)
+      // Metadata is spread FIRST so the four reserved fields always win. With the
+      // spread last, metadata carrying a `level` or `message` key - often echoed
+      // from user input - silently rewrote the line's own level and text, which
+      // let a caller forge log records that downstream parsing would trust.
+      return safeStringify({
+        ...mergedEntry.metadata,
         timestamp: mergedEntry.timestamp,
         level: mergedEntry.level,
         name: mergedEntry.name,
         message: mergedEntry.message,
-        ...mergedEntry.metadata,
       });
     }
 
@@ -169,9 +188,23 @@ export class FileLoggerAdapter implements LoggerAdapter {
     const timestamp = mergedEntry.timestamp;
     const level = mergedEntry.level.padEnd(5);
     const name = mergedEntry.name ? `[${mergedEntry.name}]` : "";
-    const meta = mergedEntry.metadata ? ` ${JSON.stringify(mergedEntry.metadata)}` : "";
+    const meta = mergedEntry.metadata ? ` ${safeStringify(mergedEntry.metadata)}` : "";
 
     return `${timestamp} ${level} ${name} ${mergedEntry.message}${meta}`;
+  }
+
+  /** Cached-size lookup: stat once per file, then track appended bytes. */
+  private getFileSize(filePath: string): number {
+    const cached = this.fileSizes.get(filePath);
+    if (cached !== undefined) {
+      return cached;
+    }
+    let size = 0;
+    if (fs.existsSync(filePath)) {
+      size = fs.statSync(filePath).size;
+    }
+    this.fileSizes.set(filePath, size);
+    return size;
   }
 
   /**
@@ -179,22 +212,32 @@ export class FileLoggerAdapter implements LoggerAdapter {
    * Renames file.log -> file.log.1, file.log.1 -> file.log.2, etc.
    */
   private rotateIfNeeded(filePath: string): void {
+    if (this.getFileSize(filePath) < this.config.maxFileSize) {
+      return;
+    }
     if (!fs.existsSync(filePath)) {
+      // Cached size is stale (file removed externally); resync and skip
+      this.fileSizes.set(filePath, 0);
       return;
     }
 
-    const stats = fs.statSync(filePath);
-    if (stats.size < this.config.maxFileSize) {
+    // maxFiles is the number of archives to keep, so 0 means keep none: drop the
+    // current file instead of renaming it to .1 and retaining one anyway.
+    if (this.config.maxFiles < 1) {
+      fs.unlinkSync(filePath);
+      this.fileSizes.set(filePath, 0);
       return;
     }
 
-    // Rotate existing numbered files
-    for (let i = this.config.maxFiles - 1; i >= 1; i--) {
+    // Rotate existing numbered files. This loop used to start at maxFiles - 1 and
+    // delete there, which discarded the second-oldest archive and left maxFiles - 1
+    // files on disk - one short of the documented "number of rotated files to keep".
+    for (let i = this.config.maxFiles; i >= 1; i--) {
       const oldPath = `${filePath}.${i}`;
       const newPath = `${filePath}.${i + 1}`;
 
       if (fs.existsSync(oldPath)) {
-        if (i === this.config.maxFiles - 1) {
+        if (i === this.config.maxFiles) {
           // Delete the oldest file
           fs.unlinkSync(oldPath);
         } else {
@@ -205,6 +248,8 @@ export class FileLoggerAdapter implements LoggerAdapter {
 
     // Rename current file to .1
     fs.renameSync(filePath, `${filePath}.1`);
+    // Fresh file after rotation
+    this.fileSizes.set(filePath, 0);
   }
 
   /**
@@ -213,6 +258,10 @@ export class FileLoggerAdapter implements LoggerAdapter {
   private writeToFile(filePath: string, line: string): void {
     this.rotateIfNeeded(filePath);
     fs.appendFileSync(filePath, `${line}\n`, "utf8");
+    this.fileSizes.set(
+      filePath,
+      (this.fileSizes.get(filePath) ?? 0) + Buffer.byteLength(line, "utf8") + 1
+    );
   }
 
   /**
@@ -262,6 +311,10 @@ export class FileLoggerAdapter implements LoggerAdapter {
       ...defaultMetadata,
     };
     childAdapter.initialized = this.initialized;
+    // Children write to the SAME files — share the size cache so appended
+    // bytes are counted once (separate caches would each under-count and
+    // rotate late)
+    childAdapter.fileSizes = this.fileSizes;
 
     return childAdapter;
   }

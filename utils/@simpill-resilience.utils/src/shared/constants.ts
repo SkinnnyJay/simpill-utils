@@ -2,12 +2,6 @@
 export const VALUE_0 = 0;
 export const VALUE_1 = 1;
 export const VALUE_2 = 2;
-export const VALUE_3 = 3;
-export const VALUE_5 = 5;
-export const VALUE_10 = 10;
-export const VALUE_20 = 20;
-export const VALUE_50 = 50;
-export const VALUE_80 = 80;
 export const CLOSED = "closed";
 export const OPEN = "open";
 export const HALF_OPEN = "half-open";
@@ -46,3 +40,24 @@ export const CIRCUIT_BREAKER_ERROR = {
 
 /** Retry result: default message when all retries fail. */
 export const RETRY_FAILED_MESSAGE = "Retry failed" as const;
+
+/** Error name for circuit-open rejections (instanceof CircuitOpenError). */
+export const ERROR_NAME_CIRCUIT_OPEN = "CircuitOpenError" as const;
+/** Error name for bulkhead queue-full rejections (instanceof BulkheadRejectedError). */
+export const ERROR_NAME_BULKHEAD_REJECTED = "BulkheadRejectedError" as const;
+/** Error message when the bulkhead queue is full. */
+export const BULKHEAD_REJECTED_MESSAGE = "Bulkhead queue is full" as const;
+/** Error message when bulkhead limit is invalid. */
+export const ERROR_BULKHEAD_LIMIT = "Bulkhead limit must be >= 1" as const;
+/** Error message when token bucket options are invalid. */
+export const ERROR_TOKEN_BUCKET_OPTIONS =
+  "Token bucket requires capacity >= 1 and refillPerSecond > 0" as const;
+
+/** Milliseconds per second (token bucket refill math). */
+export const MS_PER_SECOND = 1000;
+/** Full jitter: default base delay (ms) for attempt 0. */
+export const FULL_JITTER_DEFAULT_BASE_MS = 100;
+/** Full jitter: default cap (ms) on any computed delay. */
+export const FULL_JITTER_DEFAULT_CAP_MS = 30_000;
+/** Decorrelated jitter: multiplier on the previous sleep (AWS formula). */
+export const DECORRELATED_JITTER_MULTIPLIER = 3;
