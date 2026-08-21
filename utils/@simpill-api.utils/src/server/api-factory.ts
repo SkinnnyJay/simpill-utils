@@ -30,6 +30,24 @@ function pathKey(method: HttpMethod, path: string): string {
   return `${method}:${path}`;
 }
 
+/**
+ * The route builder as it exists at RUNTIME. The public RouteBuilder<> type
+ * carries the generics that accumulate the route map; this describes the same
+ * object with those generics erased, which is all the implementation needs.
+ * Previously both this and its local were `any`, which switched off checking
+ * inside the builder itself - the arity and return type of every method went
+ * unverified - to work around a mismatch that only exists at the boundary.
+ * That boundary is now a single cast in route(), and the body is checked.
+ */
+interface RuntimeRouteBuilder {
+  withMiddleware(m: RouteMiddleware): RuntimeRouteBuilder;
+  get(def: ApiSchemaLike, handler?: ApiHandler): unknown;
+  post(def: ApiSchemaLike, handler?: ApiHandler): unknown;
+  put(def: ApiSchemaLike, handler?: ApiHandler): unknown;
+  patch(def: ApiSchemaLike, handler?: ApiHandler): unknown;
+  delete(def: ApiSchemaLike, handler?: ApiHandler): unknown;
+}
+
 // biome-ignore lint/complexity/noBannedTypes: {} is the empty route map a fresh factory starts from
 export function createApiFactory(options: CreateApiFactoryOptions = {}): ApiFactory<{}> {
   const routes: RouteEntry[] = [];
@@ -68,15 +86,13 @@ export function createApiFactory(options: CreateApiFactoryOptions = {}): ApiFact
     return factory;
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: runtime builder is untyped; the public interfaces carry the generics
-  function createRouteBuilder(path: string, name?: string): any {
+  function createRouteBuilder(path: string, name?: string): RuntimeRouteBuilder {
     let routeMiddleware: RouteEntry["middleware"];
     const add =
       (method: HttpMethod) =>
       (def: ApiSchemaLike, handler?: ApiHandler): unknown =>
         addRoute(path, method, def, name, handler, routeMiddleware);
-    // biome-ignore lint/suspicious/noExplicitAny: see above
-    const builder: any = {
+    const builder: RuntimeRouteBuilder = {
       withMiddleware(m: RouteMiddleware) {
         routeMiddleware = m;
         return builder;
@@ -93,7 +109,9 @@ export function createApiFactory(options: CreateApiFactoryOptions = {}): ApiFact
   // biome-ignore lint/complexity/noBannedTypes: fresh factory has an empty route map
   const factory: ApiFactory<{}> = {
     route(path: string, name?: string) {
-      return createRouteBuilder(path, name);
+      // Single boundary cast: runtime shape -> the generic public RouteBuilder.
+      // biome-ignore lint/complexity/noBannedTypes: {} is the empty route map a fresh factory starts from
+      return createRouteBuilder(path, name) as unknown as ReturnType<ApiFactory<{}>["route"]>;
     },
 
     client(opts: ClientBuildOptions = {}) {

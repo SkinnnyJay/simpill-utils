@@ -17,9 +17,14 @@ export interface ApiSchemaLike {
   /**
    * Optional response transform, applied by the client after schema parsing.
    * Declared on ApiRouteDef since v1 but never wired up; now settable here.
+   *
+   * The parameter is `never`, not `any`. Both accept a transform whose input is
+   * typed however the caller likes - under strictFunctionTypes parameters are
+   * checked contravariantly, and `never` is the bottom type, so every parameter
+   * type is a supertype of it. Unlike `any` it does not switch off checking of
+   * the value flowing through.
    */
-  // biome-ignore lint/suspicious/noExplicitAny: transform input is typed by the user; any keeps inference open
-  transform?: (data: any) => unknown;
+  transform?: (data: never) => unknown;
 }
 
 /** z.input of a schema slot, or the fallback when the slot is absent. */
@@ -29,10 +34,7 @@ export type InferInput<S, TFallback> = S extends z.ZodType<unknown> ? z.input<S>
 export type InferOutput<S, TFallback> = S extends z.ZodType<unknown> ? z.output<S> : TFallback;
 
 /** What a client method resolves to: transform return type, else response schema output. */
-export type ClientResult<S extends ApiSchemaLike> = S["transform"] extends (
-  // biome-ignore lint/suspicious/noExplicitAny: matching the open transform signature
-  data: any
-) => infer U
+export type ClientResult<S extends ApiSchemaLike> = S["transform"] extends (data: never) => infer U
   ? U
   : InferOutput<S["response"], unknown>;
 
