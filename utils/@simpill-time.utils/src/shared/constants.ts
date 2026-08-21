@@ -17,18 +17,6 @@ export const MS_PER_DAY = HOURS_PER_DAY * MS_PER_HOUR;
 /** Months per year. */
 export const MONTHS_PER_YEAR = 12;
 
-export const VALUE_0 = 0;
-export const VALUE_1 = 1;
-export const VALUE_2 = 2;
-export const VALUE_3 = 3;
-export const VALUE_6 = 6;
-export const VALUE_7 = 7;
-export const VALUE_10 = 10;
-export const VALUE_16 = 16;
-export const VALUE_30 = 30;
-export const VALUE_50 = 50;
-export const VALUE_60 = 60;
-export const VALUE_80 = 80;
 export const TIMEOUT_MS_1000 = 1000;
 export const TIMEOUT_MS_4000 = 4000;
 export const TIMEOUT_MS_5000 = 5000;

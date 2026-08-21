@@ -8,9 +8,9 @@ import { ToonCompressionStrategy } from "../shared/strategies/toon-strategy";
 import { XmlCompressionStrategy } from "../shared/strategies/xml-strategy";
 import { YamlCompressionStrategy } from "../shared/strategies/yaml-strategy";
 import type { TelemetryStorage } from "../shared/telemetry.types";
+import { TokenOptimizer } from "../shared/token-optimizer";
 import { type CompressionType, compressionTypeSchema } from "../shared/token-optimizer.types";
 import { createDefaultTokenizerAdapter, type TokenizerAdapter } from "../shared/tokenizer";
-import { TokenOptimizer } from "../shared/token-optimizer";
 import { CompressionTypeEnum } from "../shared/types";
 import {
   type CompressionValidatorRegistry,
