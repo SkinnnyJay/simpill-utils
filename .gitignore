@@ -91,3 +91,7 @@ site/
 .playwright/
 ./test-results/
 ./tmp/
+
+# Editor/tooling leftovers. npm force-includes README* in the tarball
+# regardless of the files field, so a stray README.md.tmp ships to consumers.
+*.md.tmp
