@@ -4,7 +4,8 @@
   "description": "Typed API client with Zod validation, handler registry, and middleware (Node and Edge).",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/api.utils.git"
+    "url": "https://github.com/SkinnnyJay/simpill-utils.git",
+    "directory": "utils/@simpill-api.utils"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -89,9 +90,9 @@
     "node": ">=16.0.0"
   },
   "bugs": {
-    "url": "https://github.com/SkinnnyJay/api.utils/issues"
+    "url": "https://github.com/SkinnnyJay/simpill-utils/issues"
   },
-  "homepage": "https://github.com/SkinnnyJay/api.utils#readme",
+  "homepage": "https://github.com/SkinnnyJay/simpill-utils/tree/main/utils/@simpill-api.utils#readme",
   "typesVersions": {
     "*": {
       "client": [

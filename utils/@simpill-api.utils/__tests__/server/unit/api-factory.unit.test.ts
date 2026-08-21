@@ -1,4 +1,3 @@
-import { substitutePath } from "../../../src/server/client-builder";
 /**
  * @file API Factory Unit Tests
  * @description Tests for createApiFactory, route builder, client, handlers, validation, middleware
@@ -6,6 +5,8 @@ import { substitutePath } from "../../../src/server/client-builder";
 
 import { z } from "zod";
 import { createApiFactory } from "../../../src/server/api-factory";
+import { substitutePath } from "../../../src/server/client-builder";
+import { ApiMissingParamError } from "../../../src/shared/errors";
 import { HANDLER_ERROR, TIMEOUT_MS_5000 } from "../../../src/shared/internal-constants";
 
 describe("createApiFactory", () => {
@@ -411,7 +412,9 @@ describe("substitutePath (security)", () => {
   it("throws rather than emitting a literal :param", () => {
     // The old greedy pattern read the key of "/files/:name.json" as "name.json", missed, and
     // sent a URL containing ":name.json" anyway.
-    expect(() => substitutePath("/files/:name", {})).toThrow(/Missing value for path parameter/);
+    // The typed error carries the param name and the route it came from.
+    expect(() => substitutePath("/files/:name", {})).toThrow(ApiMissingParamError);
+    expect(() => substitutePath("/files/:name", {})).toThrow(/:name/);
     expect(substitutePath("/files/:name.json", { name: "a" })).toBe("/files/a.json");
   });
 });

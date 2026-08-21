@@ -1,15 +1,7 @@
 import { HTTP_METHOD } from "@simpill/protocols.utils";
-import {
-  CONTENT_TYPE_HEADER,
-  CONTENT_TYPE_HEADER_LOWER,
-  CONTENT_TYPE_JSON,
-  ERROR_HTTP_RESPONSE_PREFIX,
-  ERROR_HTTP_RESPONSE_SEP,
-  ERROR_MISSING_PATH_PARAM_PREFIX,
-  ERROR_MISSING_PATH_PARAM_SUFFIX,
-  VALUE_0,
-} from "../shared/internal-constants";
-import type { ClientCallOptions, RouteEntry } from "./api-factory-types";
+import { ApiHttpError, ApiMissingParamError, ApiResponseParseError } from "../shared/errors";
+import { VALUE_0 } from "../shared/internal-constants";
+import type { ClientBuildOptions, ClientCallOptions, RouteEntry } from "./api-factory-types";
 import { fetchWithRetry, fetchWithTimeout } from "./fetch-helpers";
 import { parseWithSchema } from "./schema-parse";
 
@@ -28,34 +20,93 @@ export interface ClientBuilderLogging {
 export function getClientCallOptions(options: Record<string, unknown>): ClientCallOptions {
   return {
     params: (options.params as Record<string, string> | undefined) ?? {},
-    query: (options.query as Record<string, string | number | boolean> | undefined) ?? {},
+    query:
+      (options.query as
+        | Record<string, string | number | boolean | Array<string | number | boolean>>
+        | undefined) ?? {},
     headers: (options.headers as Record<string, string> | undefined) ?? {},
     body: options.body,
   };
 }
 
+/**
+ * Substitute :params into a path template. v1 fixes:
+ * - values are percent-encoded (a param of "a/b" or "x?y=1" no longer mangles
+ *   the URL / injects path segments)
+ * - a missing param throws ApiMissingParamError instead of silently sending
+ *   the literal ":id" segment to the server
+ */
 export function substitutePath(pathPattern: string, params: Record<string, string>): string {
-  // Values are encoded, matching buildQuery below. Unencoded, a caller-supplied id could
-  // reroute the request entirely - "../admin" resolves to a different endpoint once fetch
-  // normalises the URL - or inject a query string into a URL buildQuery believes it owns.
-  //
-  // The key pattern is also anchored to word characters. `[^/]+` was greedy to the end of the
-  // segment, so "/files/:name.json" parsed the key as "name.json", missed, and emitted a URL
-  // containing a literal ":name.json" instead of raising.
-  return pathPattern.replace(/:([A-Za-z0-9_]+)/g, (match, key: string) => {
+  // The key pattern is anchored to word characters. `[^/]+` was greedy to the end of
+  // the segment, so "/files/:name.json" parsed the key as "name.json", missed, and
+  // emitted a URL containing a literal ":name.json" instead of raising.
+  return pathPattern.replace(/:([A-Za-z0-9_]+)/g, (_, key: string) => {
     const value = params[key];
-    if (value === undefined) {
-      throw new Error(`${ERROR_MISSING_PATH_PARAM_PREFIX}${key}${ERROR_MISSING_PATH_PARAM_SUFFIX}`);
+    if (value === undefined || value === null) {
+      throw new ApiMissingParamError(key, pathPattern);
     }
-    return encodeURIComponent(value);
+    return encodeURIComponent(String(value));
   });
 }
 
-export function buildQuery(query: Record<string, string | number | boolean>): string {
-  const entries = Object.entries(query)
-    .filter(([, v]) => v !== undefined && v !== null)
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`);
-  return entries.length === VALUE_0 ? "" : `?${entries.join("&")}`;
+/**
+ * Serialize query params. v1 fix: array values are supported and serialize as
+ * repeated keys ("tags=[a,b]" -> "tags=a&tags=b"); undefined/null entries are
+ * skipped at both the top level and inside arrays.
+ */
+export function buildQuery(
+  query: Record<string, string | number | boolean | Array<string | number | boolean>>
+): string {
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(query)) {
+    if (v === undefined || v === null) continue;
+    const ek = encodeURIComponent(k);
+    if (Array.isArray(v)) {
+      for (const item of v) {
+        if (item === undefined || item === null) continue;
+        parts.push(`${ek}=${encodeURIComponent(String(item))}`);
+      }
+    } else {
+      parts.push(`${ek}=${encodeURIComponent(String(v))}`);
+    }
+  }
+  return parts.length === VALUE_0 ? "" : `?${parts.join("&")}`;
+}
+
+/**
+ * Merge header maps case-insensitively for the Content-Type decision. v1 bug:
+ * "Content-Type": "application/json" was spread LAST, so a user-supplied
+ * Content-Type could NEVER override it (the README claimed the opposite) —
+ * and a lowercase "content-type" produced two distinct keys, i.e. duplicate
+ * headers on the wire.
+ */
+export function mergeHeaders(
+  ...maps: Array<Record<string, string> | undefined>
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  const canonical = new Map<string, string>();
+  for (const map of maps) {
+    if (!map) continue;
+    for (const [k, v] of Object.entries(map)) {
+      const lower = k.toLowerCase();
+      const existingKey = canonical.get(lower);
+      if (existingKey !== undefined && existingKey !== k) {
+        delete out[existingKey];
+      }
+      canonical.set(lower, k);
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+const CONTENT_TYPE = "Content-Type";
+
+function hasContentType(headers: Record<string, string>): boolean {
+  for (const k of Object.keys(headers)) {
+    if (k.toLowerCase() === "content-type") return true;
+  }
+  return false;
 }
 
 export function buildClient(
@@ -63,16 +114,9 @@ export function buildClient(
   defaultBaseUrl: string,
   defaultHeaders: Record<string, string>,
   logging: ClientBuilderLogging,
-  opts: {
-    baseUrl?: string;
-    headers?: Record<string, string>;
-    fetcher?: typeof fetch;
-    retry?: { maxRetries?: number; delayMs?: number };
-    timeoutMs?: number;
-  } = {}
+  opts: ClientBuildOptions = {}
 ): Record<string, (options?: Record<string, unknown>) => Promise<unknown>> {
   const baseUrl = (opts.baseUrl ?? defaultBaseUrl).replace(/\/$/, "");
-  const headers = { ...defaultHeaders, ...opts.headers };
   const baseFetcher = opts.fetcher ?? fetch;
   const doFetch = opts.timeoutMs
     ? (input: URL | string, init?: RequestInit) =>
@@ -86,31 +130,31 @@ export function buildClient(
             fetcher: doFetch as typeof fetch,
           })
       : doFetch;
+  const validateRequest = opts.validateRequest === true;
   const clientMap: Record<string, (options?: Record<string, unknown>) => Promise<unknown>> = {};
 
   for (const r of routes) {
     clientMap[r.key] = async (options = {}) => {
-      const { params, query, body, headers: extraHeaders } = getClientCallOptions(options);
+      const call = getClientCallOptions(options);
+      let { params, query, body } = call;
+      if (validateRequest) {
+        params = parseWithSchema<Record<string, string>>(r.schema.params, params);
+        query = parseWithSchema<ClientCallOptions["query"]>(r.schema.query, query);
+        if (r.schema.body) body = parseWithSchema<unknown>(r.schema.body, body);
+      }
       const url = `${baseUrl}${substitutePath(r.path, params)}${buildQuery(query)}`;
-      const mergedHeaders = { ...headers, ...extraHeaders };
-      const sendsBody = body !== undefined && r.method !== HTTP_METHOD.GET;
-      // Content-Type used to be appended AFTER the caller's headers, so a client
-      // configured for form data, NDJSON or a +json media type had its choice
-      // silently replaced with application/json - and the header went out even on
-      // bodyless GETs, provoking CORS preflights for nothing. It is now a default
-      // applied only when there is a body and the caller has not set one (header
-      // names are case-insensitive, so "content-type" counts too).
-      const hasContentType = Object.keys(mergedHeaders).some(
-        (key) => key.toLowerCase() === CONTENT_TYPE_HEADER_LOWER
-      );
-      const init: RequestInit = {
-        method: r.method,
-        headers:
-          sendsBody && !hasContentType
-            ? { ...mergedHeaders, [CONTENT_TYPE_HEADER]: CONTENT_TYPE_JSON }
-            : mergedHeaders,
-      };
-      if (sendsBody) {
+      const headers = mergeHeaders(defaultHeaders, opts.headers, call.headers);
+      const sendBody = body !== undefined && r.method !== HTTP_METHOD.GET;
+      // Only default a Content-Type when the request actually carries one. v1 sent it
+      // on bodyless GETs too, which provokes CORS preflights for nothing.
+      // v1 spread Content-Type LAST, so callers could never override it. It is now
+      // a default: applied only when no caller-supplied content-type exists (any
+      // casing) and only when the request carries a body.
+      if (sendBody && !hasContentType(headers)) {
+        headers[CONTENT_TYPE] = "application/json";
+      }
+      const init: RequestInit = { method: r.method, headers };
+      if (sendBody) {
         init.body = JSON.stringify(body);
       }
       logging.onRequest?.({ method: r.method, url, routeKey: r.key });
@@ -126,10 +170,35 @@ export function buildClient(
           durationMs,
         });
         if (!res.ok) {
-          const text = await res.text();
-          throw new Error(ERROR_HTTP_RESPONSE_PREFIX + res.status + ERROR_HTTP_RESPONSE_SEP + text);
+          const text = await res.text().catch(() => "");
+          throw new ApiHttpError({
+            status: res.status,
+            statusText: res.statusText,
+            body: text,
+            url,
+            method: r.method,
+            routeKey: r.key,
+          });
         }
-        const raw = await res.json().catch(() => ({}));
+        const text = await res.text();
+        let raw: unknown;
+        if (text === "") {
+          // Back-compat: empty bodies (204s etc.) parse to {} like v1.
+          raw = {};
+        } else {
+          try {
+            raw = JSON.parse(text);
+          } catch (cause) {
+            // v1 silently coerced ANY invalid JSON to {} — data corruption.
+            throw new ApiResponseParseError({
+              url,
+              method: r.method,
+              routeKey: r.key,
+              body: text,
+              cause,
+            });
+          }
+        }
         const parsed = parseWithSchema<unknown>(r.schema.response, raw);
         return r.transform ? r.transform(parsed) : parsed;
       } catch (err) {

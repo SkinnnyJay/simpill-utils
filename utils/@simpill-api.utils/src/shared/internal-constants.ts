@@ -4,7 +4,6 @@
  */
 export const VALUE_0 = 0;
 export const VALUE_50 = 50;
-export const ERROR = "error";
 export const HANDLER_ERROR = "handler-error";
 export const TIMEOUT_MS_1000 = 1000;
 export const TIMEOUT_MS_5000 = 5000;

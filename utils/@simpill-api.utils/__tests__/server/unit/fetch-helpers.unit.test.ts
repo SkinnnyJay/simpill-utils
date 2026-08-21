@@ -144,13 +144,17 @@ describe("fetchWithTimeout", () => {
       return new Promise<Response>(() => undefined);
     });
 
-    void fetchWithTimeout(
+    // The call also rejects with ApiTimeoutError once the timer fires; this test is
+    // about the SIGNAL, so swallow the rejection rather than leave it unhandled.
+    const pending = fetchWithTimeout(
       "https://example.com",
       { signal: controller.signal },
       { timeoutMs: 10, fetcher }
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 40));
+    await expect(pending).rejects.toThrow(/timed out/i);
+    // Composed with the caller's signal, so the timeout actually cancels the request
+    // instead of leaving it running after the caller has given up.
     expect(receivedSignal?.aborted).toBe(true);
   });
 });
