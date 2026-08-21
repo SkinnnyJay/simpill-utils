@@ -1,5 +1,8 @@
 import { HTTP_METHOD } from "@simpill/protocols.utils";
 import {
+  CONTENT_TYPE_HEADER,
+  CONTENT_TYPE_HEADER_LOWER,
+  CONTENT_TYPE_JSON,
   ERROR_HTTP_RESPONSE_PREFIX,
   ERROR_HTTP_RESPONSE_SEP,
   ERROR_MISSING_PATH_PARAM_PREFIX,
@@ -89,11 +92,25 @@ export function buildClient(
     clientMap[r.key] = async (options = {}) => {
       const { params, query, body, headers: extraHeaders } = getClientCallOptions(options);
       const url = `${baseUrl}${substitutePath(r.path, params)}${buildQuery(query)}`;
+      const mergedHeaders = { ...headers, ...extraHeaders };
+      const sendsBody = body !== undefined && r.method !== HTTP_METHOD.GET;
+      // Content-Type used to be appended AFTER the caller's headers, so a client
+      // configured for form data, NDJSON or a +json media type had its choice
+      // silently replaced with application/json - and the header went out even on
+      // bodyless GETs, provoking CORS preflights for nothing. It is now a default
+      // applied only when there is a body and the caller has not set one (header
+      // names are case-insensitive, so "content-type" counts too).
+      const hasContentType = Object.keys(mergedHeaders).some(
+        (key) => key.toLowerCase() === CONTENT_TYPE_HEADER_LOWER
+      );
       const init: RequestInit = {
         method: r.method,
-        headers: { ...headers, ...extraHeaders, "Content-Type": "application/json" },
+        headers:
+          sendsBody && !hasContentType
+            ? { ...mergedHeaders, [CONTENT_TYPE_HEADER]: CONTENT_TYPE_JSON }
+            : mergedHeaders,
       };
-      if (body !== undefined && r.method !== HTTP_METHOD.GET) {
+      if (sendsBody) {
         init.body = JSON.stringify(body);
       }
       logging.onRequest?.({ method: r.method, url, routeKey: r.key });

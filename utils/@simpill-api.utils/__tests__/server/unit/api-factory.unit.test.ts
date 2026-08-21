@@ -111,6 +111,79 @@ describe("createApiFactory", () => {
       expect(h["X-Custom"]).toBe("c1");
     });
 
+    it("lets the caller override Content-Type instead of forcing application/json", async () => {
+      let capturedHeaders: Record<string, string> | undefined;
+      const api = createApiFactory()
+        .route("/upload")
+        .post({ body: z.object({ name: z.string() }), response: z.object({ ok: z.boolean() }) });
+      const client = api.client({
+        fetcher: async (_url, init) => {
+          capturedHeaders = init?.headers as Record<string, string> | undefined;
+          return new Response(JSON.stringify({ ok: true }), { status: 200 });
+        },
+      });
+
+      await client["POST:/upload"]({
+        body: { name: "Jane" },
+        headers: { "Content-Type": "application/merge-patch+json" },
+      });
+
+      expect(capturedHeaders?.["Content-Type"]).toBe("application/merge-patch+json");
+    });
+
+    it("honours a lowercase content-type override (header names are case-insensitive)", async () => {
+      let capturedHeaders: Record<string, string> | undefined;
+      const api = createApiFactory({ defaultHeaders: { "content-type": "application/xml" } })
+        .route("/upload")
+        .post({ body: z.object({ name: z.string() }), response: z.object({ ok: z.boolean() }) });
+      const client = api.client({
+        fetcher: async (_url, init) => {
+          capturedHeaders = init?.headers as Record<string, string> | undefined;
+          return new Response(JSON.stringify({ ok: true }), { status: 200 });
+        },
+      });
+
+      await client["POST:/upload"]({ body: { name: "Jane" } });
+
+      const h = capturedHeaders ?? {};
+      expect(h["content-type"]).toBe("application/xml");
+      expect(h["Content-Type"]).toBeUndefined();
+    });
+
+    it("still defaults to application/json when the caller sets no Content-Type", async () => {
+      let capturedHeaders: Record<string, string> | undefined;
+      const api = createApiFactory()
+        .route("/upload")
+        .post({ body: z.object({ name: z.string() }), response: z.object({ ok: z.boolean() }) });
+      const client = api.client({
+        fetcher: async (_url, init) => {
+          capturedHeaders = init?.headers as Record<string, string> | undefined;
+          return new Response(JSON.stringify({ ok: true }), { status: 200 });
+        },
+      });
+
+      await client["POST:/upload"]({ body: { name: "Jane" } });
+
+      expect(capturedHeaders?.["Content-Type"]).toBe("application/json");
+    });
+
+    it("does not send Content-Type on a request with no body", async () => {
+      let capturedHeaders: Record<string, string> | undefined;
+      const api = createApiFactory()
+        .route("/me")
+        .get({ response: z.object({}) });
+      const client = api.client({
+        fetcher: async (_url, init) => {
+          capturedHeaders = init?.headers as Record<string, string> | undefined;
+          return new Response("{}", { status: 200 });
+        },
+      });
+
+      await client["GET:/me"]();
+
+      expect(capturedHeaders?.["Content-Type"]).toBeUndefined();
+    });
+
     it("should throw when response is not ok", async () => {
       const api = createApiFactory()
         .route("/fail")
