@@ -12,6 +12,13 @@
  *
  * Wildcards match ONE level (pino semantics), not arbitrary depth.
  *
+ * Separately from paths, `sensitiveKeys` censors a set of KEY NAMES wherever
+ * they occur, at any depth, ignoring case and `_`/`-` separators. The built-in
+ * defaults use this: "password" as a path only ever matched a top-level key, so
+ * the common shapes real code logs - { user: { password } },
+ * { req: { headers: { cookie } } }, a capitalised { Authorization } - were all
+ * written out in the clear despite being on the always-redacted list.
+ *
  * Paths are parsed once at creation into a segment plan; per-call work is a
  * plain walk with selective copy-on-write: only object branches that lie on a
  * redacted path are cloned, everything else keeps the original reference, and
@@ -34,12 +41,30 @@ export interface RedactOptions {
   paths: readonly string[];
   /** Replacement value or function (default: "[REDACTED]"). */
   censor?: RedactCensor;
+  /**
+   * Key names censored wherever they appear, at any depth. Matching ignores
+   * case and `_`/`-`, so "apiKey", "api_key" and "API-KEY" are one key.
+   */
+  sensitiveKeys?: readonly string[];
 }
 
 /** Compiled redactor: returns a redacted copy; never mutates the input. */
 export type Redactor = <T>(value: T) => T;
 
 const WILDCARD = "*";
+
+/**
+ * Depth ceiling for the key-name sweep. Unlike a path plan, key matching has to
+ * visit every key of every object, so this bounds the per-call cost of one
+ * pathologically deep metadata object on the logging hot path. Cycles are cut
+ * separately; this only has to sit above any plausible real nesting.
+ */
+const MAX_KEY_SCAN_DEPTH = 20;
+
+/** "API_Key" / "api-key" / "apiKey" all collapse to "apikey". */
+function normalizeKey(key: string): string {
+  return key.toLowerCase().replace(/[_-]/g, "");
+}
 
 /** Parse one path string into segments. Supports dot + bracket notation. */
 export function parseRedactPath(path: string): string[] {
@@ -161,7 +186,10 @@ export function mergeRedactPaths(extraPaths?: readonly string[]): readonly strin
  * Redactor that always includes {@link DEFAULT_REDACT_PATHS}, plus optional extras.
  */
 export function createDefaultRedactor(extraPaths?: readonly string[]): Redactor {
-  return createRedactor(mergeRedactPaths(extraPaths));
+  return createRedactor({
+    paths: extraPaths ?? [],
+    sensitiveKeys: DEFAULT_REDACT_PATHS,
+  });
 }
 
 /**
@@ -178,6 +206,9 @@ export function createRedactor(options: RedactOptions | readonly string[]): Reda
       : { paths: [] };
   const censor = opts.censor ?? REDACT_DEFAULTS.CENSOR;
   const plan = buildPlan(opts.paths);
+  const sensitiveKeys = new Set((opts.sensitiveKeys ?? []).map(normalizeKey));
+  const hasSensitiveKeys = sensitiveKeys.size > 0;
+  const emptyNode = newNode();
 
   const applyCensor = (value: unknown, pathSegments: string[]): unknown => {
     if (typeof censor === "function") {
@@ -190,14 +221,47 @@ export function createRedactor(options: RedactOptions | readonly string[]): Reda
     return censor;
   };
 
-  const walk = (value: unknown, node: PlanNode, pathSoFar: string[]): unknown => {
+  const walk = (
+    value: unknown,
+    node: PlanNode,
+    pathSoFar: string[],
+    depth: number,
+    seen: Set<object>
+  ): unknown => {
     if (!isPlainContainer(value)) {
       return value;
     }
-    if (node.children.size === 0 && node.wildcard === null) {
+    // The key sweep has to look at branches no path mentions, so it - and only
+    // it - keeps descending once the plan is exhausted.
+    const scanKeys = hasSensitiveKeys && depth < MAX_KEY_SCAN_DEPTH;
+    if (!scanKeys && node.children.size === 0 && node.wildcard === null) {
       return value;
     }
+    // Ancestor set, not a visited set: a value legitimately reachable twice is
+    // still redacted twice; only a true cycle is cut.
+    if (scanKeys) {
+      if (seen.has(value)) {
+        return value;
+      }
+      seen.add(value);
+    }
+    try {
+      return walkContainer(value, node, pathSoFar, depth, seen, scanKeys);
+    } finally {
+      if (scanKeys) {
+        seen.delete(value);
+      }
+    }
+  };
 
+  const walkContainer = (
+    value: Record<string, unknown> | unknown[],
+    node: PlanNode,
+    pathSoFar: string[],
+    depth: number,
+    seen: Set<object>,
+    scanKeys: boolean
+  ): unknown => {
     if (Array.isArray(value)) {
       // Only wildcard descends into arrays ("users[*].password"); numeric
       // exact segments are also honored ("items[0].secret").
@@ -206,10 +270,13 @@ export function createRedactor(options: RedactOptions | readonly string[]): Reda
         const key = String(i);
         const exact = node.children.get(key);
         const branches = collectBranches(exact, node.wildcard);
-        if (branches === null) {
+        if (branches === null && !scanKeys) {
           continue;
         }
-        const replaced = applyBranches(value[i], branches, pathSoFar, key);
+        const replaced =
+          branches === null
+            ? descend(value[i], emptyNode, pathSoFar, key, depth, seen)
+            : applyBranches(value[i], branches, pathSoFar, key, depth, seen);
         if (replaced !== value[i]) {
           if (copy === null) {
             copy = value.slice();
@@ -223,12 +290,12 @@ export function createRedactor(options: RedactOptions | readonly string[]): Reda
     let objCopy: Record<string, unknown> | null = null;
     const record = value as Record<string, unknown>;
     // Iterate the smaller side when there is no wildcard and few plan keys
-    if (node.wildcard === null && node.children.size < 4) {
+    if (!scanKeys && node.wildcard === null && node.children.size < 4) {
       for (const [key, child] of node.children) {
         if (!Object.hasOwn(record, key)) {
           continue;
         }
-        const replaced = applyBranches(record[key], [child], pathSoFar, key);
+        const replaced = applyBranches(record[key], [child], pathSoFar, key, depth, seen);
         if (replaced !== record[key]) {
           if (objCopy === null) {
             objCopy = { ...record };
@@ -240,11 +307,24 @@ export function createRedactor(options: RedactOptions | readonly string[]): Reda
     }
 
     for (const key of Object.keys(record)) {
-      const branches = collectBranches(node.children.get(key), node.wildcard);
-      if (branches === null) {
+      if (scanKeys && sensitiveKeys.has(normalizeKey(key))) {
+        const censored = censorAt(record[key], pathSoFar, key);
+        if (censored !== record[key]) {
+          if (objCopy === null) {
+            objCopy = { ...record };
+          }
+          objCopy[key] = censored;
+        }
         continue;
       }
-      const replaced = applyBranches(record[key], branches, pathSoFar, key);
+      const branches = collectBranches(node.children.get(key), node.wildcard);
+      if (branches === null && !scanKeys) {
+        continue;
+      }
+      const replaced =
+        branches === null
+          ? descend(record[key], emptyNode, pathSoFar, key, depth, seen)
+          : applyBranches(record[key], branches, pathSoFar, key, depth, seen);
       if (replaced !== record[key]) {
         if (objCopy === null) {
           objCopy = { ...record };
@@ -271,11 +351,35 @@ export function createRedactor(options: RedactOptions | readonly string[]): Reda
     return null;
   };
 
+  const censorAt = (value: unknown, pathSoFar: string[], key: string): unknown => {
+    pathSoFar.push(key);
+    const censored = applyCensor(value, pathSoFar.slice());
+    pathSoFar.pop();
+    return censored;
+  };
+
+  /** Descend one level with no matching branch — used by the key sweep alone. */
+  const descend = (
+    value: unknown,
+    node: PlanNode,
+    pathSoFar: string[],
+    key: string,
+    depth: number,
+    seen: Set<object>
+  ): unknown => {
+    pathSoFar.push(key);
+    const result = walk(value, node, pathSoFar, depth + 1, seen);
+    pathSoFar.pop();
+    return result;
+  };
+
   const applyBranches = (
     value: unknown,
     branches: PlanNode[],
     pathSoFar: string[],
-    key: string
+    key: string,
+    depth: number,
+    seen: Set<object>
   ): unknown => {
     pathSoFar.push(key);
     let result = value;
@@ -288,7 +392,7 @@ export function createRedactor(options: RedactOptions | readonly string[]): Reda
     if (result === value) {
       for (const branch of branches) {
         if (!branch.terminal) {
-          result = walk(result, branch, pathSoFar);
+          result = walk(result, branch, pathSoFar, depth + 1, seen);
         }
       }
     }
@@ -298,7 +402,7 @@ export function createRedactor(options: RedactOptions | readonly string[]): Reda
 
   return (<T>(value: T): T => {
     try {
-      return walk(value, plan, []) as T;
+      return walk(value, plan, [], 0, new Set<object>()) as T;
     } catch {
       // Never throw from the logging path; on unexpected failure return input
       return value;
