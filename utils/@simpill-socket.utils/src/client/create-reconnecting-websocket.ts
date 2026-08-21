@@ -384,6 +384,10 @@ export function createReconnectingWebSocket(
 
     if (ws?.readyState === WS_READY_STATE.OPEN) {
       ws.send(serialized);
+      // idleMs is documented as "no message received / sent", but the timer was only restarted
+      // on open and on inbound messages. A send-only socket (telemetry, uplink) was therefore
+      // closed as idle while actively transmitting, then reconnect-looped on a working link.
+      startIdleTimer();
       return true;
     }
     if (messageQueue) {
