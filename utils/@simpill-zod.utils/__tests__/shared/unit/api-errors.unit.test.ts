@@ -32,3 +32,23 @@ describe("api-errors", () => {
     });
   });
 });
+
+import { z as z4 } from "zod";
+import { ValidationError } from "../../../src/shared";
+
+describe("api-errors (uplift fixes)", () => {
+  it("parseOrThrowValidation throws an instanceof-checkable ValidationError", () => {
+    try {
+      parseOrThrowValidation(z4.object({ a: z4.number() }), { a: "x" });
+      fail("should have thrown");
+    } catch (err) {
+      expect(err).toBeInstanceOf(ValidationError);
+      expect(err).toBeInstanceOf(Error);
+      const ve = err as ValidationError;
+      expect(ve.name).toBe("ValidationError");
+      expect(ve.message).toBe("Validation failed");
+      expect(ve.payload.code).toBe("VALIDATION_ERROR");
+      expect(ve.payload.details.a).toBeDefined();
+    }
+  });
+});

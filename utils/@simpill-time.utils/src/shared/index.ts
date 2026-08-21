@@ -6,6 +6,7 @@ export {
 } from "@simpill/function.utils";
 export {
   HOURS_PER_DAY,
+  MONTHS_PER_YEAR,
   MS_PER_DAY,
   MS_PER_HOUR,
   MS_PER_MINUTE,
@@ -25,16 +26,20 @@ export {
   addWeeks,
   addYears,
   clampDate,
+  daysInMonth,
   delta,
   deltaStructured,
   diff,
   endOfDay,
+  endOfMonth,
   formatISO,
   getUnixTimeStamp,
   getUnixTimeStampMs,
   isFuture,
   isPast,
+  isSameDay,
   isValidDate,
   startOfDay,
+  startOfMonth,
   toDateSafe,
 } from "./date-time";

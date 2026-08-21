@@ -1,4 +1,5 @@
-import { delay } from "@simpill/async.utils";
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
 import { createReconnectingWebSocket } from "../../../src/client/create-reconnecting-websocket";
 
 describe("createReconnectingWebSocket", () => {

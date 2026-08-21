@@ -15,13 +15,31 @@ export {
   NODE_ENV,
   type NodeEnvValue,
 } from "./constants";
-export type { EnvSpec, EnvSpecEntry } from "./env-schema";
+export {
+  type CreateEnvOptions,
+  createEnv,
+  type EnvArraySpec,
+  type EnvBooleanSpec,
+  type EnvEnumSpec,
+  type EnvIntegerSpec,
+  type EnvJsonSpec,
+  type EnvNumberSpec,
+  type EnvPortSpec,
+  type EnvSource,
+  type EnvSpec,
+  type EnvSpecEntry,
+  type EnvStringSpec,
+  type EnvUrlSpec,
+  type InferEnvSpec,
+} from "./env-schema";
 export {
   ENV_ERROR_CODE,
   EnvDecryptError,
   EnvError,
   type EnvErrorCode,
   EnvParseError,
+  EnvSchemaError,
+  type EnvSchemaIssue,
   EnvValidationError,
   MissingEnvError,
 } from "./errors";
@@ -33,3 +51,10 @@ export {
   parseNumberEnvValue,
   parseNumberEnvValueStrict,
 } from "./parse-helpers";
+export {
+  isSecretLikeKey,
+  REDACTED_VALUE,
+  type RedactOptions,
+  redactEnvValue,
+  SECRET_KEY_PATTERN,
+} from "./redact";

@@ -28,12 +28,14 @@ export function requireArgs<T>(args: (T | null | undefined)[], count: number): T
 }
 
 export function firstArg<T>(args: T[] | IArguments): T | undefined {
-  return Array.from(args)[0];
+  // Indexed access works on both arrays and IArguments; avoids the
+  // Array.from copy the previous implementation paid per call.
+  return (args as ArrayLike<T>)[0];
 }
 
 export function lastArg<T>(args: T[] | IArguments): T | undefined {
-  const a = Array.from(args);
-  return a[a.length - 1];
+  const a = args as ArrayLike<T>;
+  return a.length > 0 ? a[a.length - 1] : undefined;
 }
 
 export function restArgs<T>(args: T[] | IArguments, from = 1): T[] {

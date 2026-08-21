@@ -24,7 +24,9 @@ From `utils/react.utils`:
 - `src/client/create-safe-context.ts` – createSafeContext, useSafeContext.
 - `src/client/use-stable-callback.ts` – Stable callback via useLatest.
 - `src/client/use-lazy-state.ts` – Lazy useState initializer.
-- `src/client/use-deferred-update.ts` – setState wrapped in startTransition.
+- `src/client/use-deferred-update.ts` – stable setter + isPending via useTransition.
+- `src/client/use-effect-event.ts` – React 19.2 useEffectEvent ponyfill.
+- `src/client/use-isomorphic-layout-effect.ts` – SSR-safe layout effect.
 - `src/shared/types.ts` – Re-exports of React types.
 
 Tests in `__tests__/client/unit/*.unit.test.ts` and `__tests__/shared/unit/*.unit.test.ts`.

@@ -1,7 +1,15 @@
-export type { Slice } from "./slices";
-export { combineSlices, createSlice } from "./slices";
-export { createSelector, createTypedStore } from "./store-factory";
 export type {
+  AnySlice,
+  Slice,
+  SliceSet,
+  SlicesActions,
+  SlicesState,
+} from "./slices";
+export { combineSlices, createSlice, SliceCollisionError } from "./slices";
+export type { MemoSelector } from "./store-factory";
+export { createMemoSelector, createSelector, createTypedStore } from "./store-factory";
+export type {
+  AnySliceActions,
   SliceActions,
   SliceState,
   StateCreator,

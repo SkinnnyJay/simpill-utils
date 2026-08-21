@@ -4,12 +4,13 @@
   "description": "Framework-agnostic React utilities: hooks, safe context, stable callbacks, transitions.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/react.utils.git"
+    "url": "https://github.com/SkinnnyJay/simpill-utils.git",
+    "directory": "utils/@simpill-react.utils"
   },
   "bugs": {
-    "url": "https://github.com/SkinnnyJay/react.utils/issues"
+    "url": "https://github.com/SkinnnyJay/simpill-utils/issues"
   },
-  "homepage": "https://github.com/SkinnnyJay/react.utils#readme",
+  "homepage": "https://github.com/SkinnnyJay/simpill-utils/tree/main/utils/@simpill-react.utils#readme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -61,7 +62,7 @@
     "typescript",
     "utilities",
     "type-safe",
-    "esm",
+    "cjs",
     "tree-shakeable",
     "react",
     "nodejs"

@@ -33,7 +33,7 @@ export class EnvManager implements IEnvManager {
   private static bootstrapped = false;
   private static logger: EnvLoggerAdapter | null = null;
 
-  readonly envCache: Map<string, string>;
+  private readonly envCache: Map<string, string>;
   readonly rawCache: Map<string, string>;
   private readonly privateKey: string | undefined;
   private readonly dynamic: boolean;
@@ -47,7 +47,7 @@ export class EnvManager implements IEnvManager {
     this.options = options;
     loadEnvFiles(this.envCache, this.rawCache, options);
     snapshotProcessEnv(this.envCache, this.rawCache);
-    applyOverrides(this.envCache, options?.overrides);
+    applyOverrides(this.envCache, this.rawCache, options?.overrides);
   }
 
   private static defaultLog(_level: "info" | "warn" | "error", message: string): void {
@@ -126,6 +126,16 @@ export class EnvManager implements IEnvManager {
 
   public static getInstance(options?: EnvManagerOptions): EnvManager {
     if (EnvManager.instance) {
+      // Silent-footgun guard: options passed after the singleton exists
+      // were dropped without a trace, so callers got a manager configured
+      // by whoever ran first. Warn loudly instead of losing the config.
+      if (options !== undefined) {
+        EnvManager.log(
+          "warn",
+          "getInstance(options) called after the instance was created — options ignored. Call resetInstance() first or configure at first use.",
+          { ignoredOptions: Object.keys(options) }
+        );
+      }
       return EnvManager.instance;
     }
     EnvManager.instance = new EnvManager(options);
@@ -136,9 +146,33 @@ export class EnvManager implements IEnvManager {
     EnvManager.instance = null;
   }
 
-  /** @deprecated Use Env class instead */
+  /**
+   * @deprecated Use Env class instead
+   *
+   * Implementation note: the previous `Object.assign(process.env, {...fns})`
+   * was broken in real Node — `process.env`'s setter coerces every assigned
+   * value to a string, so the "methods" were stored as source-code TEXT and
+   * `process.env.getString(...)` threw `TypeError: not a function`. The old
+   * tests only passed because they replaced process.env with a plain object
+   * (`process.env = { ...originalEnv }`), which jest-style setups do too.
+   * Installing the helpers on a dedicated prototype sidesteps the setter,
+   * works on the REAL process.env, and keeps them out of enumeration
+   * (Object.keys/entries and child-process env inheritance stay clean).
+   */
   public static extendProcessEnvPrototype(): void {
-    Object.assign(process.env, {
+    Object.setPrototypeOf(process.env, EnvManager.buildProcessEnvHelperPrototype());
+  }
+
+  /** @internal Restore the default prototype (used by tests/teardown). */
+  public static unextendProcessEnvPrototype(): void {
+    Object.setPrototypeOf(process.env, Object.prototype);
+  }
+
+  private static buildProcessEnvHelperPrototype(): object {
+    // Non-enumerable: child_process env serialization and some Object.keys
+    // walks can otherwise leak helper names into spawned environments (CI).
+    const proto = Object.create(Object.prototype) as Record<string, unknown>;
+    const helpers: Record<string, (...args: never[]) => unknown> = {
       getString: (key: string, defaultValue = "") =>
         EnvManager.getInstance().getString(key, defaultValue),
       getNumber: (key: string, defaultValue = 0) =>
@@ -157,7 +191,16 @@ export class EnvManager implements IEnvManager {
       isEncrypted: (key: string) => EnvManager.getInstance().isEncrypted(key),
       getDecrypted: (key: string, privateKey?: string) =>
         EnvManager.getInstance().getDecrypted(key, privateKey),
-    });
+    };
+    for (const [name, fn] of Object.entries(helpers)) {
+      Object.defineProperty(proto, name, {
+        value: fn,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      });
+    }
+    return proto;
   }
 
   public getEnvironment(): string {
@@ -189,7 +232,7 @@ export class EnvManager implements IEnvManager {
     this.rawCache.clear();
     loadEnvFiles(this.envCache, this.rawCache, this.options);
     snapshotProcessEnv(this.envCache, this.rawCache);
-    applyOverrides(this.envCache, this.options?.overrides);
+    applyOverrides(this.envCache, this.rawCache, this.options?.overrides);
   }
 
   public getCacheSize(): number {
@@ -275,12 +318,16 @@ export class EnvManager implements IEnvManager {
     return getArrayFromEnv(this.getValue.bind(this), key, defaultValue, separator);
   }
 
-  public getJson<T = unknown>(key: string, defaultValue?: T): T {
-    return getJsonFromEnv(this.getValue.bind(this), key, defaultValue);
+  public getJson<T = unknown>(key: string, defaultValue?: T, validate?: (value: unknown) => T): T {
+    return getJsonFromEnv(this.getValue.bind(this), key, defaultValue, validate);
   }
 
-  public getRequiredJson<T = unknown>(key: string, errorMessage?: string): T {
-    return getRequiredJsonFromEnv(this.getValue.bind(this), key, errorMessage);
+  public getRequiredJson<T = unknown>(
+    key: string,
+    errorMessage?: string,
+    validate?: (value: unknown) => T
+  ): T {
+    return getRequiredJsonFromEnv(this.getValue.bind(this), key, errorMessage, validate);
   }
 
   public getValidatedString(
@@ -331,6 +378,10 @@ export class EnvManager implements IEnvManager {
     return parseEncrypted(encryptedValue, privateKey);
   }
 
+  /**
+   * @deprecated This method exposes sensitive key material and will be removed in a future
+   * major version. Use `hasPrivateKey()` to check if a key is loaded without exposing it.
+   */
   public getPrivateKey(): string | undefined {
     return this.privateKey;
   }

@@ -59,24 +59,36 @@ export function stripIndent(value: string): string {
     .replace(/\s+$/g, "");
 }
 
-/** First character uppercase, rest unchanged. */
-export function capitalize(value: string): string {
+/** Uppercase the first code point (not code unit), optionally locale-aware. */
+export function capitalize(value: string, locale?: string): string {
   if (value.length === 0) {
     return "";
   }
-  return `${value[0].toUpperCase()}${value.slice(1)}`;
+  const cp = value.codePointAt(0);
+  if (cp === undefined) {
+    return value;
+  }
+  const first = String.fromCodePoint(cp);
+  const upper = locale ? first.toLocaleUpperCase(locale) : first.toUpperCase();
+  return upper + value.slice(first.length);
 }
 
-/** First character lowercase, rest unchanged. */
-export function decapitalize(value: string): string {
+/** Lowercase the first code point (not code unit), optionally locale-aware. */
+export function decapitalize(value: string, locale?: string): string {
   if (value.length === 0) {
     return "";
   }
-  return `${value[0].toLowerCase()}${value.slice(1)}`;
+  const cp = value.codePointAt(0);
+  if (cp === undefined) {
+    return value;
+  }
+  const first = String.fromCodePoint(cp);
+  const lowerFirst = locale ? first.toLocaleLowerCase(locale) : first.toLowerCase();
+  return lowerFirst + value.slice(first.length);
 }
 
 /** First character of first word uppercase; rest lowercase (sentence style). */
-export function toSentenceCase(value: string): string {
+export function toSentenceCase(value: string, locale?: string): string {
   if (value.length === 0) {
     return "";
   }
@@ -84,10 +96,12 @@ export function toSentenceCase(value: string): string {
   if (firstNonSpace === -1) {
     return value;
   }
-  const lower = value.toLowerCase();
+  const lower = locale ? value.toLocaleLowerCase(locale) : value.toLowerCase();
   const before = lower.slice(0, firstNonSpace);
-  const capital = lower[firstNonSpace].toUpperCase();
-  const after = lower.slice(firstNonSpace + 1);
+  const cp = lower.codePointAt(firstNonSpace);
+  const firstChar = cp === undefined ? lower[firstNonSpace] : String.fromCodePoint(cp);
+  const capital = locale ? firstChar.toLocaleUpperCase(locale) : firstChar.toUpperCase();
+  const after = lower.slice(firstNonSpace + firstChar.length);
   return `${before}${capital}${after}`;
 }
 
@@ -128,20 +142,32 @@ export function padEndSafe(
 const DIGITS_ONLY = /^\d+$/;
 const LETTERS_ONLY = /^[a-zA-Z]+$/;
 const ALPHANUMERIC = /^[a-zA-Z0-9]+$/;
+const UNICODE_LETTERS_ONLY = /^\p{L}+$/u;
+const UNICODE_ALPHANUMERIC = /^[\p{L}\p{N}]+$/u;
 
 /** True if value is non-null and contains only digit characters. */
 export function hasOnlyDigits(value: string | null | undefined): boolean {
   return typeof value === "string" && value.length > 0 && DIGITS_ONLY.test(value);
 }
 
-/** True if value is non-null and contains only letter characters. */
+/** True if value is non-null and contains only ASCII letter characters. */
 export function hasOnlyLetters(value: string | null | undefined): boolean {
   return typeof value === "string" && value.length > 0 && LETTERS_ONLY.test(value);
 }
 
-/** True if value is non-null and contains only alphanumeric characters. */
+/** True if value is non-null and contains only ASCII alphanumeric characters. */
 export function isAlphaNumeric(value: string | null | undefined): boolean {
   return typeof value === "string" && value.length > 0 && ALPHANUMERIC.test(value);
+}
+
+/** True if value is non-null and contains only Unicode letters (any script). */
+export function hasOnlyUnicodeLetters(value: string | null | undefined): boolean {
+  return typeof value === "string" && value.length > 0 && UNICODE_LETTERS_ONLY.test(value);
+}
+
+/** True if value is non-null and contains only Unicode letters or numbers. */
+export function isUnicodeAlphaNumeric(value: string | null | undefined): boolean {
+  return typeof value === "string" && value.length > 0 && UNICODE_ALPHANUMERIC.test(value);
 }
 
 /** Replace all occurrences; "" for null/undefined. */
@@ -154,19 +180,32 @@ export function replaceAllSafe(
   if (typeof search === "string") {
     return value.split(search).join(replace);
   }
-  return value.replace(search, replace);
+  // A non-global RegExp would replace only the first match despite the name;
+  // ensure the global flag so it truly replaces all.
+  const globalSearch = search.global ? search : new RegExp(search.source, `${search.flags}g`);
+  return value.replace(globalSearch, replace);
 }
 
-/** Lowercase; returns "" for null/undefined. */
-export function safeLower(value: string | null | undefined): string {
-  return value == null ? "" : value.toLowerCase();
+/** Lowercase; returns "" for null/undefined. Optional locale for case mapping. */
+export function safeLower(value: string | null | undefined, locale?: string): string {
+  if (value == null) return "";
+  return locale ? value.toLocaleLowerCase(locale) : value.toLowerCase();
 }
 
-/** Uppercase; returns "" for null/undefined. */
-export function safeUpper(value: string | null | undefined): string {
-  return value == null ? "" : value.toUpperCase();
+/** Uppercase; returns "" for null/undefined. Optional locale for case mapping. */
+export function safeUpper(value: string | null | undefined, locale?: string): string {
+  if (value == null) return "";
+  return locale ? value.toLocaleUpperCase(locale) : value.toUpperCase();
 }
 
+export { splitWords } from "./case.utils";
+export {
+  graphemeLength,
+  isAscii,
+  reverseGraphemes,
+  sliceGraphemes,
+  toGraphemes,
+} from "./grapheme";
 export { escapeHtml, escapeRegExp, splitLines, stripAnsi, unescapeHtml } from "./string-escape";
-export { maskString, slugify, stripDiacritics } from "./string-slug-mask";
+export { foldToAscii, maskString, slugify, stripDiacritics } from "./string-slug-mask";
 export { truncate, truncateWords, wrapText } from "./string-truncate-wrap";

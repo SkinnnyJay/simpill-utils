@@ -135,6 +135,18 @@ export interface Logger {
   warn(message: string, metadata?: LogMetadata): void;
   debug(message: string, metadata?: LogMetadata): void;
   error(message: string, metadata?: LogMetadata): void;
+  /**
+   * Create a child logger (optional; always present on factory-created loggers).
+   * `child(metadata)` keeps the parent name; `child(name, metadata?)` appends
+   * ".name" to the parent name. Metadata is inherited and merged.
+   */
+  child?(nameOrMetadata: string | LogMetadata, metadata?: LogMetadata): Logger;
+  /**
+   * True if a log at this level would be emitted (optional; always present on
+   * factory-created loggers). Use to skip expensive metadata construction:
+   * `if (logger.isLevelEnabled?.("DEBUG")) logger.debug(msg, buildHugeMeta())`.
+   */
+  isLevelEnabled?(level: LogLevel): boolean;
 }
 
 /**
@@ -154,6 +166,13 @@ export interface LoggerOptions {
   includeTimestamp?: boolean;
   /** Custom metadata to include in all logs */
   defaultMetadata?: LogMetadata;
+  /**
+   * Field paths to redact from log metadata. Matched fields are replaced with "[REDACTED]".
+   * Supports dot notation (e.g. "user.password") and top-level keys (e.g. "token").
+   * Default sensitive fields are always redacted: password, token, secret, authorization,
+   * cookie, apiKey, api_key, accessToken, refreshToken, privateKey.
+   */
+  redactPaths?: string[];
 }
 
 /**

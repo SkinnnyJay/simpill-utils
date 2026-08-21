@@ -1,4 +1,4 @@
 export * from "../shared";
-export * from "./telemetryFactory";
-export * from "./telemetryStorage";
-export * from "./tokenOptimizerFactory";
+export * from "./telemetry.factory";
+export * from "./telemetry.storage";
+export * from "./token-optimizer.factory";

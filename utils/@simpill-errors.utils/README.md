@@ -36,9 +36,14 @@ const serialized = serializeError(err, { includeStack: false });
 
 | Feature | Description |
 |---------|-------------|
-| **AppError** | Error with code, message, meta, cause, toJSON() |
-| **serializeError** | Safe serialization for logging or transport |
-| **createErrorCodeMap** | Map codes to messages (ERROR_CODES, ErrorCodeOptions) |
+| **AppError** | Error with code, message, meta, cause (native non-enumerable semantics), toJSON() |
+| **serializeError** | Always-JSON-safe serialization: circular meta/cause handled, AggregateError `errors`, extra props preserved |
+| **deserializeError** | Rebuild an Error from a SerializedError (reverse of serializeError) |
+| **createErrorCodeMap / createErrorFromCode** | Map codes to messages and construct AppError from a code |
+| **httpStatusFromCode / errorCodeFromStatus** | Bidirectional ErrorCode ↔ HTTP status mapping |
+| **toProblemDetails** | RFC 9457 `application/problem+json` responses (never leaks stack/cause) |
+| **isError / isErrorLike / isAppError** | Cross-realm-safe error detection (native `Error.isError` when available) |
+| **sanitizeForJson** | Deep-sanitize any value so JSON.stringify never throws |
 
 ---
 
@@ -57,9 +62,14 @@ import { ... } from "@simpill/errors.utils/shared"; // Shared only
 
 - **AppError**(message, options?) — options: **code**, **meta**, **cause** (native `Error.cause`-style chaining)
 - **AppErrorMeta** — record for metadata (keep serializable; avoid circular references)
-- **serializeError**(error, options?) → SerializedError — options: **includeStack**. Serializes name, message, code, meta, stack. **Cause chains and AggregateError** are not recursed into; serialize `error.cause` separately if needed. Non-Error values become `{ name: "Error", message: string }`. Do not put circular refs in **meta** — serialization does not detect cycles.
-- **SerializedError** — name, message, code?, meta?, stack?
-- **createErrorCodeMap**, **ERROR_CODES**, **ErrorCode**, **ErrorCodeOptions**
+- **serializeError**(error, options?) → SerializedError — options: **includeStack**, **includeCause**, **maxCauseDepth**. The result is **always safe to `JSON.stringify`**: circular references in meta, cause chains, or extra props are cycle-detected and replaced with `"[Circular]"`; bigint/symbol/function/Date/Map/Set are converted to JSON-safe forms. **AggregateError** inner `errors` are serialized. Extra own enumerable properties (Node's `errno`/`syscall`/`path`, custom fields) are preserved under `props`. Error-like objects (name+message, e.g. cross-realm or postMessage payloads) keep their identity; thrown primitives keep their value in `message`; other values are attached as sanitized `data`.
+- **SerializedError** — name, message, code?, meta?, stack?, cause?, errors?, props?, data?
+- **deserializeError**(serialized) → Error — restores name, message, stack, code, meta, cause chain, and inner errors
+- **isError** / **isErrorLike** / **isAppError** — cross-realm-safe detection (uses native `Error.isError` when available)
+- **sanitizeForJson**(value, maxDepth?) — deep-sanitize any value to a JSON-stringify-safe form
+- **createErrorCodeMap**, **createErrorFromCode**, **ERROR_CODES**, **ErrorCode**, **ErrorCodeOptions**
+- **HTTP_STATUS_BY_CODE**, **httpStatusFromCode**(code, fallback?), **errorCodeFromStatus**(status)
+- **toProblemDetails**(error, options?) → ProblemDetails (RFC 9457), **PROBLEM_JSON_CONTENT_TYPE**
 
 ### AppError with cause and meta
 
@@ -87,7 +97,7 @@ Pass `serializeError(err, { includeStack: true })` to your logger (e.g. `@simpil
 
 ### HTTP status mapping
 
-There is **no** built-in map from **ErrorCode** (or **AppError.code**) to HTTP status. Map in your API layer, e.g. **NOT_FOUND** → 404, **UNAUTHORIZED** → 401, **FORBIDDEN** → 403, **BAD_REQUEST** / **VALIDATION** → 400, **CONFLICT** → 409, **TIMEOUT** → 408, **INTERNAL** → 500. Example: `const statusByCode: Partial<Record<string, number>> = { NOT_FOUND: 404, BAD_REQUEST: 400 }; res.status(statusByCode[err.code] ?? 500).json(serializeError(err))`.
+Built in: **HTTP_STATUS_BY_CODE** maps every **ErrorCode** to a status (**NOT_FOUND** → 404, **VALIDATION** → 422, **TIMEOUT** → 504, ...). Use **httpStatusFromCode**(code) / **errorCodeFromStatus**(status) for the two directions, and **toProblemDetails**(err, { instance: req.path }) to build an RFC 9457 `application/problem+json` body that never leaks stacks or causes: `res.status(problem.status).type(PROBLEM_JSON_CONTENT_TYPE).json(problem)`.
 
 ### Result-style helpers
 
@@ -103,7 +113,6 @@ There is **no** **fromUnknown**(e) export. To turn an **unknown** caught value i
 
 ### What we don't provide
 
-- **HTTP status mapping** — No built-in code → status map; build one in your API layer (e.g. NOT_FOUND → 404, BAD_REQUEST → 400).
 - **Result types** — Use **@simpill/patterns.utils** (**toResult**, **fromPromise**) with **mapError** that returns **AppError**.
 - **fromUnknown** — No helper; wrap unknown caught values in **AppError** manually (e.g. `instanceof Error` → use message and cause; else **AppError(String(e))**).
 - **Namespaced error codes** — **ERROR_CODES** is flat; use string prefixes (e.g. `"AUTH.FORBIDDEN"`) or separate code maps per domain.
@@ -113,7 +122,7 @@ There is **no** **fromUnknown**(e) export. To turn an **unknown** caught value i
 | Use case | Recommendation |
 |----------|----------------|
 | Domain/API errors with code and meta | Use **AppError** with **ERROR_CODES** and **meta**; serialize with **serializeError** for logs or responses. |
-| Map error to HTTP status | Build a **code → status** map in your API layer; **ERROR_CODES** names align with common statuses. |
+| Map error to HTTP status | Use **httpStatusFromCode** / **toProblemDetails** (RFC 9457) — built in. |
 | Turn thrown/unknown into Result | Use **patterns.utils** **fromPromise**/ **toResult** with **mapError** that returns **AppError**. |
 | Consistent error messages | Use **createErrorCodeMap** and use the map when creating or displaying errors. |
 

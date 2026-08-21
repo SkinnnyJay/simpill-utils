@@ -7,11 +7,21 @@ export {
   RATE_LIMITER_WINDOW_MS_ONE_SECOND,
   WITH_JITTER_DEFAULT_FACTOR,
 } from "./constants";
+export { BulkheadRejectedError, CircuitOpenError } from "./errors";
 export { type RetryResultOptions, retryResult } from "./retry-result";
 export type {
+  BulkheadCreateOptions,
   BulkheadOptions,
+  CircuitBreakerMetrics,
   CircuitBreakerOptions,
   CircuitState,
   RateLimiterOptions,
+  TokenBucketOptions,
 } from "./types";
-export { type WithJitterOptions, withJitter } from "./with-jitter";
+export {
+  type BackoffJitterOptions,
+  createDecorrelatedJitter,
+  fullJitter,
+  type WithJitterOptions,
+  withJitter,
+} from "./with-jitter";

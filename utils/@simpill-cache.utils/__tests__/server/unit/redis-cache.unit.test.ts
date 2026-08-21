@@ -43,4 +43,31 @@ describe("RedisCache", () => {
     const cache = new RedisCache<unknown>(adapter);
     await expect(cache.get("bad")).rejects.toThrow("RedisCache: invalid JSON for key bad");
   });
+
+  it("get validates value via constructor validate option", async () => {
+    const adapter = createMockAdapter();
+    const cache = new RedisCache<{ count: number }>(adapter, {
+      validate: (v) => {
+        if (typeof v === "object" && v !== null && "count" in v) return v as { count: number };
+        throw new Error("invalid shape");
+      },
+    });
+    await cache.set("k", { count: 3 });
+    const result = await cache.get("k");
+    expect(result?.count).toBe(3);
+  });
+
+  it("get throws from validator when stored shape is wrong", async () => {
+    const adapter = createMockAdapter();
+    adapter.store.set("cache:k", JSON.stringify({ wrong: "data" }));
+    const cache = new RedisCache<{ count: number }>(adapter, {
+      validate: (v) => {
+        if (typeof v !== "object" || v === null || !("count" in v)) {
+          throw new Error("invalid shape");
+        }
+        return v as { count: number };
+      },
+    });
+    await expect(cache.get("k")).rejects.toThrow("invalid shape");
+  });
 });

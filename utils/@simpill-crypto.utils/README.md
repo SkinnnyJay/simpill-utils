@@ -33,10 +33,17 @@ const token = randomBytesHex(16);
 
 | Feature | Description |
 |---------|-------------|
-| **hash** | **Sync** hash (sha1, sha256, sha384, sha512) → hex string |
+| **hash / hashBuffer** | **Sync** hash (sha1, sha256, sha384, sha512) → hex, base64, base64url, or Buffer |
+| **hmac / hmacBuffer** | HMAC (RFC 2104) under a key, same encodings |
+| **safeEqual** | Length-independent constant-time compare (hash-then-compare) |
+| **timingSafeEqualBuffer** | Same-length constant-time comparison (legacy; leaks length via timing) |
+| **hashPassword / verifyPassword** | Password storage: scrypt (OWASP 2026 params) or native argon2id, self-describing PHC strings |
+| **hkdf** | RFC 5869 key derivation (subkeys from a master key) |
+| **pbkdf2** | PBKDF2 (600k iterations of HMAC-SHA256 by default) for FIPS/interop |
+| **scryptDerive** | Raw scrypt (RFC 7914) with explicit parameters |
 | **randomBytesSecure** | Cryptographically secure random bytes (Buffer) |
-| **randomBytesHex** | Random bytes as hex string |
-| **timingSafeEqualBuffer** | Constant-time comparison (server only) |
+| **randomBytesHex / randomBytesBase64Url** | Random bytes as hex or URL-safe token |
+| **randomIntSecure** | Uniform random integer without modulo bias |
 
 ---
 
@@ -53,36 +60,48 @@ import { ... } from "@simpill/crypto.utils/shared";  // Types only
 
 ## API Reference
 
-- **hash**(data, algorithm?) → string — **synchronous**; hashes to hex. `data` is string (UTF-8) or Buffer; algorithm: HashAlgorithm (default sha256).
+- **hash**(data, algorithm?, encoding?) → string — **synchronous**; algorithm default sha256, encoding "hex" | "base64" | "base64url" (default hex). **hashBuffer**(data, algorithm?) → Buffer.
+- **hmac**(key, data, algorithm?, encoding?) → string / **hmacBuffer**(key, data, algorithm?) → Buffer — HMAC verified against RFC 4231 test vectors.
+- **safeEqual**(a, b) → boolean — **preferred secret comparison.** Length-independent constant time via the hash-then-compare pattern: both inputs are digested to fixed 32-byte SHA-256 values before `crypto.timingSafeEqual`, so timing reveals neither the differing byte position nor whether the lengths match.
+- **timingSafeEqualBuffer**(a, b) → boolean — legacy same-length comparison, kept for backward compatibility. **Warning:** its early return on length mismatch is observable (~73× faster path measured on a 4 KiB secret), so an attacker can learn a secret's length from timing. Prefer `safeEqual`.
+- **hashPassword**(password, options?) → string — password storage. Default scrypt N=2^17, r=8, p=1 (OWASP 2026), 16-byte random salt, 32-byte key; ~470 ms per hash on a typical server core. Emits a self-describing PHC string (`$scrypt$ln=17,r=8,p=1$<salt>$<hash>`). `{ algorithm: "argon2id" }` uses native `crypto.argon2Sync` on Node ≥ 26 (m=64 MiB, t=3, p=4) and throws a clear error elsewhere — check `hasArgon2()`.
+- **verifyPassword**(password, stored) → boolean — recomputes with the parameters embedded in the stored string and compares via `safeEqual`. Returns `false` for a wrong password; throws `TypeError` for an unrecognized format.
+- **hkdf**(ikm, { salt?, info?, length?, algorithm? }) → Buffer — RFC 5869 (test-vector verified). Derive purpose-specific subkeys from one master key; not for passwords.
+- **pbkdf2**(password, salt, { iterations?, length?, algorithm? }) → Buffer — defaults 600,000 iterations HMAC-SHA256 (OWASP 2026). For FIPS/interop; prefer `hashPassword` otherwise.
+- **scryptDerive**(password, salt, keyLength, cost, blockSize, parallelism) → Buffer — raw RFC 7914 scrypt (test-vector verified) with `maxmem` sized automatically (Node's 32 MiB default otherwise rejects OWASP-scale parameters).
 - **randomBytesSecure**(length) → Buffer — throws `RangeError` if length is negative or not an integer.
-- **randomBytesHex**(length) → string
-- **timingSafeEqualBuffer**(a, b) → boolean — constant-time comparison. **Important:** If `a` and `b` have different lengths, returns `false` without comparing (to avoid leaking length). Normalize lengths before comparing (e.g. hash both values and compare hashes of the same length).
-- **HashAlgorithm** — "sha1" | "sha256" | "sha384" | "sha512"
+- **randomBytesHex**(length) → string · **randomBytesBase64Url**(length) → string — URL-safe unpadded token for URLs, cookies, headers.
+- **randomIntSecure**(min, max) → number — uniform integer in [min, max) via `crypto.randomInt`, no modulo bias. Throws `RangeError` for invalid ranges (incl. range ≥ 2^48).
+- **hasArgon2**() → boolean — whether this Node build ships native argon2id.
+- **HashAlgorithm** — "sha1" | "sha256" | "sha384" | "sha512" · **DigestEncoding** — "hex" | "base64" | "base64url" · **PasswordAlgorithm** — "scrypt" | "argon2id"
 
-### timingSafeEqualBuffer example
-
-Use for comparing secrets (tokens, HMACs) without timing side-channels. Ensure both inputs have the same length; otherwise the function returns false and does not perform a comparison:
+### Comparing secrets
 
 ```ts
-import { timingSafeEqualBuffer, hash } from "@simpill/crypto.utils/server";
+import { safeEqual } from "@simpill/crypto.utils/server";
 
 const secret = process.env.API_SECRET ?? "";
 const provided = req.headers["x-api-key"] ?? "";
-// Compare fixed-length hashes so lengths always match for valid input
-const secretHash = hash(secret, "sha256");
-const providedHash = hash(provided, "sha256");
-if (timingSafeEqualBuffer(secretHash, providedHash)) {
-  // authenticated
+if (safeEqual(secret, provided)) {
+  // authenticated — no length normalization needed
 }
+```
+
+### Password storage
+
+```ts
+import { hashPassword, verifyPassword } from "@simpill/crypto.utils/server";
+
+const stored = hashPassword(newUserPassword);        // "$scrypt$ln=17,r=8,p=1$…$…"
+// later:
+if (verifyPassword(loginAttempt, stored)) { /* ok */ }
 ```
 
 ### What we don’t provide
 
-- **HMAC** — No HMAC helpers. Use Node `crypto.createHmac(algorithm, key).update(data).digest('hex')` (or another encoding).
-- **KDF / password hashing** — No PBKDF2, scrypt, or argon2. Use Node `crypto.pbkdf2`, `crypto.scrypt`, or a dedicated library (e.g. `argon2`).
-- **Hash output encodings** — `hash()` returns hex only. For base64 or Buffer, use Node `crypto.createHash(algorithm).update(data).digest()` with the desired encoding.
 - **randomUUID** — Use the global `crypto.randomUUID()` (Node 19+ / modern runtimes) or `generateUUID` from `@simpill/uuid.utils`.
 - **WebCrypto (client)** — This package is server-only for runtime crypto. In the browser use `crypto.subtle` for hashing and key derivation.
+- **bcrypt** — bcrypt has a 72-byte input limit and no memory hardness; `hashPassword`'s scrypt/argon2id defaults are the modern recommendation.
 
 ---
 

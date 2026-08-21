@@ -347,6 +347,14 @@ describe("BufferedLoggerAdapter", () => {
   });
 
   describe("periodic flush", () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
     it("should flush periodically", async () => {
       const adapter = new BufferedLoggerAdapter(mockAdapter, {
         maxBufferSize: 100,
@@ -361,8 +369,8 @@ describe("BufferedLoggerAdapter", () => {
         timestamp: new Date().toISOString(),
       });
 
-      // Wait for periodic flush
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Advance past one flush interval and flush pending async work
+      await jest.advanceTimersByTimeAsync(50);
 
       expect(mockAdapter.logs.length).toBe(1);
 

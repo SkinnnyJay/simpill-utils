@@ -111,7 +111,10 @@ describe("fetchWithTimeout", () => {
     expect(receivedInit?.signal).toBeDefined();
   });
 
-  it("should use provided init.signal when given", async () => {
+  // Previously this asserted `receivedSignal === controller.signal`, which enshrined a bug:
+  // choosing the caller's signal meant the timeout controller was never attached, so passing a
+  // cancellation signal silently disabled the timeout entirely. The contract is that BOTH work.
+  it("should honour a caller-provided signal", async () => {
     const controller = new AbortController();
     let receivedSignal: AbortSignal | undefined;
     const res = new Response("ok", { status: 200 });
@@ -119,14 +122,35 @@ describe("fetchWithTimeout", () => {
       receivedSignal = init?.signal as AbortSignal;
       return Promise.resolve(res);
     });
+
     await fetchWithTimeout(
       "https://example.com",
       { signal: controller.signal },
-      {
-        timeoutMs: TIMEOUT_MS_1000,
-        fetcher,
-      }
+      { timeoutMs: TIMEOUT_MS_1000, fetcher }
     );
-    expect(receivedSignal).toBe(controller.signal);
+
+    expect(receivedSignal).toBeDefined();
+    expect(receivedSignal?.aborted).toBe(false);
+    controller.abort();
+    expect(receivedSignal?.aborted).toBe(true);
+  });
+
+  it("should still time out when a caller signal is supplied", async () => {
+    const controller = new AbortController();
+    let receivedSignal: AbortSignal | undefined;
+    const fetcher = jest.fn().mockImplementation((_url: string, init?: RequestInit) => {
+      receivedSignal = init?.signal as AbortSignal;
+      // Never settles: only the timeout can abort this.
+      return new Promise<Response>(() => undefined);
+    });
+
+    void fetchWithTimeout(
+      "https://example.com",
+      { signal: controller.signal },
+      { timeoutMs: 10, fetcher }
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    expect(receivedSignal?.aborted).toBe(true);
   });
 });

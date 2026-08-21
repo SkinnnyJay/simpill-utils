@@ -1,1 +1,8 @@
-export type { HashAlgorithm } from "./types";
+export type {
+  DigestEncoding,
+  HashAlgorithm,
+  HashPasswordOptions,
+  HkdfOptions,
+  PasswordAlgorithm,
+  Pbkdf2Options,
+} from "./types";

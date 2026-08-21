@@ -25,3 +25,17 @@ describe("RateLimiter", () => {
     expect(results).toEqual([1, 2]);
   });
 });
+
+describe("RateLimiter uplift", () => {
+  it("abort interrupts the window wait immediately", async () => {
+    const limiter = new RateLimiter({ maxRequests: 1, windowMs: 5000 });
+    await limiter.run(() => Promise.resolve(1));
+    const controller = new AbortController();
+    const started = Date.now();
+    const pending = limiter.run(() => Promise.resolve(2), { signal: controller.signal });
+    setTimeout(() => controller.abort(), 20);
+    await expect(pending).rejects.toThrow("Operation aborted.");
+    // pre-fix this waited the full 5s window before noticing the abort
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
+});

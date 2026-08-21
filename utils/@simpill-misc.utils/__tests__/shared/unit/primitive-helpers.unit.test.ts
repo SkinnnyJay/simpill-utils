@@ -82,5 +82,19 @@ describe("primitive-helpers", () => {
     it("returns fallback on invalid JSON", () => {
       expect(parseJsonSafe("invalid", 42)).toBe(42);
     });
+    it("applies validator when provided and shape matches", () => {
+      const result = parseJsonSafe('{"count":5}', null, (v) => {
+        if (typeof v === "object" && v !== null && "count" in v) return v as { count: number };
+        throw new Error("invalid");
+      });
+      expect(result?.count).toBe(5);
+    });
+    it("returns fallback when validator throws", () => {
+      const result = parseJsonSafe('{"wrong":1}', null, (v) => {
+        if (typeof v !== "object" || v === null || !("count" in v)) throw new Error("bad shape");
+        return v as { count: number };
+      });
+      expect(result).toBeNull();
+    });
   });
 });

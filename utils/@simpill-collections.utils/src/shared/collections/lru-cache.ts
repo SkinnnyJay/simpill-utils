@@ -64,6 +64,11 @@ export class LRUCache<K, V> {
     return this._map.has(key);
   }
 
+  /** Like get(), but does not refresh recency. */
+  peek(key: K): V | undefined {
+    return this._map.get(key)?.value;
+  }
+
   delete(key: K): boolean {
     const node = this._map.get(key);
     if (!node) return false;
@@ -96,5 +101,33 @@ export class LRUCache<K, V> {
     if (this._head) this._head.prev = node;
     else this._tail = node;
     this._head = node;
+  }
+
+  /**
+   * Iterate entries from most to least recently used (matches mnemonist's
+   * LRUMap convention). Do not mutate the cache while iterating.
+   */
+  *entries(): IterableIterator<[K, V]> {
+    let node = this._head;
+    while (node) {
+      yield [node.key, node.value];
+      node = node.next;
+    }
+  }
+
+  *keys(): IterableIterator<K> {
+    for (const [key] of this.entries()) yield key;
+  }
+
+  *values(): IterableIterator<V> {
+    for (const [, value] of this.entries()) yield value;
+  }
+
+  [Symbol.iterator](): IterableIterator<[K, V]> {
+    return this.entries();
+  }
+
+  forEach(cb: (value: V, key: K, cache: LRUCache<K, V>) => void): void {
+    for (const [key, value] of this.entries()) cb(value, key, this);
   }
 }

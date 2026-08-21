@@ -20,9 +20,9 @@ const ensureTonlModule = async (): Promise<TonlModule> => {
         const tonl = await import("tonl");
         return tonl as TonlModule;
       } catch {
-        return {
-          encodeTONL: (value: unknown) => JSON.stringify(value),
-        };
+        // Optional dependency. The old JSON fallback was a silent no-op reported as a
+        // successful TONL compression; fail so the optimizer falls back to passthrough.
+        throw new Error(ERROR_MESSAGES.TONL_ENCODER_UNAVAILABLE);
       }
     })();
   }

@@ -65,22 +65,32 @@ Then run your request handlers with `runWithRequestContext` (e.g. from middlewar
 
 ## API
 
-- **RequestContext** — `{ requestId?, traceId?, spanId?, userId?, sessionId?, tenantId?, [key: string]: unknown }`
-- **createRequestContextStore()** — Returns a new store (AsyncLocalStorage-backed).
-- **runWithRequestContext(context, fn)** — Runs `fn` with `context`; context is available via `getRequestContext()` for the whole sync/async execution.
+- **RequestContext** — `{ requestId?, traceId?, spanId?, userId?, sessionId?, tenantId?, [key: string]: unknown }`. All getters/run helpers accept a type parameter for custom shapes: `getRequestContext<AppContext>()`.
+- **createRequestContextStore\<T\>()** — Returns a new store (AsyncLocalStorage-backed) with `run`, `runAsync`, `getStore`, `update`, `runWithChild`, `bind`.
+- **runWithRequestContext(context, fn)** — Runs `fn` (sync or async) with `context`; always returns a Promise. A synchronous throw inside `fn` becomes a rejection.
+- **runWithRequestContextSync(context, fn)** — Synchronous variant: returns `fn`'s value directly, no Promise allocation (15.8x faster for sync fns, interleaved medians, Node 22).
 - **getRequestContext()** — Returns the current context or `undefined`.
+- **requireRequestContext()** — Returns the current context or throws `RequestContextUnavailableError`.
+- **updateRequestContext(patch)** — Shallow-merges `patch` into the current context **in place**, visible to all readers in the run (add `userId` after auth, etc.). Returns `false` outside a run.
+- **setRequestContextValue(key, value)** / **getRequestContextValue(key)** — Single-key convenience forms.
+- **runWithChildRequestContext(patch, fn)** — Runs `fn` with a child context: inherits the current context's fields (shallow copy, never aliased) with `patch` on top; parent is restored after.
+- **bindRequestContext(fn)** — Captures the current context and returns a function that always runs `fn` inside it. Fixes EventEmitter listeners / queued callbacks that fire after the run.
+- **RequestContextUnavailableError** — Thrown by `requireRequestContext()` outside a run.
+
+The **default store is process-global** (anchored on a `Symbol.for()` registry key), so duplicate copies of this package in one process — npm dedupe failures, monorepo double-installs — share one store instead of silently splitting context.
 
 ### AsyncLocalStorage caveats
 
-Context is tied to the **async execution** that started in `runWithRequestContext`. It is **not** visible in work started outside that chain (e.g. a callback scheduled with `setTimeout` from another module, or a Worker thread). Pass context explicitly into such code or run the work inside a new `runWithRequestContext`. Also, **nested** `runWithRequestContext` creates a new context that **shadows** the outer one for the duration of the inner `fn`; when the inner fn completes, the outer context is visible again.
+Context is tied to the **async execution** that started in `runWithRequestContext`. It is **not** automatically visible in work started outside that chain (e.g. a callback scheduled with `setTimeout` from another module, or a Worker thread) — wrap such callbacks with **bindRequestContext(fn)** to carry the context along, or pass it explicitly. **Nested** `runWithRequestContext` creates a new context that **shadows** the outer one for the duration of the inner `fn`; use **runWithChildRequestContext** when the inner scope should inherit the outer fields.
 
 ### Client / undefined behavior
 
-The **client** entry point does not use AsyncLocalStorage (not available in browser/Edge). **getRequestContext()** from `@simpill/request-context.utils/client` always returns **undefined**. Use the **server** entry in Node so context is set by middleware and available down the call stack.
+The **client** entry point does not use AsyncLocalStorage (not available in browser/Edge). It mirrors the **full server API surface** so isomorphic code can import the same names from either entry: `run*` helpers execute `fn` without installing context, getters return **undefined**, mutators are no-ops returning **false**, `bindRequestContext` is identity, and `requireRequestContext` always throws. Use the **server** entry in Node so context is set by middleware and available down the call stack.
 
 ### Update / merge
 
-There are no **update** or **merge** helpers. To “change” context, call **getRequestContext()**, build a new object (e.g. `{ ...current, userId: "x" }`), and run **runWithRequestContext(newContext, fn)** for the scope where the updated context should apply. Mutating the object returned by getRequestContext() is possible but not recommended (shared reference).
+- **updateRequestContext(patch)** shallow-merges into the current context object in place — the enrichment pattern: middleware sets `requestId`, the auth guard later adds `userId`, and every log line after (and code that grabbed the context earlier) sees it.
+- **runWithChildRequestContext(patch, fn)** creates a scoped child: a fresh object inheriting the parent's fields with `patch` on top. The parent is never aliased or mutated and is restored when `fn` completes.
 
 ### OpenTelemetry
 
@@ -88,7 +98,7 @@ Use **traceId** and **spanId** from your OpenTelemetry context and pass them int
 
 ### Merge / override semantics
 
-**runWithRequestContext(context, fn)** installs that **context** for the duration of **fn**. There is no merge with a “parent” context. Nested **runWithRequestContext(innerContext, innerFn)** replaces the current context with **innerContext** inside **innerFn**; after **innerFn** returns, the previous (outer) context is restored.
+**runWithRequestContext(context, fn)** installs that **context** for the duration of **fn** — no merge with the parent. Nested runs replace the visible context inside `innerFn` and restore the outer one after. When the inner scope should **inherit** the parent's fields, use **runWithChildRequestContext(patch, fn)**.
 
 ### Node version
 
@@ -96,21 +106,15 @@ Use **traceId** and **spanId** from your OpenTelemetry context and pass them int
 
 ### Express and Koa examples
 
-**Express:** The run must stay active for the whole request. Have the callback return a Promise that resolves when the response finishes so context is visible in all route handlers:
+**Express:** Wrap `next()` in the run — ALS propagates into every handler `next()` invokes, including all their async continuations. Do **not** pass anything to `next()` (Express treats any argument as an error and routes the request to your error handler):
 
 ```ts
-import { runWithRequestContext } from "@simpill/request-context.utils/server";
+import { runWithRequestContextSync } from "@simpill/request-context.utils/server";
 
 app.use((req, res, next) => {
   const requestId = (req.headers["x-request-id"] as string) || crypto.randomUUID();
   const traceId = (req.headers["x-trace-id"] as string) || requestId;
-  runWithRequestContext({ requestId, traceId }, () =>
-    new Promise<void>((resolve, reject) => {
-      res.once("finish", () => resolve());
-      res.once("close", () => resolve());
-      next(reject);
-    })
-  ).catch(next);
+  runWithRequestContextSync({ requestId, traceId }, () => next());
 });
 ```
 
@@ -140,9 +144,8 @@ AsyncLocalStorage does not require explicit cleanup; context is scoped to the ru
 
 ### What we don't provide
 
-- **Update / merge helpers** — No API to “patch” current context; build a new object (e.g. `{ ...getRequestContext(), userId: "x" }`) and call **runWithRequestContext(newContext, fn)** for the scope that should see the update.
 - **OpenTelemetry context propagation** — This package is a simple ALS-backed store. Pass **traceId** / **spanId** from OTel into **RequestContext** in middleware; for full OTel propagation use **@opentelemetry/api**.
-- **Context in client / Edge** — **getRequestContext()** from the client entry always returns **undefined** (no AsyncLocalStorage in browser/Edge).
+- **Real context in client / Edge** — No AsyncLocalStorage in browser/Edge; the client entry ships API-compatible no-op stubs (see above).
 
 ### When to use
 
@@ -157,9 +160,9 @@ AsyncLocalStorage does not require explicit cleanup; context is scoped to the ru
 ## Subpath exports
 
 - `@simpill/request-context.utils` — all
-- `@simpill/request-context.utils/server` — Node store and getter
-- `@simpill/request-context.utils/client` — stub getter (returns undefined)
-- `@simpill/request-context.utils/shared` — types only
+- `@simpill/request-context.utils/server` — Node store + helpers
+- `@simpill/request-context.utils/client` — API-compatible no-op stubs for browser/Edge
+- `@simpill/request-context.utils/shared` — RequestContext type + RequestContextUnavailableError
 
 ## Examples
 
