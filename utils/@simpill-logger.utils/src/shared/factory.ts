@@ -96,6 +96,21 @@ function logAdapterError(adapterError: unknown, entry: LogEntry): void {
   }
 }
 
+/**
+ * Redaction runs on per-call metadata inside the log methods, but default and child metadata is
+ * merged back in by the adapter *after* that point - so a secret bound once at logger creation
+ * was emitted verbatim on every line the logger ever wrote. Redact it up front instead.
+ */
+function redactBoundMetadata(metadata?: LogMetadata): LogMetadata | undefined {
+  if (!metadata) {
+    return metadata;
+  }
+  if (!globalRedactor) {
+    compileRedactor();
+  }
+  return globalRedactor ? globalRedactor(metadata) : metadata;
+}
+
 function createLoggerFromAdapter(adapter: LoggerAdapter, name: string): Logger {
   // Bound once per logger; a disabled level then costs one call + one branch
   const levelGate = adapter.isLevelEnabled ? adapter.isLevelEnabled.bind(adapter) : null;
@@ -152,7 +167,10 @@ function createLoggerFromAdapter(adapter: LoggerAdapter, name: string): Logger {
       const childName = typeof nameOrMetadata === "string" ? `${name}.${nameOrMetadata}` : name;
       const childMetadata =
         typeof nameOrMetadata === "string" ? metadata : (nameOrMetadata as LogMetadata);
-      return createLoggerFromAdapter(adapter.child(childName, childMetadata), childName);
+      return createLoggerFromAdapter(
+        adapter.child(childName, redactBoundMetadata(childMetadata)),
+        childName
+      );
     },
     isLevelEnabled(level: LogLevel): boolean {
       if (isMockEnabled) {
@@ -206,7 +224,7 @@ export function getLogger(name: string, defaultMetadata?: LogMetadata): Logger {
   }
 
   const adapter = getAdapterInternal();
-  const childAdapter = adapter.child(name, defaultMetadata);
+  const childAdapter = adapter.child(name, redactBoundMetadata(defaultMetadata));
   const logger = createLoggerFromAdapter(childAdapter, name);
 
   if (!defaultMetadata) {
