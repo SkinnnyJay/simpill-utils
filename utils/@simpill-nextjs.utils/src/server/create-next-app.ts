@@ -1,10 +1,12 @@
 import type { INextApp } from "../shared/interfaces";
 import { createAnnotationsAdapter, createNoopAnnotations } from "./annotations-adapter";
 import { createSafeAction } from "./create-safe-action";
+import type { CreateInitShutdownOptions } from "./init-shutdown";
 import { createInitShutdown } from "./init-shutdown";
 import { createLoggingIntegration } from "./logging-adapter";
 import { createMiddlewareChain } from "./middleware-chain";
 import { errorResponse, jsonResponse, parseSearchParams } from "./route-helpers";
+import type { CreateRouteRegistryOptions } from "./route-registry";
 import { createRouteRegistry } from "./route-registry";
 import type { WithRequestContextOptions } from "./with-request-context";
 import { getRequestContext, withRequestContext } from "./with-request-context";
@@ -20,6 +22,16 @@ export interface CreateNextAppOptions {
   };
   /** Optional: called when setLogContextProvider is invoked (e.g. wire to logger.utils). */
   setLogContextProvider?: (provider: () => unknown) => void;
+  /** Options for the lifecycle manager (e.g. shutdownOrder: "lifo"). */
+  lifecycle?: CreateInitShutdownOptions;
+  /** Options for the route registry (e.g. onDuplicate: "throw"). */
+  routes?: CreateRouteRegistryOptions;
+  /** Default correlation-id handling for request.withRequestContext. */
+  correlation?: {
+    trustIncomingIds?: boolean;
+    idPattern?: RegExp;
+    readTraceparent?: boolean;
+  };
 }
 
 /**
@@ -27,11 +39,12 @@ export interface CreateNextAppOptions {
  * Use as the entry point for route handlers, middleware, and lifecycle hooks.
  */
 export function createNextApp(options: CreateNextAppOptions = {}): INextApp {
-  const { requestIdHeader, traceIdHeader, annotationsStore, setLogContextProvider } = options;
+  const { requestIdHeader, traceIdHeader, annotationsStore, setLogContextProvider, correlation } =
+    options;
 
-  const routes = createRouteRegistry();
+  const routes = createRouteRegistry(options.routes);
   const middleware = createMiddlewareChain();
-  const lifecycle = createInitShutdown();
+  const lifecycle = createInitShutdown(options.lifecycle);
 
   const requestHelpers: INextApp["request"] = {
     withRequestContext<T>(handler: () => Promise<T>, opts?: WithRequestContextOptions): Promise<T> {
@@ -39,6 +52,9 @@ export function createNextApp(options: CreateNextAppOptions = {}): INextApp {
         requestIdHeader: opts?.requestIdHeader ?? requestIdHeader,
         traceIdHeader: opts?.traceIdHeader ?? traceIdHeader,
         getHeaders: opts?.getHeaders,
+        trustIncomingIds: opts?.trustIncomingIds ?? correlation?.trustIncomingIds,
+        idPattern: opts?.idPattern ?? correlation?.idPattern,
+        readTraceparent: opts?.readTraceparent ?? correlation?.readTraceparent,
       });
     },
     parseSearchParams(req, schema) {

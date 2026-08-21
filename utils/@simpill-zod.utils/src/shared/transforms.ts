@@ -5,24 +5,32 @@
 import { z } from "zod";
 
 /**
- * Preprocesses string with trim. Use with z.string().
+ * Preprocesses string with trim BEFORE the schema's own checks run.
+ * Previously this used .transform(), which runs AFTER validation — so
+ * trimString(z.string().min(1)) accepted " " (passes min(1) pre-trim)
+ * and emitted "", violating the schema's stated contract.
+ * Non-string inputs pass through untouched so the inner schema reports
+ * the proper type error.
  */
-export function trimString<T extends z.ZodString>(schema: T): z.ZodEffects<T, string, string> {
-  return schema.transform((s) => s.trim());
+export function trimString<T extends z.ZodString>(schema: T) {
+  return z.preprocess((v) => (typeof v === "string" ? v.trim() : v), schema);
 }
 
 /**
- * Preprocesses string to lowercase. Use with z.string().
+ * Preprocesses string to lowercase BEFORE the schema's checks run
+ * (same post-validation ordering bug as trimString, now fixed):
+ * lowerString(z.string().regex(/^[a-z]+$/)).parse("ABC") now yields "abc"
+ * instead of rejecting input it was documented to normalize.
  */
-export function lowerString<T extends z.ZodString>(schema: T): z.ZodEffects<T, string, string> {
-  return schema.transform((s) => s.toLowerCase());
+export function lowerString<T extends z.ZodString>(schema: T) {
+  return z.preprocess((v) => (typeof v === "string" ? v.toLowerCase() : v), schema);
 }
 
 /**
- * Preprocesses string to uppercase. Use with z.string().
+ * Preprocesses string to uppercase BEFORE the schema's checks run.
  */
-export function upperString<T extends z.ZodString>(schema: T): z.ZodEffects<T, string, string> {
-  return schema.transform((s) => s.toUpperCase());
+export function upperString<T extends z.ZodString>(schema: T) {
+  return z.preprocess((v) => (typeof v === "string" ? v.toUpperCase() : v), schema);
 }
 
 /**

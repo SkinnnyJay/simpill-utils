@@ -13,6 +13,22 @@ export type ValidationErrorPayload = {
 };
 
 /**
+ * Error thrown by parseOrThrowValidation. instanceof-checkable (previously a
+ * bare Error with a bolted-on property, so catch blocks had to duck-type it).
+ * Carries the API payload; message and .payload shape are unchanged.
+ */
+export class ValidationError extends Error {
+  readonly payload: ValidationErrorPayload;
+
+  constructor(payload: ValidationErrorPayload) {
+    super(payload.message);
+    this.name = "ValidationError";
+    this.payload = payload;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+/**
  * Converts a failed parse result into a consistent validation error payload for APIs.
  * Use in route handlers: if (!result.success) return res.status(400).json(toValidationError(result)).
  */
@@ -28,7 +44,7 @@ export function toValidationError(result: {
 }
 
 /**
- * Asserts input parses with schema; throws an Error with payload for API handlers.
+ * Asserts input parses with schema; throws a ValidationError with payload for API handlers.
  * Useful in backend when you want to throw and catch to return 400 with details.
  */
 export function parseOrThrowValidation<Schema extends z.ZodType>(
@@ -39,8 +55,5 @@ export function parseOrThrowValidation<Schema extends z.ZodType>(
   if (parsed.success) {
     return parsed.data;
   }
-  const payload: ValidationErrorPayload = toValidationError(parsed);
-  const err = new Error(payload.message) as Error & { payload: ValidationErrorPayload };
-  err.payload = payload;
-  throw err;
+  throw new ValidationError(toValidationError(parsed));
 }

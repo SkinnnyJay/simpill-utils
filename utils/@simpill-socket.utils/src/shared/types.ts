@@ -4,10 +4,14 @@ export interface ReconnectOptions {
   initialDelayMs?: number;
   maxDelayMs?: number;
   backoffMultiplier?: number;
-  /** "none" | "full" | "equal" - jitter applied to delay before reconnect */
-  jitter?: "none" | "full" | "equal";
+  /** "none" | "full" | "equal" | "decorrelated" - jitter applied to delay before reconnect */
+  jitter?: "none" | "full" | "equal" | "decorrelated";
   /** 0–1; used when jitter is "equal" for min/max range. Default 0.5 */
   jitterRatio?: number;
+  /** Connection must stay open this long before the attempt counter resets. Default 5000 */
+  minUptimeMs?: number;
+  /** Abort a CONNECTING attempt after this many ms and retry (stuck TCP/TLS). Off by default */
+  connectTimeoutMs?: number;
 }
 
 /** Heartbeat ping and optional pong detection. */
@@ -68,6 +72,8 @@ export interface ReconnectingWebSocketState {
   lastCloseAt: number | null;
   attemptCount: number;
   reconnectAttempt: number;
+  /** Messages currently buffered in the outbound queue (0 when queue disabled). */
+  queuedCount: number;
 }
 
 /** Lifecycle and message event hooks. */

@@ -1,6 +1,7 @@
 {
   "name": "@simpill/annotations.utils",
   "version": "1.0.0",
+  "deprecated": "Prefer @simpill/function.utils (createMetadataStore / getMetadata / setMetadata). This package remains a stable re-export for existing consumers.",
   "description": "Typed metadata store and annotation helpers for symbols and keys (Node and Edge).",
   "repository": {
     "type": "git",
@@ -60,7 +61,7 @@
     "typescript",
     "utilities",
     "type-safe",
-    "esm",
+    "cjs",
     "tree-shakeable",
     "annotations",
     "metadata",
@@ -69,6 +70,9 @@
   "author": "@SkinnnyJay",
   "license": "ISC",
   "sideEffects": false,
+  "dependencies": {
+    "@simpill/function.utils": "file:../@simpill-function.utils"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
     "@types/jest": "^30.0.0",

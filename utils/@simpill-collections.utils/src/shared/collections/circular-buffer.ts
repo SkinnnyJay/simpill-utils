@@ -5,7 +5,7 @@ import type { ICollection } from "../contracts";
  * Fixed-capacity ring buffer. Oldest entries dropped when full.
  */
 export class CircularBuffer<T> implements ICollection<T> {
-  private readonly _buffer: T[];
+  private readonly _buffer: (T | undefined)[];
   private _head = VALUE_0;
   private _size = VALUE_0;
   private readonly _capacity: number;
@@ -33,6 +33,8 @@ export class CircularBuffer<T> implements ICollection<T> {
   }
 
   clear(): void {
+    // Release references: previously every entry stayed reachable after clear().
+    this._buffer.fill(undefined);
     this._head = VALUE_0;
     this._size = VALUE_0;
   }
@@ -45,8 +47,11 @@ export class CircularBuffer<T> implements ICollection<T> {
     return out;
   }
 
-  [Symbol.iterator](): Iterator<T> {
-    return this.toArray()[Symbol.iterator]();
+  *[Symbol.iterator](): IterableIterator<T> {
+    // Lazy: no full-array copy per iteration. Do not mutate while iterating.
+    for (let i = 0; i < this._size; i++) {
+      yield this._buffer[(this._head + i) % this._capacity] as T;
+    }
   }
 
   push(value: T): void {
@@ -61,24 +66,25 @@ export class CircularBuffer<T> implements ICollection<T> {
 
   shift(): T | undefined {
     if (this._size === VALUE_0) return undefined;
-    const value = this._buffer[this._head];
+    const value = this._buffer[this._head] as T;
+    this._buffer[this._head] = undefined; // release the reference for GC
     this._head = (this._head + 1) % this._capacity;
     this._size--;
     return value;
   }
 
   peekFront(): T | undefined {
-    return this._size === VALUE_0 ? undefined : this._buffer[this._head];
+    return this._size === VALUE_0 ? undefined : (this._buffer[this._head] as T);
   }
 
   peekBack(): T | undefined {
     if (this._size === VALUE_0) return undefined;
     const idx = (this._head + this._size - 1) % this._capacity;
-    return this._buffer[idx];
+    return this._buffer[idx] as T;
   }
 
   get(index: number): T | undefined {
     if (index < 0 || index >= this._size) return undefined;
-    return this._buffer[(this._head + index) % this._capacity];
+    return this._buffer[(this._head + index) % this._capacity] as T;
   }
 }

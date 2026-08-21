@@ -1,14 +1,20 @@
 export {
+  type ApproxEqualOptions,
+  approxEqual,
   avg,
   clamp,
+  type IsInRangeOptions,
+  inverseLerp,
   isFiniteNumber,
   isInRange,
-  type IsInRangeOptions,
   isInteger,
   lerp,
+  type RoundToOptions,
   randomInt,
+  remap,
   roundTo,
   sum,
+  sumPrecise,
   toFloat,
   toInt,
-} from "../shared";
+} from "../shared/number.utils";

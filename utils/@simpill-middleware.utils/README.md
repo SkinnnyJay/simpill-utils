@@ -42,13 +42,22 @@ The middleware reads requestId/traceId from headers (if present), otherwise gene
 
 ## API
 
-- **createCorrelationMiddleware(options?)** — Returns Middleware; options: requestIdHeader, traceIdHeader, generateRequestId.
-- **compose(middlewares)** — Returns a single Middleware that runs the array in order.
-- **Middleware, Next, MiddlewareRequest, MiddlewareResponse** — Shared types.
+- **createCorrelationMiddleware(options?)** — Returns Middleware; options: requestIdHeader, traceIdHeader, generateRequestId, trustIncomingIds, isValidId, useTraceparent, setResponseHeaders.
+- **compose(middlewares)** — Returns a single Middleware that runs the array in order, with Express-style `next(err)` propagation and a koa-compose-style guard against `next()` being called multiple times.
+- **parseTraceparent(value)** — Parse a W3C Trace Context `traceparent` header; returns `{ version, traceId, parentId, traceFlags, sampled }` or `undefined` for anything the spec says to ignore (malformed, version `ff`, all-zero ids).
+- **Middleware, Next, ErrorMiddleware, HeadersLike, MiddlewareRequest, MiddlewareResponse, TraceparentData** — Shared types.
 
 ### Compose helper
 
 **compose(middlewares)** returns a single middleware that runs the array in order; each middleware receives a **next** that invokes the next in the chain. Use when stacking multiple middlewares into one (e.g. for a custom pipeline or testing). With Express you can also chain by registering in order: `app.use(m1); app.use(m2);`.
+
+Semantics:
+
+- **Errors propagate.** `next(err)` with a truthy argument skips the remaining composed middlewares and forwards the argument to the terminal `next` — exactly what Express does. Router sentinels (`next("route")`) are forwarded the same way. Falsy arguments (`next()`, `next(null)`) continue the chain.
+- **Double `next()` is caught.** Calling `next()` more than once from the same middleware rejects with `"next() called multiple times"` (koa-compose behavior) instead of re-running downstream middlewares and the terminal `next` — the classic double-response bug.
+- **Sync throws stay synchronous.** Express 4 catches synchronous throws and routes them to error handlers; compose does not convert them into rejections. Async rejections propagate through the returned promise when middlewares `await next()`.
+- **The array is snapshotted.** Mutating it after `compose(...)` does not change the composed chain.
+- Passing a non-array or a non-function element throws a `TypeError` at compose time.
 
 ```ts
 import { compose, type Middleware } from "@simpill/middleware.utils";
@@ -73,7 +82,7 @@ fastify.addHook("onRequest", (request, reply, done) => {
 
 ### Error middleware typing
 
-Error-handling middleware that takes **(err, req, res, next)** is **not** part of this package. The **Middleware** type is **(req, res, next)** only. For error middleware use your framework’s types or define `MiddlewareError = (err: Error, req, res, next: Next) => void | Promise<void>` and register it after normal middleware.
+Error-handling middleware that takes **(err, req, res, next)** is exported as the **ErrorMiddleware** type. compose does not invoke it (that is framework territory) — register it with your framework after the normal chain. Inside a composed stack, `next(err)` short-circuits the remaining composed middlewares and hands `err` to the terminal `next`, so Express routes it to your error middleware as usual.
 
 ### Context typing
 
@@ -103,11 +112,26 @@ Use **@simpill/logger.utils** with **setLogContextProvider(() => getRequestConte
 
 Incoming headers are read in a **case-insensitive** way (lookup uses lowercase first, then the original key). Response headers are set with the **exact** names you pass in options (e.g. **requestIdHeader: CORRELATION_HEADERS.REQUEST_ID** from `@simpill/protocols.utils`); HTTP header names are case-insensitive but the string you provide is what **setHeader** receives.
 
+### Incoming id validation (security)
+
+Client-supplied `x-request-id` / `x-trace-id` values are untrusted input. By default the middleware only accepts ids of 1–128 characters from `[A-Za-z0-9._~-]` (covers UUID, ULID, KSUID, base62 and base64url ids); anything else — oversized values, whitespace, control characters, log-delimiter payloads — is **discarded and replaced with a generated id**, never reflected into response headers, the request context, or your logs. Tune with:
+
+- **isValidId(id)** — replace the default validator.
+- **trustIncomingIds: false** — never accept client ids at all (Envoy-style edge sanitization); every request gets a fresh generated id.
+
+### W3C traceparent
+
+When the trace-id header is absent, the middleware falls back to the [W3C Trace Context](https://www.w3.org/TR/trace-context/) `traceparent` header (the format OpenTelemetry propagates). On a valid header the context gets **traceId** (the 32-hex trace-id) and **spanId** (the 16-hex parent-id); malformed values, version `ff`, and all-zero ids are ignored per spec. Disable with **useTraceparent: false**. An explicit trace-id header always wins (backward compatible). `parseTraceparent` is exported if you need the parser directly.
+
+### Edge / Fetch Headers
+
+`req.headers` may be either the Node-style plain record or a Fetch-API `Headers` object (`.get(name)`), so the correlation middleware works in Edge-style hooks too — matching the package description ("Node and Edge").
+
 ### What we don't provide
 
-- **compose** — No middleware composition helper; chain via your framework (**app.use(m1); app.use(m2)**) or manual **next** wrapping.
-- **Error middleware type** — **Middleware** is **(req, res, next)** only; for **(err, req, res, next)** define your own type and register with the framework.
-- **Next.js / Edge** — No **(req, res, next)** stack there; use **runWithRequestContext** from **@simpill/request-context.utils** in the route handler.
+- **A middleware runner.** compose returns a middleware; something (your framework, or your own call) still has to invoke it.
+- **Error middleware execution.** The **ErrorMiddleware** type `(err, req, res, next)` is exported for convenience, but compose never invokes error middlewares — register them with your framework after the normal chain.
+- **A full Next.js / Edge middleware stack.** There is no (req, res, next) pipeline in those runtimes; call **runWithRequestContext** in the route handler. createCorrelationMiddleware does, however, read ids from Fetch-API `Headers` objects if you adapt it into an Edge-style hook.
 
 ### When to use
 
@@ -117,7 +141,7 @@ Incoming headers are read in a **case-insensitive** way (lookup uses lowercase f
 | Request-scoped logging | Combine with **setLogContextProvider(getRequestContext)** and **runWithRequestContext** so logs include requestId/traceId. |
 | Next.js / Edge API routes | Use **runWithRequestContext** in the handler; no (req, res, next) middleware. |
 | Custom Req/Res types | Use **Middleware&lt;MyReq, MyRes&gt;** and ensure req has **headers**, res has **setHeader**. |
-| Chaining many middlewares | Use framework’s **app.use** order; no compose helper in this package. |
+| Chaining many middlewares | Use **compose(middlewares)** (error-propagating, double-next guarded) or the framework's **app.use** order. |
 
 Subpaths: `@simpill/middleware.utils`, `./client` (types only), `./server`, `./shared`.
 

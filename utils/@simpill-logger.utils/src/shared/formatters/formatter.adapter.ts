@@ -1,6 +1,7 @@
 /** Formatter plugin interface with full context access. */
 
 import { ENV_KEYS, LOG_LEVEL, type LogLevel } from "../constants";
+import { safeStringify } from "../safe-stringify";
 import type { LogEntry, LogMetadata } from "../types";
 
 export interface FormatterContext {
@@ -80,5 +81,7 @@ export function outputToString(output: FormattedOutput): string {
   if (typeof output === "string") {
     return output;
   }
-  return JSON.stringify(output);
+  // safeStringify: JSON-mode formatters return the metadata object embedded in
+  // the output — a circular reference here used to throw and lose the entry
+  return safeStringify(output);
 }

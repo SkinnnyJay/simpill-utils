@@ -77,7 +77,7 @@
     "typescript",
     "utilities",
     "type-safe",
-    "esm",
+    "cjs",
     "tree-shakeable",
     "env",
     "dotenv",

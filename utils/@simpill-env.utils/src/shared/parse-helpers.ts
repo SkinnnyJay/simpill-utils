@@ -8,7 +8,9 @@ import {
 import { EnvParseError, EnvValidationError } from "./errors";
 
 export function parseNumberEnvValue(rawValue: string, defaultValue: number): number {
-  if (rawValue === "") {
+  // Whitespace-only guard: Number(" ") === 0, so `PORT= ` (a hand-edited
+  // .env with a stray space) silently parsed to 0 instead of the default.
+  if (rawValue.trim() === "") {
     return defaultValue;
   }
   const parsedValue: number = Number(rawValue);
@@ -16,10 +18,13 @@ export function parseNumberEnvValue(rawValue: string, defaultValue: number): num
 }
 
 export function parseBooleanEnvValue(rawValue: string, defaultValue: boolean): boolean {
-  if (rawValue === "") {
+  // Trim guard: `DEBUG=true ` (trailing space) silently fell through to
+  // the default because "true " !== "true". Numbers already trimmed via
+  // Number(); booleans now match.
+  const normalizedValue: string = rawValue.trim().toLowerCase();
+  if (normalizedValue === "") {
     return defaultValue;
   }
-  const normalizedValue: string = rawValue.toLowerCase();
   if (normalizedValue === BOOLEAN_TRUTHY.TRUE || normalizedValue === BOOLEAN_TRUTHY.ONE) {
     return true;
   }
@@ -31,7 +36,9 @@ export function parseBooleanEnvValue(rawValue: string, defaultValue: boolean): b
 
 /** @throws {EnvParseError} If the value cannot be parsed as a number */
 export function parseNumberEnvValueStrict(key: string, rawValue: string): number {
-  if (rawValue === "") {
+  // Number(" ") === 0: without the trim guard a whitespace-only value
+  // passed STRICT parsing and returned 0 instead of throwing.
+  if (rawValue.trim() === "") {
     throw new EnvParseError(key, rawValue, ENV_PARSE_TYPE.NUMBER);
   }
   const parsedValue: number = Number(rawValue);
@@ -43,10 +50,10 @@ export function parseNumberEnvValueStrict(key: string, rawValue: string): number
 
 /** @throws {EnvParseError} If the value cannot be parsed as a boolean */
 export function parseBooleanEnvValueStrict(key: string, rawValue: string): boolean {
-  if (rawValue === "") {
+  const normalizedValue: string = rawValue.trim().toLowerCase();
+  if (normalizedValue === "") {
     throw new EnvParseError(key, rawValue, ENV_PARSE_TYPE.BOOLEAN);
   }
-  const normalizedValue: string = rawValue.toLowerCase();
   if (normalizedValue === BOOLEAN_TRUTHY.TRUE || normalizedValue === BOOLEAN_TRUTHY.ONE) {
     return true;
   }

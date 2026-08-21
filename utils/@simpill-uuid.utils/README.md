@@ -29,12 +29,13 @@ import {
   compareUUIDs,
 } from "@simpill/uuid.utils";
 
-const id = generateUUID();
-const v4 = generateUUIDv4();
+const id = generateUUID();          // v4, native crypto.randomUUID fast path
+const v7 = generateUUIDv7();        // RFC 9562 time-ordered, monotonic (great for DB keys)
 if (isUUID(id)) { /* ... */ }
-validateUUID(id); // true if valid, false otherwise (does not throw)
-compareUUIDs(a, b); // true if equal, false otherwise
-parseUUID(str);    // returns UUID string or null
+validateUUID(id); // true if valid RFC 9562 UUID (versions 1-8, Nil, Max); does not throw
+compareUUIDs(a, b); // true if same UUID (case-insensitive per RFC 9562)
+parseUUID(str);     // returns UUID string or null
+getUUIDv7Timestamp(v7); // Unix ms embedded in a v7 UUID
 ```
 
 ---
@@ -43,12 +44,16 @@ parseUUID(str);    // returns UUID string or null
 
 | Feature | Description |
 |---------|-------------|
-| **generateUUID** / **generateUUIDv4** | Generate UUIDs (v4 default) |
+| **generateUUID** / **generateUUIDv4** | Generate v4 UUIDs (native `crypto.randomUUID` fast path) |
+| **generateUUIDv7** | RFC 9562 time-ordered UUIDs with a per-process monotonicity guarantee |
 | **generateUUIDv1** / **generateUUIDv5** | Version-specific generation |
-| **validateUUID** | Returns true if valid, false otherwise (does not throw) |
-| **isUUID** | Type guard / boolean check (same as validateUUID) |
-| **parseUUID** | Returns UUID string if valid, otherwise null |
-| **compareUUIDs** | Returns true if equal, false otherwise (case-sensitive) |
+| **validateUUID** | True for any valid RFC 9562 UUID (versions 1-8, Nil, Max); does not throw |
+| **isUUID** / **isUUIDv7** | Boolean checks |
+| **uuidVersion** | Extract the version number (1-8; 0 for Nil/Max; null if invalid) |
+| **getUUIDv7Timestamp** | Unix millisecond timestamp embedded in a v7 UUID |
+| **parseUUID** / **normalizeUUID** | Validate-and-return; normalize returns canonical lowercase |
+| **compareUUIDs** | True if same UUID — case-insensitive per RFC 9562 |
+| **NIL_UUID** / **MAX_UUID** | RFC 9562 special-value constants |
 | **UUIDHelper** | Object with same methods |
 
 ---
@@ -66,11 +71,16 @@ import { ... } from "@simpill/uuid.utils/shared";  // Shared only
 
 ## API Reference
 
-- **generateUUID**(), **generateUUIDv1**(), **generateUUIDv4**(), **generateUUIDv5**(namespace, name)
-- **validateUUID**(uuid) → boolean — true if valid RFC 4122 UUID
+- **generateUUID**(), **generateUUIDv1**(), **generateUUIDv4**(), **generateUUIDv5**(name, namespace), **generateUUIDv7**()
+- **validateUUID**(uuid) → boolean — true if valid RFC 9562 UUID (versions 1-8, Nil, Max)
 - **isUUID**(uuid) → boolean — same as validateUUID
+- **isUUIDv7**(uuid) → boolean — true if a valid v7 UUID
+- **uuidVersion**(uuid) → number | null — version 1-8, 0 for Nil/Max, null if invalid
+- **getUUIDv7Timestamp**(uuid) → number | null — Unix ms embedded in a v7 UUID
 - **parseUUID**(value) → string | null — returns the string if valid, null otherwise
-- **compareUUIDs**(a, b) → boolean — true if equal (case-sensitive)
+- **normalizeUUID**(value) → string | null — canonical lowercase form, null if invalid
+- **compareUUIDs**(a, b) → boolean — true if same UUID (case-insensitive per RFC 9562)
+- **NIL_UUID**, **MAX_UUID** — special-value constants
 - **UUIDHelper** — namespace object with the same methods
 
 ---
@@ -92,13 +102,14 @@ import { NAMESPACE_DNS } from "uuid";
 const id = generateUUIDv5("example.com", NAMESPACE_DNS);
 ```
 
-**Case sensitivity:** RFC 4122 permits lowercase and uppercase hex. This package compares UUIDs with strict string equality (`compareUUIDs`); normalize to lowercase (e.g. `uuid.toLowerCase()`) before comparing if you need case-insensitive equality.
+**Case sensitivity:** RFC 9562 permits lowercase and uppercase hex and assigns no meaning to case. `compareUUIDs` is case-insensitive accordingly (with an `===` fast path). Use `normalizeUUID` to get the canonical lowercase form for storage.
+
+**UUIDv7 for database keys:** `generateUUIDv7()` embeds a 48-bit Unix millisecond timestamp, so IDs sort chronologically and cluster well in B-tree indexes. Within a process, output is strictly monotonic even under high-frequency generation (RFC 9562 §6.2 Method 1: dedicated 12-bit counter in `rand_a`, random-seeded per tick) and never regresses when the system clock steps backwards.
 
 ### What we don’t provide
 
-- **UUID v3 / v7** — Only v1, v4, and v5 are supported. For v3 (MD5-based) or v7 (time-ordered), use the `uuid` package directly.
-- **Stringify / parse bytes** — No conversion between UUID strings and 16-byte buffers. Use the `uuid` package (`bufferFromUUID` / `uuidToBuffer`-style APIs) if you need binary serialization.
-- **Version-specific guards** — No `isUUIDv4(str)` or similar. Use `validateUUID(str)` and, if you need the version, parse the 13th character (e.g. `str[14]` for the version nibble) or use a library that exposes version helpers.
+- **UUID v3 / v6 / v8 generation** — v1, v4, v5, and v7 are supported for generation. For v3 (MD5-based), v6, or v8, use the `uuid` package directly. (Validation accepts all RFC 9562 versions.)
+- **Stringify / parse bytes** — No conversion between UUID strings and 16-byte buffers. Use the `uuid` package if you need binary serialization.
 
 | Example | Description |
 |---------|-------------|

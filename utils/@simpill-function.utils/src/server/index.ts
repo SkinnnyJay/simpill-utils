@@ -1,13 +1,16 @@
-export type { CancellableFunction, ThrottleOptions } from "../shared";
+export type { CancellableFunction, MetadataKey, MetadataStore, ThrottleOptions } from "../shared";
 export {
   compose,
   composeWith,
+  createMetadataStore,
   debounce,
   deleteAnnotation,
   fillArgs,
   firstArg,
   getAnnotation,
   getAnnotations,
+  getMetadata,
+  globalMetadataStore,
   hasAnnotation,
   lastArg,
   noop,
@@ -17,6 +20,7 @@ export {
   requireArgs,
   restArgs,
   setAnnotation,
+  setMetadata,
   spreadArgs,
   throttle,
 } from "../shared";

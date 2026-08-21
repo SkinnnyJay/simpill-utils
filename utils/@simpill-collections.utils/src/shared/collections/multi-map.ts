@@ -73,4 +73,25 @@ export class MultiMap<K, V> {
   [Symbol.iterator](): IterableIterator<[K, V[]]> {
     return this._map.entries();
   }
+
+  /** Total number of values across all keys (size counts keys). */
+  countValues(): number {
+    let total = VALUE_0;
+    for (const arr of this._map.values()) total += arr.length;
+    return total;
+  }
+
+  /** Iterate every [key, value] pair (one entry per value, not per key). */
+  *flatEntries(): IterableIterator<[K, V]> {
+    for (const [key, arr] of this._map) {
+      for (const value of arr) yield [key, value];
+    }
+  }
+
+  /** Iterate every value across all keys. */
+  *flatValues(): IterableIterator<V> {
+    for (const arr of this._map.values()) {
+      for (const value of arr) yield value;
+    }
+  }
 }

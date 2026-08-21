@@ -10,3 +10,7 @@ export const ERROR_USE_CTX_OUTSIDE_SUFFIX =
 /** useSafeContext outside provider. */
 export const ERROR_USE_SAFE_CONTEXT_OUTSIDE_PROVIDER =
   "useSafeContext must be used within the corresponding Provider." as const;
+
+/** useEffectEvent called during render (ponyfill guard for pre-19.2 React). */
+export const ERROR_EFFECT_EVENT_RENDER =
+  "A function wrapped in useEffectEvent can't be called during rendering." as const;

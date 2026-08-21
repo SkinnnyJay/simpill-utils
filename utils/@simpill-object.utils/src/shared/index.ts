@@ -10,16 +10,20 @@ export {
   type BoundedLRUMapOptions,
   type BoundedLRUMapStats,
 } from "./bounded-lru-map";
+export { safeClone } from "./clone";
 export {
   createWithDefaults,
   defineReadOnly,
   fromEntries,
 } from "./create";
 export {
+  deleteByPath,
   getByPath,
   getByPathOrDefault,
   hasPath,
+  type PropertyPath,
   setByPath,
+  toPathSegments,
 } from "./get-set";
 export {
   hasOwn,

@@ -4,12 +4,13 @@
   "description": "Zustand store helpers: factory, persist, devtools, slices (Node and Edge).",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/zustand.utils.git"
+    "url": "https://github.com/SkinnnyJay/simpill-utils.git",
+    "directory": "utils/@simpill-zustand.utils"
   },
   "bugs": {
-    "url": "https://github.com/SkinnnyJay/zustand.utils/issues"
+    "url": "https://github.com/SkinnnyJay/simpill-utils/issues"
   },
-  "homepage": "https://github.com/SkinnnyJay/zustand.utils#readme",
+  "homepage": "https://github.com/SkinnnyJay/simpill-utils/tree/main/utils/@simpill-zustand.utils#readme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -60,7 +61,7 @@
     "typescript",
     "utilities",
     "type-safe",
-    "esm",
+    "cjs",
     "tree-shakeable",
     "zustand",
     "react",
@@ -70,19 +71,18 @@
   "author": "",
   "license": "ISC",
   "sideEffects": false,
-  "dependencies": {
-    "zustand": "^5.0.2"
-  },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.11.0",
     "jest": "^30.2.0",
     "ts-jest": "^29.4.6",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "zustand": "^5.0.2"
   },
   "peerDependencies": {
-    "typescript": ">=4.0.0"
+    "typescript": ">=4.0.0",
+    "zustand": "^5.0.2"
   },
   "engines": {
     "node": ">=16.0.0"

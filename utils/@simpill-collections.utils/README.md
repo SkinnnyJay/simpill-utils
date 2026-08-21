@@ -52,7 +52,7 @@ Shared interfaces for consistent APIs:
 
 ### LinkedList
 
-Doubly linked list. O(1) insert/remove at head/tail.
+Doubly linked list. O(1) insert/remove at head/tail; index access walks from the closer end (O(n/2)). Iteration is lazy, and `reversed()` iterates tail-to-head. `removeAt` returns `undefined` for out-of-range indices.
 
 ```ts
 import { LinkedList } from "@simpill/collections.utils";
@@ -98,7 +98,7 @@ stack.pop(); // 2
 
 ### Deque
 
-Double-ended queue. Push/pop at both ends.
+Double-ended queue. Push/pop at both ends, O(1) random access via `at(index)`, lazy iteration plus `reversed()`. Popped slots are cleared so large objects are not retained by the ring buffer.
 
 ```ts
 import { Deque } from "@simpill/collections.utils";
@@ -127,7 +127,7 @@ b.shift(); // 2
 
 ### LRUCache
 
-Size-bounded cache with least-recently-used eviction.
+Size-bounded cache with least-recently-used eviction. `peek()` reads without refreshing recency; `keys()`/`values()`/`entries()`/`forEach`/`[Symbol.iterator]` iterate from most to least recently used (mnemonist convention).
 
 ```ts
 import { LRUCache } from "@simpill/collections.utils";
@@ -141,7 +141,7 @@ cache.set("b", 2);
 
 ### TTLCache
 
-Entries expire after a TTL (ms). Optional `maxSize` with LRU eviction. Expired entries are pruned on `set()`, `get()`, and when reading `size`; **prune is O(n)** in the number of entries, so when many entries are expired, these operations may be slow.
+Entries expire after a TTL (ms). Optional `maxSize` with LRU eviction. All operations are **O(1) amortized**: recency uses the Map's own insertion order (delete + re-insert), expiry is checked lazily on read, and a full expiry sweep runs at most once per TTL window. Reading `size` forces a sweep so it stays exact (O(n)). Extras: `peek()` (read without recency touch), `getRemainingTTL()`, and live-entry `keys()`/`values()`/`entries()`/`[Symbol.iterator]` in LRU-first order. `has()` does not refresh recency and is correct for stored `undefined` values.
 
 ```ts
 import { TTLCache } from "@simpill/collections.utils";
@@ -153,7 +153,7 @@ cache.get("a"); // 1 within TTL
 
 ### MultiMap
 
-One key maps to multiple values.
+One key maps to multiple values. `size` counts keys; `countValues()` counts values; `flatEntries()`/`flatValues()` iterate per value.
 
 ```ts
 import { MultiMap } from "@simpill/collections.utils";
@@ -166,7 +166,7 @@ m.get("tags"); // [1, 2]
 
 ### BiMap
 
-Bidirectional map. Key and value are both unique.
+Bidirectional map. Key and value are both unique. With no options, entries use native Map identity (SameValueZero) — `1` and `"1"` are distinct keys, symbols never collide. `equalsKey`/`equalsValue` enable custom equality (linear scan, O(n) per op); `hashKey`/`hashValue` enable custom O(1) hashing. `entries()` and `[Symbol.iterator]` yield `[key, value]` pairs.
 
 ```ts
 import { BiMap } from "@simpill/collections.utils";
@@ -243,9 +243,10 @@ npx ts-node examples/01-basic-usage.ts
 | Deque          | —              | O(1) both ends             | O(n)      |
 | CircularBuffer | O(1) by index  | O(1) push/shift           | O(n)      |
 | LRUCache       | O(1) get/set   | O(1) eviction             | O(n)      |
-| TTLCache       | O(1) get/set   | Expiry prune on get/size  | O(n)      |
-| OrderedMap     | O(1) get       | O(1) set                  | O(n)      |
-| TypedSet       | O(n) has       | O(n) add (no hash)        | O(n)      |
+| TTLCache       | O(1) get/set (amortized) | sweep ≤ once per TTL window | O(n)      |
+| OrderedMap     | O(1) get       | O(1) set, O(n) delete     | O(n)      |
+| TypedSet       | O(1) has (default) / O(n) custom equals | O(1) add (default) / O(n) custom equals | O(n) |
+| BiMap          | O(1) (native/hash) / O(n) custom equals | O(1) (native/hash) / O(n) custom equals | O(n) |
 
 ### Iteration and serialize
 

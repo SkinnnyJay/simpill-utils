@@ -8,6 +8,10 @@ import {
 /**
  * Bounded LRU Map: size-limited Map with least-recently-used eviction.
  * Optional logger for alerts when usage exceeds a threshold.
+ *
+ * This implementation is preserved for backward compatibility.
+ * New code should prefer LRUMap or LRUCache from @simpill/cache.utils, which offer
+ * the same LRU semantics without the embedded alerting concern.
  */
 
 /** Minimal logger interface for optional alerting. */
