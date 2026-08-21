@@ -173,3 +173,58 @@ describe("BufferedLoggerAdapter uplift", () => {
     expect(buf.isLevelEnabled(LOG_LEVEL.DEBUG)).toBe(true);
   });
 });
+
+describe("BufferedLoggerAdapter throwing onFlushError handler", () => {
+  const makeInner = (state: { fail: boolean; delivered: string[] }): LoggerAdapter => ({
+    initialize(): void {},
+    log(e: LogEntry): void {
+      if (state.fail) {
+        throw new Error("sink down");
+      }
+      state.delivered.push(e.message);
+    },
+    child(): LoggerAdapter {
+      throw new Error("unused");
+    },
+    isLevelEnabled(_level: LogLevel): boolean {
+      return true;
+    },
+  });
+
+  it("never rejects flush(), and keeps flushing after the handler throws", async () => {
+    const state = { fail: true, delivered: [] as string[] };
+    const buf = new BufferedLoggerAdapter(makeInner(state), {
+      onFlushError: (): void => {
+        throw new Error("user handler bug");
+      },
+    });
+
+    buf.log(mk("m1"));
+    await expect(buf.flush()).resolves.toBeUndefined();
+
+    buf.log(mk("m2"));
+    await expect(buf.flush()).resolves.toBeUndefined();
+
+    // The sink recovers; the retained backlog must still drain rather than stay
+    // wedged behind a permanently rejected pendingFlush chain.
+    state.fail = false;
+    await expect(buf.flush()).resolves.toBeUndefined();
+    expect(state.delivered).toEqual(["m1", "m2"]);
+  });
+
+  it("still drains the buffer on destroy() after the handler threw", async () => {
+    const state = { fail: true, delivered: [] as string[] };
+    const buf = new BufferedLoggerAdapter(makeInner(state), {
+      onFlushError: (): void => {
+        throw new Error("user handler bug");
+      },
+    });
+
+    buf.log(mk("m1"));
+    await buf.flush();
+    state.fail = false;
+
+    await expect(buf.destroy()).resolves.toBeUndefined();
+    expect(state.delivered).toEqual(["m1"]);
+  });
+});

@@ -259,7 +259,11 @@ export function sum(values: number[]): number {
     c += Math.abs(s) >= Math.abs(v) ? s - t + v : v - t + s;
     s = t;
   }
-  return s + c;
+  // Standard Kahan-Babuska-Neumaier finalisation. On a non-finite running total the
+  // compensation term is NaN (Infinity - Infinity), so adding it turned a correct Infinity
+  // into NaN - making this *less* accurate than a naive reduce on exactly the inputs the
+  // docstring claims it handles better.
+  return Number.isFinite(s) ? s + c : s;
 }
 
 type MathWithSumPrecise = Math & {

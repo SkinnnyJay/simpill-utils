@@ -158,7 +158,7 @@ describe("fetchWithTimeout with a user signal", () => {
     expect(Date.now() - start).toBeLessThan(2000);
   });
 
-  it("should keep passing the user's signal through identically by default", async () => {
+  it("should keep passing the user's signal through identically when composeSignal is false", async () => {
     const controller = new AbortController();
     let received: AbortSignal | undefined;
     const fetcher = jest.fn().mockImplementation((_url: string, init?: RequestInit) => {
@@ -168,7 +168,7 @@ describe("fetchWithTimeout with a user signal", () => {
     await fetchWithTimeout(
       "https://x",
       { signal: controller.signal },
-      { timeoutMs: 1000, fetcher }
+      { timeoutMs: 1000, fetcher, composeSignal: false }
     );
     expect(received).toBe(controller.signal);
   });

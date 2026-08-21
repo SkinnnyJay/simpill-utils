@@ -41,7 +41,9 @@ export const createAnalyticsTelemetryStorage = (
       }
 
       if (typeof limit === "number" && limit >= 0) {
-        return snapshots.slice(-limit).reverse();
+        // slice(-0) is slice(0), i.e. the whole array - a computed limit of 0 returned the
+        // entire telemetry history, including every raw prompt.
+        return (limit > 0 ? snapshots.slice(-limit) : []).reverse();
       }
       return snapshots.slice().reverse();
     },

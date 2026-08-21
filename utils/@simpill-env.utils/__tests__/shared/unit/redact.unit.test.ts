@@ -52,6 +52,25 @@ describe("isSecretLikeKey", () => {
     expect(isSecretLikeKey("api_key")).toBe(true);
     expect(SECRET_KEY_PATTERN.test("database_url")).toBe(true);
   });
+
+  it("matches AUTHORIZATION and its variants", () => {
+    // The docstring claimed AUTH coverage, but the anchor `(^|_)AUTH(_|$)` required AUTH to be
+    // a whole underscore-delimited segment - so the most canonical secret-bearing name missed.
+    for (const key of ["AUTHORIZATION", "authorization", "Authorization", "AUTHN", "AUTHZ"]) {
+      expect(isSecretLikeKey(key)).toBe(true);
+    }
+  });
+
+  it("matches PASSPHRASE alongside the PASSWORD family", () => {
+    expect(isSecretLikeKey("PASSPHRASE")).toBe(true);
+    expect(isSecretLikeKey("SSH_PASSPHRASE")).toBe(true);
+  });
+
+  it("still excludes the deliberately-unmatched generic names", () => {
+    for (const key of ["PORT", "KEY", "HOST", "NODE_ENV"]) {
+      expect(isSecretLikeKey(key)).toBe(false);
+    }
+  });
 });
 
 describe("redactEnvValue", () => {

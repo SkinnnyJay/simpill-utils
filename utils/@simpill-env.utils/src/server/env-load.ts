@@ -2,8 +2,18 @@ import dotenvx from "@dotenvx/dotenvx";
 import { DEFAULT_ENV_PATHS } from "../shared/constants";
 import type { DotenvxConfigOutput, EnvManagerOptions } from "./env.types";
 
+/**
+ * Resolve which .env files to load.
+ *
+ * An `envPaths` that is present but empty means "load none", not "use the
+ * defaults". Treating it as unset made it impossible to opt out of file
+ * loading: callers asking for zero files got both defaults instead, and
+ * dotenvx then reported each one missing. EnvManager.bootstrap already read
+ * the option this way (`config.envPaths ?? ...`), so the two entry points
+ * disagreed about the same field.
+ */
 export function determineEnvPaths(options?: EnvManagerOptions): readonly string[] {
-  if (options?.envPaths && options.envPaths.length > 0) {
+  if (options?.envPaths) {
     return options.envPaths;
   }
   if (options?.envPath) {

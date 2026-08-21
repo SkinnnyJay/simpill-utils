@@ -171,12 +171,16 @@ export class FileLoggerAdapter implements LoggerAdapter {
 
     if (this.config.format === "json") {
       // safeStringify: circular/BigInt metadata must not throw (entry loss)
+      // Metadata is spread FIRST so the four reserved fields always win. With the
+      // spread last, metadata carrying a `level` or `message` key - often echoed
+      // from user input - silently rewrote the line's own level and text, which
+      // let a caller forge log records that downstream parsing would trust.
       return safeStringify({
+        ...mergedEntry.metadata,
         timestamp: mergedEntry.timestamp,
         level: mergedEntry.level,
         name: mergedEntry.name,
         message: mergedEntry.message,
-        ...mergedEntry.metadata,
       });
     }
 
@@ -217,13 +221,23 @@ export class FileLoggerAdapter implements LoggerAdapter {
       return;
     }
 
-    // Rotate existing numbered files
-    for (let i = this.config.maxFiles - 1; i >= 1; i--) {
+    // maxFiles is the number of archives to keep, so 0 means keep none: drop the
+    // current file instead of renaming it to .1 and retaining one anyway.
+    if (this.config.maxFiles < 1) {
+      fs.unlinkSync(filePath);
+      this.fileSizes.set(filePath, 0);
+      return;
+    }
+
+    // Rotate existing numbered files. This loop used to start at maxFiles - 1 and
+    // delete there, which discarded the second-oldest archive and left maxFiles - 1
+    // files on disk - one short of the documented "number of rotated files to keep".
+    for (let i = this.config.maxFiles; i >= 1; i--) {
       const oldPath = `${filePath}.${i}`;
       const newPath = `${filePath}.${i + 1}`;
 
       if (fs.existsSync(oldPath)) {
-        if (i === this.config.maxFiles - 1) {
+        if (i === this.config.maxFiles) {
           // Delete the oldest file
           fs.unlinkSync(oldPath);
         } else {

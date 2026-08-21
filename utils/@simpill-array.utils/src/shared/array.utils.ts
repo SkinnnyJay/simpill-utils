@@ -380,7 +380,10 @@ export function sumBy<T>(iterable: Iterable<T>, keyFn: (item: T) => number): num
     else c += v - t + sum;
     sum = t;
   }
-  return sum + c;
+  // Standard Kahan-Babuska-Neumaier finalisation. On a non-finite running total the
+  // compensation term is NaN (Infinity - Infinity), so adding it turned a correct Infinity
+  // into NaN.
+  return Number.isFinite(sum) ? sum + c : sum;
 }
 
 /**

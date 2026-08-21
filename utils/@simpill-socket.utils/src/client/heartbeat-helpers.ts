@@ -6,10 +6,31 @@ import {
 } from "../shared/constants";
 
 export function defaultIsPong(data: unknown): boolean {
-  if (typeof data === "string") return data === PONG_VALUE;
-  if (data && typeof data === "object" && "type" in data)
-    return (data as { type: string }).type === PONG_VALUE;
-  return false;
+  if (typeof data === "string") {
+    if (data === PONG_VALUE) return true;
+    // MessageEvent.data from a real WebSocket is always a string, Blob or ArrayBuffer - never a
+    // parsed object. So a server using the documented `{ type: "pong" }` convention arrived here
+    // as the *string* `{"type":"pong"}`, failed the equality check, and its pongs were never
+    // counted - closing a perfectly healthy socket after maxMisses intervals.
+    const trimmed = data.trimStart();
+    if (!trimmed.startsWith("{")) return false;
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      return isPongObject(parsed);
+    } catch {
+      return false;
+    }
+  }
+  return isPongObject(data);
+}
+
+function isPongObject(value: unknown): boolean {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "type" in value &&
+    (value as { type: unknown }).type === PONG_VALUE
+  );
 }
 
 export interface HeartbeatRunner {
@@ -71,7 +92,12 @@ export function runHeartbeat(
     if (!socket) return;
     const msg =
       typeof heartbeat.message === "function" ? heartbeat.message() : (heartbeat.message ?? "");
-    if (msg) sendFn(msg);
+    // Only arm the pong deadline when a ping actually went out. heartbeat.message is optional
+    // and defaults to "", so the previous unconditional arm meant a config of
+    // { intervalMs, expectPong: true } sent nothing, counted misses anyway, and closed a
+    // healthy connection.
+    if (!msg) return;
+    sendFn(msg);
     if (expectPong && pongTimeoutId === null) {
       pongTimeoutId = setTimeout(() => {
         pongTimeoutId = null;

@@ -171,6 +171,71 @@ describe("crypto.utils", () => {
     });
   });
 
+  describe("KDF parameter bounds (hostile / malformed stored strings)", () => {
+    // verifyPassword previously fed regex captures straight into the KDF with
+    // no bounds, so a stored string a caller does not fully control could pin
+    // arbitrary cost: ln=30 yields maxmem ~1 TiB. These must be rejected as a
+    // malformed format (TypeError), not attempted and not a failed login.
+    it("rejects an out-of-range scrypt ln rather than attempting the derivation", () => {
+      const hostile =
+        "$scrypt$ln=30,r=8,p=1$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+      expect(() => verifyPassword("pw", hostile)).toThrow(TypeError);
+    });
+
+    it("rejects an out-of-range scrypt r", () => {
+      const hostile =
+        "$scrypt$ln=17,r=99999999,p=1$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+      expect(() => verifyPassword("pw", hostile)).toThrow(TypeError);
+    });
+
+    it("rejects an out-of-range scrypt p", () => {
+      const hostile =
+        "$scrypt$ln=17,r=8,p=9999$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+      expect(() => verifyPassword("pw", hostile)).toThrow(TypeError);
+    });
+
+    it("rejects an out-of-range argon2id memory cost", () => {
+      const hostile =
+        "$argon2id$v=19$m=999999999,t=3,p=4$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+      expect(() => verifyPassword("pw", hostile)).toThrow(TypeError);
+    });
+
+    it("rejects a stored string whose salt is too short", () => {
+      const hostile = "$scrypt$ln=17,r=8,p=1$AA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+      expect(() => verifyPassword("pw", hostile)).toThrow(TypeError);
+    });
+
+    it("rejects saltLength 0 at hash time instead of emitting an unverifiable hash", () => {
+      // Previously accepted: b64(empty salt) is "", producing
+      // "$scrypt$ln=17,r=8,p=1$$<hash>", which matches neither PHC regex, so
+      // verifyPassword threw on a value hashPassword itself had produced.
+      expect(() => hashPassword("pw", { saltLength: 0 })).toThrow(RangeError);
+    });
+
+    it("rejects an out-of-range keyLength at hash time", () => {
+      expect(() => hashPassword("pw", { keyLength: 4 })).toThrow(RangeError);
+    });
+
+    it("still accepts the documented defaults", () => {
+      const stored = hashPassword("correct horse");
+      expect(verifyPassword("correct horse", stored)).toBe(true);
+      expect(verifyPassword("wrong", stored)).toBe(false);
+    });
+
+    it("round-trips every parameter combination it is willing to emit", () => {
+      const combos = [
+        { cost: 2 ** 14, blockSize: 8, parallelism: 1 },
+        { cost: 2 ** 14, blockSize: 1, parallelism: 1 },
+        { cost: 2 ** 14, blockSize: 8, parallelism: 2, keyLength: 16, saltLength: 8 },
+        { cost: 2 ** 14, blockSize: 8, parallelism: 1, keyLength: 64, saltLength: 64 },
+      ];
+      for (const opts of combos) {
+        const stored = hashPassword("pw", opts);
+        expect(verifyPassword("pw", stored)).toBe(true);
+      }
+    });
+  });
+
   describe("randomBytesSecure", () => {
     it("returns Buffer of given length", () => {
       const b = randomBytesSecure(32);

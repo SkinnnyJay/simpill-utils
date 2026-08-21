@@ -37,7 +37,10 @@ export function getClientCallOptions(options: Record<string, unknown>): ClientCa
  *   the literal ":id" segment to the server
  */
 export function substitutePath(pathPattern: string, params: Record<string, string>): string {
-  return pathPattern.replace(/:([^/]+)/g, (_, key: string) => {
+  // The key pattern is anchored to word characters. `[^/]+` was greedy to the end of
+  // the segment, so "/files/:name.json" parsed the key as "name.json", missed, and
+  // emitted a URL containing a literal ":name.json" instead of raising.
+  return pathPattern.replace(/:([A-Za-z0-9_]+)/g, (_, key: string) => {
     const value = params[key];
     if (value === undefined || value === null) {
       throw new ApiMissingParamError(key, pathPattern);
@@ -142,10 +145,12 @@ export function buildClient(
       const url = `${baseUrl}${substitutePath(r.path, params)}${buildQuery(query)}`;
       const headers = mergeHeaders(defaultHeaders, opts.headers, call.headers);
       const sendBody = body !== undefined && r.method !== HTTP_METHOD.GET;
-      // v1 always set Content-Type (including on GETs; preserved for compat)
-      // but spread it LAST so callers could never override it. Now: default
-      // only when no caller-supplied content-type exists, any casing.
-      if (!hasContentType(headers)) {
+      // Only default a Content-Type when the request actually carries one. v1 sent it
+      // on bodyless GETs too, which provokes CORS preflights for nothing.
+      // v1 spread Content-Type LAST, so callers could never override it. It is now
+      // a default: applied only when no caller-supplied content-type exists (any
+      // casing) and only when the request carries a body.
+      if (sendBody && !hasContentType(headers)) {
         headers[CONTENT_TYPE] = "application/json";
       }
       const init: RequestInit = { method: r.method, headers };

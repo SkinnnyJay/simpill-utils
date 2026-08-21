@@ -84,8 +84,22 @@ export class BufferedLoggerAdapter implements LoggerAdapter {
    * flush to complete instead of resolving early with entries still in the air.
    */
   async flush(): Promise<void> {
-    this.pendingFlush = this.pendingFlush.then(() => this.doFlush());
-    return this.pendingFlush;
+    // Chain off a settled predecessor. Chaining a bare .then() off a rejected pendingFlush
+    // meant one throwing onFlushError handler wedged the adapter permanently: doFlush never
+    // ran again, every later flush() re-rejected with the same stale error, and destroy()
+    // discarded the whole buffer at shutdown - in a class whose contract is "never throws".
+    const next = this.pendingFlush.catch(() => undefined).then(() => this.doFlush());
+    this.pendingFlush = next.catch(() => undefined);
+    return next;
+  }
+
+  /** A user-supplied handler must never be able to break the logger. */
+  private reportFlushError(error: unknown, entries: LogEntry[]): void {
+    try {
+      this.config.onFlushError(error, entries);
+    } catch {
+      // Never throw from logger
+    }
   }
 
   private async doFlush(): Promise<void> {
@@ -110,7 +124,7 @@ export class BufferedLoggerAdapter implements LoggerAdapter {
       // Requeue ONLY the undelivered remainder — entries the inner adapter
       // already accepted must not be replayed (duplicate delivery)
       const undelivered = entries.slice(delivered);
-      this.config.onFlushError(err, undelivered);
+      this.reportFlushError(err, undelivered);
       this.buffer = undelivered.concat(this.buffer);
       this.enforceOverflowCap();
     } finally {
@@ -136,7 +150,7 @@ export class BufferedLoggerAdapter implements LoggerAdapter {
       }
     } catch (err) {
       const undelivered = entries.slice(delivered);
-      this.config.onFlushError(err, undelivered);
+      this.reportFlushError(err, undelivered);
       this.buffer = undelivered.concat(this.buffer);
       this.enforceOverflowCap();
     } finally {

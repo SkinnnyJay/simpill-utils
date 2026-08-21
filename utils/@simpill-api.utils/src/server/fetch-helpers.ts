@@ -55,20 +55,23 @@ export async function fetchWithRetry(
  * - no init.signal: the timeout aborts the request (as before), but with an
  *   ApiTimeoutError reason (name "TimeoutError") so timeouts are
  *   distinguishable from user aborts
- * - init.signal present (default): the caller's signal is passed through
- *   IDENTICALLY (back-compat) and the timeout is enforced by racing the
- *   returned promise — it rejects with ApiTimeoutError on expiry. The
- *   underlying request cannot be cancelled in this mode.
- * - init.signal present + composeSignal: true: the caller's signal and the
- *   timeout signal are composed, so the timeout also CANCELS the request.
- *   (Opt-in because the fetcher then receives a derived signal object.)
+ * - init.signal present + composeSignal: true (DEFAULT): the caller's signal
+ *   and the timeout signal are composed, so the timeout CANCELS the request,
+ *   AND the returned promise is raced against the timer. Both halves matter:
+ *   composing alone only REQUESTS cancellation, so a fetcher that ignores its
+ *   signal would never settle; racing alone leaves the request running after
+ *   the caller has given up. The fetcher receives a derived signal object.
+ * - init.signal present + composeSignal: false: the caller's signal is passed
+ *   through IDENTICALLY and the timeout is enforced by the race alone, so the
+ *   underlying request cannot be cancelled and keeps running. Opt out only
+ *   when a caller must receive its own signal object by identity.
  */
 export async function fetchWithTimeout(
   input: URL | string,
   init?: RequestInit,
   options: { timeoutMs?: number; fetcher?: typeof fetch; composeSignal?: boolean } = {}
 ): Promise<Response> {
-  const { timeoutMs = TIMEOUT_MS_5000, fetcher = fetch, composeSignal = false } = options;
+  const { timeoutMs = TIMEOUT_MS_5000, fetcher = fetch, composeSignal = true } = options;
 
   if (init?.signal && !composeSignal) {
     // Back-compat path: pass the caller's signal through untouched, enforce
@@ -79,19 +82,32 @@ export async function fetchWithTimeout(
       // never held the event loop, Node could exit before the race settles.
       timer = setTimeout(() => reject(new ApiTimeoutError(timeoutMs)), timeoutMs);
     });
+    const request = fetcher(input, init);
+    request.catch(() => undefined);
     try {
-      return await Promise.race([fetcher(input, init), timeout]);
+      return await Promise.race([request, timeout]);
     } finally {
       clearTimeout(timer);
     }
   }
 
   const controller = new AbortController();
-  // Not unref'd for the same reason as the race path above.
-  const timer = setTimeout(() => controller.abort(new ApiTimeoutError(timeoutMs)), timeoutMs);
   const signal = init?.signal ? composeSignals(init.signal, controller.signal) : controller.signal;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    // Not unref'd for the same reason as the race path above.
+    timer = setTimeout(() => {
+      const err = new ApiTimeoutError(timeoutMs);
+      controller.abort(err);
+      reject(err);
+    }, timeoutMs);
+  });
+  const request = fetcher(input, { ...init, signal });
+  // Whichever loses the race still settles; without this its rejection (typically
+  // the abort we just triggered) would surface as an unhandled rejection.
+  request.catch(() => undefined);
   try {
-    return await fetcher(input, { ...init, signal });
+    return await Promise.race([request, timeout]);
   } finally {
     clearTimeout(timer);
   }

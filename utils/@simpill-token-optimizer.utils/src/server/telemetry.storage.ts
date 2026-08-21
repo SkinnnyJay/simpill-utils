@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
-import { ENCODING, ERROR_CODE, INDENT_SPACES } from "../shared/constants";
+import { ENCODING, ERROR_CODE, INDENT_SPACES, LIMIT } from "../shared/constants";
 import {
   type JsonTelemetryStorageConfig,
   jsonTelemetryStorageConfigSchema,
@@ -64,13 +64,22 @@ export const createJsonTelemetryStorage = (
       const sanitized = analyticsSnapshotSchema.parse(snapshot);
       const existing = await readSnapshots(config.filePath);
       existing.push(sanitized);
-      await writeSnapshots(config.filePath, existing);
+      // LIMIT.TELEMETRY_MAX_SNAPSHOTS was only ever applied to the in-memory store, so the
+      // on-disk file - the default path, and the one that embeds every prompt verbatim - grew
+      // without bound.
+      const capped =
+        existing.length > LIMIT.TELEMETRY_MAX_SNAPSHOTS
+          ? existing.slice(-LIMIT.TELEMETRY_MAX_SNAPSHOTS)
+          : existing;
+      await writeSnapshots(config.filePath, capped);
     },
 
     async fetchRecent(limit) {
       const existing = await readSnapshots(config.filePath);
       if (typeof limit === "number" && limit >= 0) {
-        return existing.slice(-limit).reverse();
+        // slice(-0) is slice(0), i.e. the whole array - a computed limit of 0 returned the
+        // entire telemetry history, including every raw prompt.
+        return (limit > 0 ? existing.slice(-limit) : []).reverse();
       }
 
       return existing.slice().reverse();
