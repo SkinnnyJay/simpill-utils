@@ -130,10 +130,16 @@ export function getArrayFromEnv(
     .filter((s) => s !== "");
 }
 
+/**
+ * Parse a JSON environment variable. Without a `validate` function the return type is an
+ * unchecked cast — pass a Zod schema's `.parse` or any `(unknown) => T` type guard for safe
+ * runtime validation. Validator errors propagate as-is; only JSON syntax errors are caught.
+ */
 export function getJsonFromEnv<T = unknown>(
   getValue: GetValueFn,
   key: string,
-  defaultValue?: T
+  defaultValue?: T,
+  validate?: (value: unknown) => T
 ): T {
   const raw = getValue(key);
   if (raw === undefined || raw === "") {
@@ -142,30 +148,40 @@ export function getJsonFromEnv<T = unknown>(
     }
     return undefined as T;
   }
+  let parsed: unknown;
   try {
-    return JSON.parse(raw) as T;
+    parsed = JSON.parse(raw);
   } catch {
     if (defaultValue !== undefined) {
       return defaultValue;
     }
     throw new EnvParseError(key, raw, ENV_PARSE_TYPE.JSON);
   }
+  return validate ? validate(parsed) : (parsed as T);
 }
 
+/**
+ * Parse a required JSON environment variable. Without a `validate` function the return type is
+ * an unchecked cast — pass a Zod schema's `.parse` or any `(unknown) => T` type guard for safe
+ * runtime validation. Validator errors propagate as-is; only JSON syntax errors are caught.
+ */
 export function getRequiredJsonFromEnv<T = unknown>(
   getValue: GetValueFn,
   key: string,
-  errorMessage?: string
+  errorMessage?: string,
+  validate?: (value: unknown) => T
 ): T {
   const raw = getValue(key);
   if (raw === undefined || raw === "") {
     throw new MissingEnvError(key, errorMessage);
   }
+  let parsed: unknown;
   try {
-    return JSON.parse(raw) as T;
+    parsed = JSON.parse(raw);
   } catch {
     throw new EnvParseError(key, raw, ENV_PARSE_TYPE.JSON);
   }
+  return validate ? validate(parsed) : (parsed as T);
 }
 
 export function getValidatedStringFromEnv(

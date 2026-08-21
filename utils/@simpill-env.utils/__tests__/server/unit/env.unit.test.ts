@@ -191,6 +191,8 @@ describe("Env static methods", () => {
 
     afterEach(() => {
       delete process.env.TEST_JSON;
+      delete process.env.MY_JSON;
+      delete process.env.BAD_JSON;
     });
 
     it("should get json value", () => {
@@ -207,6 +209,43 @@ describe("Env static methods", () => {
 
     it("should throw for missing required json", () => {
       expect(() => Env.getRequiredJson("MISSING")).toThrow();
+    });
+
+    it("should accept a type-guard validator and return validated value", () => {
+      process.env.MY_JSON = JSON.stringify({ count: 42 });
+      EnvManager.resetInstance();
+      const result = Env.getJson("MY_JSON", undefined, (v) => {
+        if (typeof v === "object" && v !== null && "count" in v) {
+          return v as { count: number };
+        }
+        throw new Error("invalid shape");
+      });
+      expect(result?.count).toBe(42);
+    });
+
+    it("should throw from validator when shape is wrong", () => {
+      process.env.BAD_JSON = JSON.stringify({ wrong: "field" });
+      EnvManager.resetInstance();
+      expect(() =>
+        Env.getJson("BAD_JSON", undefined, (v) => {
+          if (typeof v !== "object" || v === null || !("count" in v)) {
+            throw new Error("invalid shape");
+          }
+          return v as { count: number };
+        })
+      ).toThrow("invalid shape");
+    });
+
+    it("getRequiredJson should accept a validator", () => {
+      process.env.MY_JSON = JSON.stringify({ count: 7 });
+      EnvManager.resetInstance();
+      const result = Env.getRequiredJson("MY_JSON", undefined, (v) => {
+        if (typeof v === "object" && v !== null && "count" in v) {
+          return v as { count: number };
+        }
+        throw new Error("invalid");
+      });
+      expect(result.count).toBe(7);
     });
   });
 

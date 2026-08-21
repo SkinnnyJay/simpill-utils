@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { createTokenOptimizer } from "../../../src/server/tokenOptimizerFactory";
+import { createTokenOptimizer } from "../../../src/server/token-optimizer.factory";
 import type { TelemetryStorage } from "../../../src/shared/telemetry.types";
 import type { AnalyticsSnapshot } from "../../../src/shared/token-optimizer.types";
 import { CompressionTypeEnum } from "../../../src/shared/types";

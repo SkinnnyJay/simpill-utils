@@ -1,4 +1,4 @@
-export { type Adapter, adapt, createAdapter } from "./adapter";
+export { type Adapter, adapt, createPatternAdapter } from "./adapter";
 export { type Builder, createBuilder } from "./builder";
 export {
   type ChainHandler,
@@ -26,7 +26,7 @@ export {
 } from "./composite";
 export { type Decorator, decorate } from "./decorator";
 export { createFacade, createFacadeFrom, type Facade } from "./facade";
-export { createFactory, type Factory } from "./factory";
+export { createPatternFactory, type Factory } from "./factory";
 export { createFlyweightFactory, type FlyweightFactory } from "./flyweight";
 export { createMediator, type Mediator, type MediatorHandler } from "./mediator";
 export { createObservable, type Observable, type Observer, type Unsubscribe } from "./observer";
@@ -34,15 +34,33 @@ export { pipeAsync } from "./pipe-async";
 export { createMethodProxy, type MethodProxyHooks } from "./proxy";
 export { type RaceOkOptions, raceOk } from "./race-ok";
 export {
+  andThen,
+  andThenAsync,
+  combine,
+  combineWithAllErrors,
   err,
+  fromNullable,
   fromPromise,
   fromThrowable,
   isErr,
   isOk,
+  map,
+  mapAsync,
+  mapErr,
+  match,
   ok,
+  orElse,
   type Result,
+  safeTry,
+  safeTryAsync,
+  safeUnwrap,
+  tap,
+  tapErr,
   toResult,
+  unwrap,
+  unwrapErr,
   unwrapOr,
+  unwrapOrElse,
 } from "./result";
 export {
   createStateMachine,

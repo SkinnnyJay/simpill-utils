@@ -48,10 +48,12 @@ const created = await client.post("/users", JSON.stringify({ name: "Jane" }));
 
 ## API
 
-- **fetchWithTimeout(input, init, fetch?)** — Fetch with AbortController + timeout.
-- **fetchWithRetry(input, init?, options?)** — Fetch with retries; options.retry defines policy and optional custom fetch.
-- **createHttpClient(options?)** — Returns client with get/post/put/patch/delete; options: baseUrl, defaultTimeoutMs, defaultRetry, fetch.
+- **fetchWithTimeout(input, init, fetch?)** — Fetch with AbortController + timeout; throws typed **HttpTimeoutError** and propagates abort reasons.
+- **fetchWithRetry(input, init?, options?)** — Fetch with retries; options.retry defines policy and optional custom fetch. Honors Retry-After, respects abort signals, cancels discarded response bodies.
+- **createHttpClient(options?)** — Returns client with get/head/post/put/patch/delete; options: baseUrl, defaultTimeoutMs, defaultRetry, defaultHeaders, fetch. Per-request `retry` override supported; retry and timeout compose (timeout applies per attempt).
 - **isRetryableStatus(status)** — True for 408, 429, 5xx.
+- **parseRetryAfterMs(value, now?)** — RFC 9110 Retry-After parser (delta-seconds or HTTP-date) → ms or undefined.
+- **HttpTimeoutError / RetryableStatusError** — Typed errors (see below).
 
 ### Interceptors and middleware
 
@@ -70,14 +72,19 @@ The package returns the raw **Response**. Call **response.json()**, **response.t
 | maxAttempts | 3 | Total attempts (first + retries). |
 | delayMs | 0 | Delay before first retry (ms). |
 | backoffMultiplier | 1 | Multiply delay by this after each retry. |
-| retryableStatuses | isRetryableStatus | Function: return true to treat that status as retryable (then we throw so retry runs). |
+| retryableStatuses | isRetryableStatus | Function: return true to treat that status as retryable. |
 | retryableErrors | (err) => true | Function: return false to stop retrying and rethrow. |
+| timeoutMs | — | Per-attempt timeout (ms); a timed-out attempt is aborted and retried like any other error. |
+| respectRetryAfter | true | Honor **Retry-After** headers (delta-seconds or HTTP-date, RFC 9110) on retryable responses. |
+| maxRetryAfterMs | 30000 | Cap for Retry-After waits (mirrors undici RetryHandler maxTimeout). |
+| jitter | false | Full jitter: each delay becomes uniform random in [0, delay]. |
+| retryMethods | — (all) | If set, only these methods are retried (e.g. `["GET","PUT","HEAD","OPTIONS","DELETE"]`); others fail fast. |
 
-Retries happen when the inner fetch returns a retryable status (we throw so **@simpill/async.utils** retry runs) or when fetch throws and **retryableErrors** returns true.
+Retries happen when fetch returns a retryable status or when fetch throws and **retryableErrors** returns true. An aborted **signal** stops the retry sequence immediately (delays are abort-aware too), and requests with a **ReadableStream** body are never retried (the stream is already consumed). Discarded retryable responses have their bodies cancelled so the underlying connection is released; the final failure throws **RetryableStatusError** with the intact **Response** attached.
 
 ### Idempotent retry
 
-By default we retry on **408, 429, 5xx**. Retrying **non-idempotent** methods (e.g. POST) can cause duplicate side effects. Prefer retry for **GET** or other idempotent calls, or restrict **retryableStatuses** (e.g. only 503) and use **retryableErrors** to avoid retrying on client errors.
+By default we retry on **408, 429, 5xx**. Retrying **non-idempotent** methods (e.g. POST) can cause duplicate side effects. Set **retryMethods** to an idempotent allowlist (undici's default is `["GET","PUT","HEAD","OPTIONS","DELETE"]`), or restrict **retryableStatuses** and use **retryableErrors** to avoid retrying on client errors.
 
 ### Cookies and headers
 
@@ -89,8 +96,9 @@ No cookie or header helpers. Set **headers** in **RequestInit** or **HttpRequest
 
 ### Abort and timeout errors
 
-- **Timeout:** fetchWithTimeout throws the **Error** you get when the timeout wins the race (e.g. `"Request timed out after 5000ms"`). The AbortController is aborted so the underlying request is cancelled.
-- **User abort:** If you pass **signal** (e.g. AbortController.signal) and abort it, fetch typically throws a **DOMException** with name **AbortError**. Check **err.name === "AbortError"** to distinguish from timeout or other errors.
+- **Timeout:** fetchWithTimeout throws **HttpTimeoutError** (message `"Request timed out after 5000ms"`, `name === "TimeoutError"` to match the AbortSignal.timeout convention, plus a `timeoutMs` field). The underlying request is aborted at the deadline with the timeout error as the abort reason.
+- **User abort:** If you pass **signal** and abort it, your abort **reason** is propagated to the request, and fetchWithRetry stops retrying immediately. Check **err.name === "AbortError"** vs **"TimeoutError"** to distinguish.
+- **Exhausted retries on a retryable status:** fetchWithRetry throws **RetryableStatusError** (message `"Retryable status: 503"`, plus `status` and the final **Response** with its body intact).
 
 ### Custom fetch
 
@@ -107,7 +115,7 @@ const client = createHttpClient({
 
 ### baseUrl joining
 
-**createHttpClient** resolves URLs as: **baseUrl** (trailing slash removed) + **path** (leading slash ensured). So `baseUrl: "https://api.example.com"` and `client.get("users")` → `https://api.example.com/users`; `client.get("/users")` → same. No double slashes; relative paths like `"v1/users"` become `"/v1/users"` and then `base + path`.
+**createHttpClient** resolves URLs as: **baseUrl** (trailing slash removed) + **path** (leading slash ensured). So `baseUrl: "https://api.example.com"` and `client.get("users")` → `https://api.example.com/users`; `client.get("/users")` → same. No double slashes; relative paths like `"v1/users"` become `"/v1/users"` and then `base + path`. **Absolute URLs bypass baseUrl** (axios/ky semantics): `client.get("https://other.example.org/health")` is used as-is.
 
 ### Comparison with axios / ky / undici
 

@@ -58,6 +58,14 @@ export class SimpleLoggerAdapter implements LoggerAdapter {
   }
 
   /**
+   * Fast level gate for the factory: lets disabled-level calls return before
+   * any entry construction happens.
+   */
+  isLevelEnabled(level: LogLevel): boolean {
+    return this.shouldLog(level);
+  }
+
+  /**
    * Write a log entry to stdout/stderr
    */
   log(entry: LogEntry): void {

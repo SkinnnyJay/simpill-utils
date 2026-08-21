@@ -37,9 +37,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build dependency (protocols.utils)
-        run: npm ci && npm run build
-        working-directory: utils/@simpill-protocols.utils
+      - name: Build local package dependencies (http, protocols, ...)
+        working-directory: .
+        run: node scripts/ci/build-package-deps.js utils/@simpill-api.utils
 
       - name: Run linter
         run: npm run lint

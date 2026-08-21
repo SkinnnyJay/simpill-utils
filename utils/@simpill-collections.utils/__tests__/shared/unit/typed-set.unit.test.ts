@@ -67,3 +67,34 @@ describe("TypedSet", () => {
     expect(s.toArray()).toEqual([1]);
   });
 });
+
+describe("TypedSet (uplift)", () => {
+  it("default path dedupes and deletes via native Set semantics", () => {
+    const s = TypedSet.from([1, 2, 2, 3, NaN, NaN]);
+    expect(s.size).toBe(4); // SameValueZero: NaN dedupes (Array === never matched NaN)
+    expect(s.has(NaN)).toBe(true);
+    expect(s.delete(2)).toBe(true);
+    expect(s.delete(2)).toBe(false);
+    expect(s.toArray()).toEqual([1, 3, NaN]);
+  });
+
+  it("provides Set-parity iterators", () => {
+    const s = TypedSet.from(["a", "b"]);
+    expect([...s.keys()]).toEqual(["a", "b"]);
+    expect([...s.values()]).toEqual(["a", "b"]);
+    expect([...s.entries()]).toEqual([
+      ["a", "a"],
+      ["b", "b"],
+    ]);
+  });
+
+  it("from() honors options (custom equals + validate)", () => {
+    const s = TypedSet.from([{ id: 1 }, { id: 1 }, { id: 2 }, { id: -1 }], {
+      equals: (a, b) => a.id === b.id,
+      validate: (v) => v.id > 0,
+    });
+    expect(s.size).toBe(2);
+    expect(s.has({ id: 2 })).toBe(true);
+    expect(s.has({ id: -1 })).toBe(false);
+  });
+});

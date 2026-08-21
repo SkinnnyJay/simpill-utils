@@ -73,6 +73,25 @@ export class Semaphore implements Lock {
     });
   }
 
+  /** Acquire a permit only if one is free right now; returns whether it was acquired. */
+  tryAcquire(): boolean {
+    if (this.permits > VALUE_0) {
+      this.permits--;
+      return true;
+    }
+    return false;
+  }
+
+  /** Number of callers currently blocked in acquire(). */
+  get waitingCount(): number {
+    return this.waitQueue.length;
+  }
+
+  /** Number of permits currently free. */
+  get availablePermits(): number {
+    return this.permits;
+  }
+
   /** Release one permit (or unblock one waiter). */
   release(): void {
     if (this.waitQueue.length > VALUE_0) {

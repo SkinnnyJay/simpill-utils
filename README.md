@@ -51,7 +51,7 @@ npm install @simpill/env.utils @simpill/array.utils @simpill/async.utils
 
 ## Usage
 
-Modern TypeScript/ESM: import from the package(s) you installed.
+Modern TypeScript (CommonJS builds today): import from the package(s) you installed.
 
 ```ts
 import { getEnvString } from "@simpill/env.utils";

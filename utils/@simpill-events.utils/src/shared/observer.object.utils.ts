@@ -17,9 +17,16 @@ export interface ObservableOptions {
   onError?: (err: unknown) => void;
 }
 
+interface Sub<T> {
+  fn: Listener<T>;
+  active: boolean;
+}
+
 export class Observable<T> {
   private value: T;
-  private listeners = new Set<Listener<T>>();
+  private subs = new Map<Listener<T>, Sub<T>>();
+  /** Cached notify snapshot; `null` = rebuild. Never mutated in place. */
+  private snap: Sub<T>[] | null = null;
   private onError: (err: unknown) => void;
 
   constructor(initial: T, options?: ObservableOptions) {
@@ -39,9 +46,11 @@ export class Observable<T> {
   setValue(next: T): void {
     if (Object.is(this.value, next)) return;
     this.value = next;
-    for (const fn of this.listeners) {
+    if (this.snap === null) this.snap = [...this.subs.values()];
+    for (const sub of this.snap) {
+      if (!sub.active) continue;
       try {
-        fn(next);
+        sub.fn(next);
       } catch (err) {
         this.onError(err);
       }
@@ -59,7 +68,8 @@ export class Observable<T> {
   }
 
   subscribe(listener: Listener<T>, options?: SubscribeOptions): () => void {
-    this.listeners.add(listener);
+    this.subs.set(listener, { fn: listener, active: true });
+    this.snap = null;
     if (options?.emitOnSubscribe) {
       try {
         listener(this.value);
@@ -68,8 +78,17 @@ export class Observable<T> {
       }
     }
     return (): void => {
-      this.listeners.delete(listener);
+      const sub = this.subs.get(listener);
+      if (!sub) return;
+      sub.active = false; // tombstone: an in-flight notify skips it
+      this.subs.delete(listener);
+      this.snap = null;
     };
+  }
+
+  /** Number of active subscribers. */
+  listenerCount(): number {
+    return this.subs.size;
   }
 }
 

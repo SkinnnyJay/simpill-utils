@@ -58,3 +58,24 @@ describe("Deque", () => {
     expect(d.toArray()).toEqual([1, 2, 3]);
   });
 });
+
+describe("Deque (uplift)", () => {
+  it("at() gives O(1) random access with bounds", () => {
+    const d = new Deque<number>();
+    d.pushBack(2);
+    d.pushBack(3);
+    d.pushFront(1); // wraps head
+    expect(d.at(0)).toBe(1);
+    expect(d.at(1)).toBe(2);
+    expect(d.at(2)).toBe(3);
+    expect(d.at(3)).toBeUndefined();
+    expect(d.at(-1)).toBeUndefined();
+  });
+
+  it("iterates lazily front-to-back and reversed()", () => {
+    const d = new Deque<number>();
+    for (const x of [1, 2, 3]) d.pushBack(x);
+    expect([...d]).toEqual([1, 2, 3]);
+    expect([...d.reversed()]).toEqual([3, 2, 1]);
+  });
+});

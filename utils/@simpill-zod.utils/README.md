@@ -55,17 +55,17 @@ if (result.success) {
 ## API
 
 - **Schema builders**: `stringField`, `numberField`, `booleanField`, `optionalWithDefault`, `nullableWithDefault`
-- **Safe-parse**: `safeParseResult`, `parseOrThrow`, `flattenZodError`, `formatZodError`
+- **Safe-parse**: `safeParseResult`, `parseOrThrow`, `flattenZodError` (first issue per path), `flattenZodErrorAll` (every issue), `formatZodError`
 - **Transforms**: `trimString`, `lowerString`, `upperString`, `coerceOptionalString`, `pipeTransforms`
-- **Common schemas**: `nonEmptyString`, `isoDateString`, `isoDateOnlyString`, `enumFromList`, `coerceString`
-- **Request/query**: `coerceQueryNumber`, `coerceQueryBoolean`, `paginationSchema`, `offsetPaginationSchema`, `idParamNumber`, `idParamUuid`
+- **Common schemas**: `nonEmptyString`, `isoDateString` (UTC "Z"), `isoDateTimeWithOffset` (accepts ±hh:mm), `isoDateOnlyString` (calendar-validated), `enumFromList` (literal-preserving), `coerceString`, `jsonString`
+- **Request/query**: `coerceQueryNumber` (rejects empty), `coerceQueryBoolean` (strict true/false/1/0/yes/no/y/n/on/off), `coerceQueryArray` (single-or-repeated params), `paginationSchema`, `offsetPaginationSchema`, `idParamNumber` (decimal digits only), `idParamUuid`
 - **API errors**: `toValidationError`, `parseOrThrowValidation`, `ValidationErrorPayload` (for 400 responses)
-- **OpenAPI**: `withOpenApiMetadata` (optional peer: zod-openapi)
+- **OpenAPI**: `withOpenApiMetadata` (stores metadata; description via native `.describe()`), `getOpenApiMetadata`
 
 ### What we don't provide
 
 - **Zod replacement** — This package extends Zod; **zod** is a required peer. We do not reimplement parsing or validation.
-- **OpenAPI spec generation** — **withOpenApiMetadata** attaches metadata for zod-openapi; we do not emit OpenAPI JSON/YAML. Use **zod-to-openapi** or similar to generate specs.
+- **OpenAPI spec generation** — **withOpenApiMetadata** attaches retrievable metadata (`getOpenApiMetadata`) and applies descriptions via `.describe()`; we do not emit OpenAPI JSON/YAML. Use **zod-to-openapi** or similar to generate specs.
 - **Non-Zod validation** — For simple validators without Zod use **@simpill/data.utils** (validateString, validateNumber, ValidationResult).
 
 ## License
