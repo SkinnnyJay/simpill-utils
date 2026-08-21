@@ -1,11 +1,15 @@
 export type {
   FileEncoding,
   ReadFileJsonOptions,
+  WriteFileAtomicOptions,
   WriteFileJsonOptions,
 } from "./file.utils";
 export {
   ensureDir,
   ensureDirSync,
+  JsonParseError,
+  pathExists,
+  pathExistsSync,
   readFileAsync,
   readFileJson,
   readFileJsonSync,
@@ -13,6 +17,8 @@ export {
   readFileUtf8,
   readFileUtf8Sync,
   writeFileAsync,
+  writeFileAtomic,
+  writeFileAtomicSync,
   writeFileJson,
   writeFileJsonSync,
   writeFileSync,
@@ -25,8 +31,12 @@ export {
   extname,
   isAbsolutePath,
   isPathUnderRoot,
+  isPathUnderRootReal,
+  isPathUnderRootRealSync,
   joinPath,
   normalizePath,
   resolvePath,
   resolvePathUnderRoot,
+  resolvePathUnderRootReal,
+  resolvePathUnderRootRealSync,
 } from "./path.utils";

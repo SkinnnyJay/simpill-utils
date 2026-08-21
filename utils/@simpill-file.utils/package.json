@@ -4,7 +4,8 @@
   "description": "Typed file I/O: readFileUtf8, readFileJson, writeFile, ensureDir for Node.js.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/file.utils.git"
+    "url": "https://github.com/SkinnnyJay/simpill-utils.git",
+    "directory": "utils/@simpill-file.utils"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -83,9 +84,9 @@
     "node": ">=16.0.0"
   },
   "bugs": {
-    "url": "https://github.com/SkinnnyJay/file.utils/issues"
+    "url": "https://github.com/SkinnnyJay/simpill-utils/issues"
   },
-  "homepage": "https://github.com/SkinnnyJay/file.utils#readme",
+  "homepage": "https://github.com/SkinnnyJay/simpill-utils/tree/main/utils/@simpill-file.utils#readme",
   "typesVersions": {
     "*": {
       "client": [
