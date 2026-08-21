@@ -30,6 +30,21 @@ export async function fetchWithRetry(
 /**
  * Fetch with timeout. Uses optional custom fetcher; defaults to global fetch.
  */
+/** AbortSignal.any where available (Node >= 20.3), with a listener-based fallback. */
+function combineSignals(caller: AbortSignal | null | undefined, timeout: AbortSignal): AbortSignal {
+  if (!caller) return timeout;
+  const anyOf = (AbortSignal as { any?: (signals: AbortSignal[]) => AbortSignal }).any;
+  if (typeof anyOf === "function") return anyOf([caller, timeout]);
+  const merged = new AbortController();
+  const abort = (): void => merged.abort();
+  if (caller.aborted || timeout.aborted) merged.abort();
+  else {
+    caller.addEventListener("abort", abort, { once: true });
+    timeout.addEventListener("abort", abort, { once: true });
+  }
+  return merged.signal;
+}
+
 export async function fetchWithTimeout(
   input: URL | string,
   init?: RequestInit,
@@ -41,7 +56,10 @@ export async function fetchWithTimeout(
   try {
     const res = await fetcher(input, {
       ...init,
-      signal: init?.signal ?? controller.signal,
+      // Combine rather than choose. `init.signal ?? controller.signal` meant that passing a
+      // cancellation signal silently disabled the timeout: the timer still fired, but on a
+      // controller nothing was listening to, so the request could hang forever.
+      signal: combineSignals(init?.signal, controller.signal),
     });
     return res;
   } finally {
