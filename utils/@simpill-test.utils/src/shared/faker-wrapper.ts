@@ -1,4 +1,4 @@
-import { ERROR_FAKER_PICK_EMPTY, FAKE } from "./constants";
+import { DEFAULT_SEED, ERROR_FAKER_PICK_EMPTY, FAKE } from "./constants";
 
 type FakerInstance = {
   seed?: (value: number) => void;
@@ -15,12 +15,25 @@ type FakerModule = {
   en?: unknown;
 };
 
+/**
+ * Resolve an ISOLATED faker instance for this wrapper.
+ *
+ * The Faker class constructor accepts a per-instance seed
+ * (new Faker({ locale, seed })), giving every FakerWrapper its own
+ * independent stream. The previous implementation preferred the module's
+ * GLOBAL `faker` singleton and called `faker.seed(seed)` on it — so
+ * constructing a second wrapper re-seeded the first wrapper's stream:
+ *
+ *   const a = createFaker({ seed: 1 });
+ *   const b = createFaker({ seed: 2 }); // re-seeds the shared global
+ *   a.string(5); // draws from seed-2's stream, not seed-1's
+ *
+ * (Verified against @faker-js/faker 10.3.0.) The global path is kept only
+ * as a last-resort fallback for faker builds without the Faker class, and
+ * such instances cannot be isolated from each other.
+ */
 function getFakerInstance(seed: number): FakerInstance {
   const mod = require("@faker-js/faker") as FakerModule;
-  if (mod.faker && typeof mod.faker.seed === "function") {
-    mod.faker.seed(seed);
-    return mod.faker;
-  }
   if (typeof mod.Faker === "function") {
     try {
       return new mod.Faker({ locale: [mod.en ?? {}], seed });
@@ -31,6 +44,10 @@ function getFakerInstance(seed: number): FakerInstance {
       }) => FakerInstance;
       return fn({ locale: [mod.en ?? {}], seed });
     }
+  }
+  if (mod.faker && typeof mod.faker.seed === "function") {
+    mod.faker.seed(seed);
+    return mod.faker;
   }
   throw new Error(
     "@faker-js/faker: could not resolve faker instance. Ensure @faker-js/faker is installed.",
@@ -45,7 +62,7 @@ export class FakerWrapper {
   private readonly faker: FakerInstance;
 
   constructor(options: FakerWrapperOptions = {}) {
-    const seed = options.seed ?? FAKE.MIN_NUMBER + 1;
+    const seed = options.seed ?? DEFAULT_SEED;
     this.faker = getFakerInstance(seed);
   }
 
