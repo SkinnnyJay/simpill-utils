@@ -2,6 +2,8 @@ import { HTTP_METHOD } from "@simpill/protocols.utils";
 import {
   ERROR_HTTP_RESPONSE_PREFIX,
   ERROR_HTTP_RESPONSE_SEP,
+  ERROR_MISSING_PATH_PARAM_PREFIX,
+  ERROR_MISSING_PATH_PARAM_SUFFIX,
   VALUE_0,
 } from "../shared/internal-constants";
 import type { ClientCallOptions, RouteEntry } from "./api-factory-types";
@@ -30,7 +32,20 @@ export function getClientCallOptions(options: Record<string, unknown>): ClientCa
 }
 
 export function substitutePath(pathPattern: string, params: Record<string, string>): string {
-  return pathPattern.replace(/:([^/]+)/g, (_, key) => params[key] ?? `:${key}`);
+  // Values are encoded, matching buildQuery below. Unencoded, a caller-supplied id could
+  // reroute the request entirely - "../admin" resolves to a different endpoint once fetch
+  // normalises the URL - or inject a query string into a URL buildQuery believes it owns.
+  //
+  // The key pattern is also anchored to word characters. `[^/]+` was greedy to the end of the
+  // segment, so "/files/:name.json" parsed the key as "name.json", missed, and emitted a URL
+  // containing a literal ":name.json" instead of raising.
+  return pathPattern.replace(/:([A-Za-z0-9_]+)/g, (match, key: string) => {
+    const value = params[key];
+    if (value === undefined) {
+      throw new Error(`${ERROR_MISSING_PATH_PARAM_PREFIX}${key}${ERROR_MISSING_PATH_PARAM_SUFFIX}`);
+    }
+    return encodeURIComponent(value);
+  });
 }
 
 export function buildQuery(query: Record<string, string | number | boolean>): string {

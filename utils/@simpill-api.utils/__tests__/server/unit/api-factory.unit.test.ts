@@ -1,3 +1,4 @@
+import { substitutePath } from "../../../src/server/client-builder";
 /**
  * @file API Factory Unit Tests
  * @description Tests for createApiFactory, route builder, client, handlers, validation, middleware
@@ -314,5 +315,30 @@ describe("createApiFactory", () => {
       await handlers.r({ url: "http://_/r", method: "GET" });
       expect(order).toEqual(["route-before", "handler", "route-after"]);
     });
+  });
+});
+
+describe("substitutePath (security)", () => {
+  it("encodes values so a param cannot reroute the request", () => {
+    // Unencoded, fetch normalises "/users/../admin" to "/admin" - a caller-supplied id
+    // silently retargets a different endpoint.
+    expect(substitutePath("/users/:id", { id: "../admin" })).toBe("/users/..%2Fadmin");
+  });
+
+  it("encodes values so a param cannot inject a query string", () => {
+    expect(substitutePath("/users/:id", { id: "1?admin=true" })).toBe("/users/1%3Fadmin%3Dtrue");
+  });
+
+  it("leaves ordinary values readable", () => {
+    expect(substitutePath("/users/:id/posts/:postId", { id: "42", postId: "7" })).toBe(
+      "/users/42/posts/7"
+    );
+  });
+
+  it("throws rather than emitting a literal :param", () => {
+    // The old greedy pattern read the key of "/files/:name.json" as "name.json", missed, and
+    // sent a URL containing ":name.json" anyway.
+    expect(() => substitutePath("/files/:name", {})).toThrow(/Missing value for path parameter/);
+    expect(substitutePath("/files/:name.json", { name: "a" })).toBe("/files/a.json");
   });
 });
