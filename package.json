@@ -52,9 +52,9 @@
     "build": "npx tsc --noEmit",
     "typecheck": "npx tsc --noEmit",
     "test": "npx vitest run",
-    "test:unit": "npx vitest run --dir __tests__/unit",
-    "test:integration": "npx vitest run --dir __tests__/integration",
-    "test:e2e": "npx vitest run --dir __tests__/e2e"
+    "test:unit": "npx vitest run __tests__/unit",
+    "test:integration": "npx vitest run __tests__/integration",
+    "test:e2e": "npx vitest run __tests__/e2e"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",

@@ -9,7 +9,8 @@
 # Usage:
 #   ./scripts/github/github-set-repos-public.sh              # dry run (default)
 #   APPLY=1 ./scripts/github/github-set-repos-public.sh      # mutate, with confirmation
-#   APPLY=1 ASSUME_YES=1 GITHUB_OWNER=SkinnnyJay ./scripts/github/... # CI/non-interactive
+#   APPLY=1 ASSUME_YES=1 GITHUB_OWNER=SkinnnyJay \
+#     ./scripts/github/github-set-repos-public.sh               # non-interactive
 #
 # Guards:
 #   1. Dry run is the default; mutation requires APPLY=1.
@@ -23,6 +24,13 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 UTILS_DIR="$REPO_ROOT/utils"
+
+# Naming convention and identity checks, named once so the guards cannot drift
+# apart from the layout they describe.
+readonly SCOPE="@simpill/"                 # npm scope every package here belongs to
+readonly DIR_PREFIX="@simpill-"            # utils/@simpill-<name>.utils
+readonly DIR_GLOB="@simpill-*.utils"
+readonly VISIBILITY_PUBLIC="public"
 
 APPLY="${APPLY:-}"
 ASSUME_YES="${ASSUME_YES:-}"
@@ -51,7 +59,9 @@ fi
 
 is_submodule() {
   local name="$1"
-  for s in ${SUBMODULE_DIRS+"${SUBMODULE_DIRS[@]}"}; do
+  (( ${#SUBMODULE_DIRS[@]} == 0 )) && return 1
+  local s
+  for s in "${SUBMODULE_DIRS[@]}"; do
     [[ "$s" == "$name" ]] && return 0
   done
   return 1
@@ -64,8 +74,8 @@ while IFS= read -r dir; do
     echo "Excluding $base (git submodule — not ours to publish)"
     continue
   fi
-  REPOS+=("${base#@simpill-}")              # <name>.utils
-done < <(find "$UTILS_DIR" -maxdepth 1 -type d -name '@simpill-*.utils' | sort)
+  REPOS+=("${base#"$DIR_PREFIX"}")          # <name>.utils
+done < <(find "$UTILS_DIR" -maxdepth 1 -type d -name "$DIR_GLOB" | sort)
 
 if [[ ${#REPOS[@]} -eq 0 ]]; then
   echo "Error: no @simpill-*.utils directories found under $UTILS_DIR"
@@ -95,47 +105,53 @@ fi
 
 CHANGED=0
 SKIPPED=0
+WOULD_CHANGE=0
 
 for repo in "${REPOS[@]}"; do
   full="$GITHUB_OWNER/$repo"
 
-  if ! gh repo view "$full" &>/dev/null; then
+  # One call answers both "does it exist" and "is it already public".
+  visibility="$(gh api "repos/$full" -q .visibility 2>/dev/null || echo '')"
+  if [[ -z "$visibility" ]]; then
     echo "Skip $full (repo not found)"
     SKIPPED=$((SKIPPED + 1))
     continue
   fi
-
-  visibility="$(gh api "repos/$full" -q .visibility 2>/dev/null || echo 'unknown')"
-  if [[ "$visibility" == "public" ]]; then
+  if [[ "$visibility" == "$VISIBILITY_PUBLIC" ]]; then
     echo "Skip $full (already public)"
     SKIPPED=$((SKIPPED + 1))
     continue
   fi
 
-  # Guard 3: the remote must actually be a @simpill package.
-  remote_name="$(gh api "repos/$full/contents/package.json" -q '.content' 2>/dev/null \
-    | base64 --decode 2>/dev/null \
-    | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).name||"")}catch{console.log("")}})' \
-    2>/dev/null || echo '')"
-  if [[ "$remote_name" != @simpill/* ]]; then
-    echo "Skip $full (remote package.json name is '${remote_name:-<none>}', not @simpill/*)"
+  # Guard 3: the remote must actually be a @simpill package. The raw media type
+  # returns the file itself, so gh's --jq reads .name directly — no base64 hop
+  # and no node dependency, both of which varied by platform.
+  remote_name="$(gh api "repos/$full/contents/package.json" \
+    -H "Accept: application/vnd.github.raw" --jq .name 2>/dev/null || echo '')"
+  if [[ "$remote_name" != "$SCOPE"* ]]; then
+    echo "Skip $full (remote package.json name is '${remote_name:-<none>}', not ${SCOPE}*)"
     SKIPPED=$((SKIPPED + 1))
     continue
   fi
 
   if [[ -z "$APPLY" ]]; then
-    echo "Would set $full -> public  (verified $remote_name)"
+    echo "Would set $full -> $VISIBILITY_PUBLIC  (verified $remote_name)"
+    WOULD_CHANGE=$((WOULD_CHANGE + 1))
     continue
   fi
 
-  gh repo edit "$full" --visibility public --accept-visibility-change-consequences
-  echo "Set $full to public  (verified $remote_name)"
+  gh repo edit "$full" --visibility "$VISIBILITY_PUBLIC" --accept-visibility-change-consequences
+
+  echo "Set $full to $VISIBILITY_PUBLIC  (verified $remote_name)"
   CHANGED=$((CHANGED + 1))
 done
 
 echo
 if [[ -z "$APPLY" ]]; then
-  echo "Dry run complete. No changes made. Re-run with APPLY=1 to apply."
+  echo "Dry run complete. No changes made.  Would change: $WOULD_CHANGE  Skipped: $SKIPPED"
+  if (( WOULD_CHANGE > 0 )); then
+    echo "Re-run with APPLY=1 to apply."
+  fi
 else
   echo "Done. Changed: $CHANGED  Skipped: $SKIPPED"
 fi
