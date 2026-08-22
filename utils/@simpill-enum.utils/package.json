@@ -1,6 +1,6 @@
 {
   "name": "@simpill/enum.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Enum helpers: getEnumValue, isValidEnumValue, EnumHelper (Node and Edge).",
   "repository": {
     "type": "git",

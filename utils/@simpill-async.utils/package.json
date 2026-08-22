@@ -1,6 +1,6 @@
 {
   "name": "@simpill/async.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Retry failed promises with timeout, delay, and backoff; limit concurrency with Semaphore (Node and Edge).",
   "repository": {
     "type": "git",

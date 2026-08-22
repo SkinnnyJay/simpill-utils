@@ -1,6 +1,6 @@
 {
   "name": "@simpill/function.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Debounce, throttle, once, pipe, and compose with TypeScript inference (Node and Edge).",
   "repository": {
     "type": "git",

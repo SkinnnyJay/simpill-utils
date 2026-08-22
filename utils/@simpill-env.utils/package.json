@@ -1,6 +1,6 @@
 {
   "name": "@simpill/env.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Lightweight, type-safe environment variable utilities for Node.js and Edge Runtime.",
   "repository": {
     "type": "git",

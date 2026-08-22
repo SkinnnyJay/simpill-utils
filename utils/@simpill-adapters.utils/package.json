@@ -1,6 +1,6 @@
 {
   "name": "@simpill/adapters.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Adapter helpers, logger and cache adapter interfaces (Node and Edge).",
   "repository": {
     "type": "git",

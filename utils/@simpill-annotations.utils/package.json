@@ -1,6 +1,6 @@
 {
   "name": "@simpill/annotations.utils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "deprecated": "Prefer @simpill/function.utils (createMetadataStore / getMetadata / setMetadata). This package remains a stable re-export for existing consumers.",
   "description": "Typed metadata store and annotation helpers for symbols and keys (Node and Edge).",
   "repository": {
