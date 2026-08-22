@@ -1,6 +1,6 @@
 {
   "name": "@simpill/crypto.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Hash, randomBytes, and timing-safe compare for Node.js.",
   "repository": {
     "type": "git",

@@ -1,6 +1,6 @@
 {
   "name": "@simpill/file.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Typed file I/O: readFileUtf8, readFileJson, writeFile, ensureDir for Node.js.",
   "repository": {
     "type": "git",

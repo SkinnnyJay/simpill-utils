@@ -1,6 +1,6 @@
 {
   "name": "@simpill/collections.utils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Type-safe LinkedList, Queue, Stack, LRU/TTL, MultiMap, BiMap—no full collections lib (Node and Edge).",
   "repository": {
     "type": "git",

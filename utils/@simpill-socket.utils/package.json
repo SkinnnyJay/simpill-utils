@@ -1,6 +1,6 @@
 {
   "name": "@simpill/socket.utils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Reconnecting WebSocket client with optional heartbeat (Node and Edge).",
   "repository": {
     "type": "git",

@@ -1,6 +1,6 @@
 {
   "name": "@simpill/time.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Time utilities: debounce, throttle, interval manager, managed timeout (Node and Edge).",
   "repository": {
     "type": "git",

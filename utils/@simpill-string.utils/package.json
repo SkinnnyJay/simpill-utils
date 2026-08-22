@@ -1,6 +1,6 @@
 {
   "name": "@simpill/string.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "String utilities: formatting, casing, trim, slugify (Node and Edge).",
   "repository": {
     "type": "git",

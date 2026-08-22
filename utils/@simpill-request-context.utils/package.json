@@ -1,6 +1,6 @@
 {
   "name": "@simpill/request-context.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AsyncLocalStorage request context (requestId, traceId) for Node.js logging and tracing.",
   "repository": {
     "type": "git",

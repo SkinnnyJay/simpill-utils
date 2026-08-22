@@ -1,6 +1,6 @@
 {
   "name": "@simpill/api.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Typed API client with Zod validation, handler registry, and middleware (Node and Edge).",
   "repository": {
     "type": "git",

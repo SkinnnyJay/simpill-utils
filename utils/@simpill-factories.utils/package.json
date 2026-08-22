@@ -1,6 +1,6 @@
 {
   "name": "@simpill/factories.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Typed factory builder, singleton factory, and error factory helpers (Node and Edge).",
   "repository": {
     "type": "git",

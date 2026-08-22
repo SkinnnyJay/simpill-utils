@@ -1,6 +1,6 @@
 {
   "name": "@simpill/test.utils",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Test patterns, faker wrapper, enricher, and test-runner helpers (Node and Edge).",
   "repository": {
     "type": "git",
