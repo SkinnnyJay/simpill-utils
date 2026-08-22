@@ -19,13 +19,18 @@ export async function timeoutWithFallback<T>(
     }, timeoutMs);
   });
 
-  const result = await Promise.race([promise, timeoutPromise]);
-  if (timeoutId !== undefined) {
-    clearTimeout(timeoutId);
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    // `finally`, not a trailing statement: `promise` may reject before the
+    // deadline, and an armed timer holds the Node event loop open for the rest
+    // of `timeoutMs` after the caller has already seen the error.
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+    if (timeoutWon) {
+      // Prevent unhandled rejection from late settlement.
+      promise.catch(() => {});
+    }
   }
-  if (timeoutWon) {
-    // Prevent unhandled rejection from late settlement.
-    promise.catch(() => {});
-  }
-  return result;
 }
