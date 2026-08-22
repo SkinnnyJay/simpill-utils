@@ -4,7 +4,7 @@
   "description": "Algorithms: stable merge sort, quick sort, binary search, lower/upper bound (Node and Edge).",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/algorithms.utils.git"
+    "url": "git+https://github.com/SkinnnyJay/algorithms.utils.git"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

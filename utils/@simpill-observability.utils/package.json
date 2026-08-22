@@ -4,7 +4,7 @@
   "description": "Single integration surface for correlation middleware, request context, and logger (Node).",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/observability.utils.git"
+    "url": "git+https://github.com/SkinnnyJay/observability.utils.git"
   },
   "bugs": {
     "url": "https://github.com/SkinnnyJay/observability.utils/issues"
