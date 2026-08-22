@@ -4,7 +4,7 @@
   "description": "Shared protocol constants and types for HTTP, correlation, and env parsing (Node and Edge).",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/simpill-utils.git",
+    "url": "git+https://github.com/SkinnnyJay/simpill-utils.git",
     "directory": "utils/@simpill-protocols.utils"
   },
   "bugs": {

@@ -5,7 +5,7 @@
   "description": "Typed metadata store and annotation helpers for symbols and keys (Node and Edge).",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/annotations.utils.git"
+    "url": "git+https://github.com/SkinnnyJay/annotations.utils.git"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -51,7 +51,6 @@
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "publish": "npm publish",
     "verify": "./scripts/check.sh",
     "setup:hooks": "./scripts/install-hooks.sh",
     "all": "./scripts/build-all.sh"

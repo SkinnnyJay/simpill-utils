@@ -4,7 +4,7 @@
   "description": "Lightweight, type-safe environment variable utilities for Node.js and Edge Runtime.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/env.utils.git"
+    "url": "git+https://github.com/SkinnnyJay/env.utils.git"
   },
   "bugs": {
     "url": "https://github.com/SkinnnyJay/env.utils/issues"
@@ -67,7 +67,6 @@
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "publish": "npm publish",
     "verify": "./scripts/check.sh",
     "setup:hooks": "./scripts/install-hooks.sh",
     "all": "./scripts/build-all.sh"

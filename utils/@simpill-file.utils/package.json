@@ -4,7 +4,7 @@
   "description": "Typed file I/O: readFileUtf8, readFileJson, writeFile, ensureDir for Node.js.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/simpill-utils.git",
+    "url": "git+https://github.com/SkinnnyJay/simpill-utils.git",
     "directory": "utils/@simpill-file.utils"
   },
   "main": "dist/index.js",
@@ -51,7 +51,6 @@
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "publish": "npm publish",
     "verify": "./scripts/check.sh",
     "setup:hooks": "./scripts/install-hooks.sh",
     "all": "./scripts/build-all.sh"

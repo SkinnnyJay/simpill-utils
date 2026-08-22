@@ -4,7 +4,7 @@
   "description": "Zod schema helpers: builders, safe-parse, transforms, OpenAPI metadata (Node and Edge).",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SkinnnyJay/zod.utils.git"
+    "url": "git+https://github.com/SkinnnyJay/zod.utils.git"
   },
   "bugs": {
     "url": "https://github.com/SkinnnyJay/zod.utils/issues"

@@ -160,8 +160,16 @@ for dir in "${ORDER[@]}"; do
   if [ "$DRY_RUN" = true ]; then
     (cd "$REPO_ROOT/utils/$dir" && npm publish --access public --dry-run)
   else
-    # --provenance requires OIDC token from CI (GitHub Actions with id-token: write permission)
-    (cd "$REPO_ROOT/utils/$dir" && npm publish --access public --provenance ${NPM_OTP:+--otp="$NPM_OTP"})
+    # --provenance needs an OIDC token, which only a supported CI issues
+    # (GitHub Actions with id-token: write). Passing it from a workstation makes
+    # npm refuse the publish, so it is opt-in on the environment rather than
+    # hardcoded — the comment saying so was here before, but the flag was not
+    # conditional on it.
+    provenance=""
+    if [ -n "${GITHUB_ACTIONS:-}" ]; then
+      provenance="--provenance"
+    fi
+    (cd "$REPO_ROOT/utils/$dir" && npm publish --access public ${provenance} ${NPM_OTP:+--otp="$NPM_OTP"})
   fi
   ret=$?
   set -e
