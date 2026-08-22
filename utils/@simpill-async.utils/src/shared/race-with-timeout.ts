@@ -1,3 +1,7 @@
+// A late rejection of `promise` does not need swallowing: `Promise.race`
+// subscribes to every input, so the rejection is already handled and can never
+// surface as unhandled — even after the race has settled. Anything that moves
+// off `Promise.race` has to reattach a handler itself.
 /**
  * Run a promise with a timeout. Clears the timeout if the promise settles first.
  */
@@ -18,8 +22,6 @@ export async function raceWithTimeout<T>(
     return result;
   } catch (err) {
     if (timeoutId !== undefined) clearTimeout(timeoutId);
-    // Swallow late rejection from the original promise so it does not become unhandled
-    promise.catch(() => {});
     throw err;
   }
 }

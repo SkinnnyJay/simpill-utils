@@ -2,6 +2,10 @@ export type TimeoutFallback<T> = {
   fallback: T;
 };
 
+// A late rejection of `promise` does not need swallowing: `Promise.race`
+// subscribes to every input, so the rejection is already handled and can never
+// surface as unhandled — even after the race has settled. Anything that moves
+// off `Promise.race` has to reattach a handler itself.
 /**
  * Resolve with fallback if timeout wins, otherwise resolve original promise.
  */
@@ -11,12 +15,8 @@ export async function timeoutWithFallback<T>(
   fallback: T,
 ): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  let timeoutWon = false;
   const timeoutPromise = new Promise<T>((resolve) => {
-    timeoutId = setTimeout(() => {
-      timeoutWon = true;
-      resolve(fallback);
-    }, timeoutMs);
+    timeoutId = setTimeout(() => resolve(fallback), timeoutMs);
   });
 
   try {
@@ -27,10 +27,6 @@ export async function timeoutWithFallback<T>(
     // of `timeoutMs` after the caller has already seen the error.
     if (timeoutId !== undefined) {
       clearTimeout(timeoutId);
-    }
-    if (timeoutWon) {
-      // Prevent unhandled rejection from late settlement.
-      promise.catch(() => {});
     }
   }
 }
