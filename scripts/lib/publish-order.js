@@ -18,15 +18,49 @@ const path = require("path");
 
 const DEFAULT_REPO_ROOT = path.resolve(__dirname, "../..");
 
+/**
+ * Directory names of git submodules, read from .gitmodules. Submodules live in
+ * their own repositories and are published from there, so they must never enter
+ * this repo's publish order.
+ */
+function getSubmoduleDirs(repoRoot) {
+  const gitmodules = path.join(repoRoot, ".gitmodules");
+  if (!fs.existsSync(gitmodules)) return new Set();
+  const names = new Set();
+  for (const line of fs.readFileSync(gitmodules, "utf8").split("\n")) {
+    const m = line.match(/^\s*path\s*=\s*(.+?)\s*$/);
+    if (m) names.add(path.basename(m[1]));
+  }
+  return names;
+}
+
+/**
+ * Publishable package directories under utils/.
+ *
+ * A directory qualifies only if it is named `@simpill-<name>.utils`, has a
+ * package.json, is not marked private, and is not a git submodule. Matching on
+ * the bare ".utils" suffix alone is what previously admitted the acp-llm-cli
+ * submodule into the publish order, where publish-all.sh would npm-publish it.
+ */
 function getPackageDirs(utilsDir) {
+  const repoRoot = path.dirname(utilsDir);
+  const submodules = getSubmoduleDirs(repoRoot);
   const dirs = [];
   try {
     const entries = fs.readdirSync(utilsDir, { withFileTypes: true });
     for (const e of entries) {
-      if (e.isDirectory() && e.name.endsWith(".utils")) {
-        const pkgPath = path.join(utilsDir, e.name, "package.json");
-        if (fs.existsSync(pkgPath)) dirs.push(e.name);
+      if (!e.isDirectory()) continue;
+      if (!e.name.startsWith("@simpill-") || !e.name.endsWith(".utils")) continue;
+      if (submodules.has(e.name)) continue;
+      const pkgPath = path.join(utilsDir, e.name, "package.json");
+      if (!fs.existsSync(pkgPath)) continue;
+      try {
+        if (JSON.parse(fs.readFileSync(pkgPath, "utf8")).private) continue;
+      } catch {
+        console.error("Skipping " + e.name + ": unreadable package.json");
+        continue;
       }
+      dirs.push(e.name);
     }
   } catch (err) {
     console.error("Failed to read utils:", err.message);
