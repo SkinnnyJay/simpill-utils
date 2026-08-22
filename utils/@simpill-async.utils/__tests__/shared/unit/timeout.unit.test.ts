@@ -39,6 +39,22 @@ describe("timeoutWithFallback", () => {
     expect(result).toBe("ok");
   });
 
+  it("clears the timer when the promise rejects before the deadline", async () => {
+    jest.useFakeTimers();
+    try {
+      const rejected = timeoutWithFallback(Promise.reject(new Error("boom")), 5_000, "fallback");
+
+      await expect(rejected).rejects.toThrow("boom");
+
+      // The deadline never arrived, so its timer must have been cleared on the
+      // way out. Left armed it holds the event loop open for the full timeout —
+      // a rejection at t=0 with a 30 s deadline stalls the process for 30 s.
+      expect(jest.getTimerCount()).toBe(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("does not emit unhandled rejection when timeout wins", async () => {
     const unhandled: unknown[] = [];
     const handler = (reason: unknown): void => {
