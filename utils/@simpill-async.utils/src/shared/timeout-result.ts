@@ -1,3 +1,8 @@
+// A late rejection of `promise` does not need swallowing: `Promise.race`
+// subscribes to every input, so the rejection is already handled and can never
+// surface as unhandled — even after the race has settled. Anything that moves
+// off `Promise.race` has to reattach a handler itself.
+
 /** Result of running a promise with a timeout: fulfilled, rejected, or timed_out. */
 export type TimeoutResult<T> =
   | { status: "fulfilled"; value: T }
@@ -33,11 +38,6 @@ export async function timeoutResult<T>(
   const result = await Promise.race([settledPromise, timeoutPromise]);
   if (timeoutId !== undefined) {
     clearTimeout(timeoutId);
-  }
-
-  if (result.status === "timed_out") {
-    // Swallow late rejection so it does not become unhandled
-    promise.catch(() => {});
   }
 
   return result;

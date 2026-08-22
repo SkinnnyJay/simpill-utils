@@ -218,9 +218,28 @@ function main() {
   throw new Error(USAGE);
 }
 
-try {
-  main();
-} catch (err) {
-  console.error(err.message);
-  process.exit(1);
+// Only run the CLI when invoked directly; `require`ing this file must not
+// execute anything, so other scripts can share the predicates above rather than
+// re-deriving the naming convention and drifting from it.
+if (require.main === module) {
+  try {
+    main();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(1);
+  }
 }
+
+module.exports = {
+  SCOPE,
+  DIR_PREFIX,
+  DIR_SUFFIX,
+  FILE_SPEC_PREFIX,
+  DEPENDENCY_SECTIONS,
+  isPackageDirName,
+  localSimpillDeps,
+  getSubmoduleDirs,
+  getPackageDirs,
+  topologicalOrder,
+  rewritePackageJsonForPublish,
+};

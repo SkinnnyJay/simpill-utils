@@ -83,7 +83,6 @@ export async function fetchWithTimeout(
       timer = setTimeout(() => reject(new ApiTimeoutError(timeoutMs)), timeoutMs);
     });
     const request = fetcher(input, init);
-    request.catch(() => undefined);
     try {
       return await Promise.race([request, timeout]);
     } finally {
@@ -103,9 +102,10 @@ export async function fetchWithTimeout(
     }, timeoutMs);
   });
   const request = fetcher(input, { ...init, signal });
-  // Whichever loses the race still settles; without this its rejection (typically
-  // the abort we just triggered) would surface as an unhandled rejection.
-  request.catch(() => undefined);
+  // The loser of the race still settles — typically rejecting with the abort we
+  // triggered — but `Promise.race` subscribes to every input, so that rejection is
+  // already handled and never surfaces as unhandled. Anything that moves off
+  // `Promise.race` has to reattach a handler itself.
   try {
     return await Promise.race([request, timeout]);
   } finally {
