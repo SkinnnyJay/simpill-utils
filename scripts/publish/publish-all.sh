@@ -134,6 +134,28 @@ for dir in "${ORDER[@]}"; do
     FAILED+=("$name (file: after rewrite)")
     continue
   fi
+  # Gate: refuse to publish a tarball that ships no build output. Packages
+  # declare "files": ["dist","README.md"], so a missing prepublishOnly hook
+  # (or a failed build) yields a tarball of package.json + README.md only,
+  # in which main/types and every exports subpath resolve to nothing.
+  if [ ! -d "$REPO_ROOT/utils/$dir/dist" ]; then
+    echo "  Building $name (no dist/ present)"
+    if ! (cd "$REPO_ROOT/utils/$dir" && npm run build); then
+      echo "ERROR: $name build failed — aborting publish for this package"
+      mv -f "$backup" "$pkg_path"
+      trap - EXIT
+      FAILED+=("$name (build failed)")
+      continue
+    fi
+  fi
+  if [ ! -f "$REPO_ROOT/utils/$dir/dist/index.js" ]; then
+    echo "ERROR: $name has no dist/index.js after build — refusing to publish an empty tarball"
+    mv -f "$backup" "$pkg_path"
+    trap - EXIT
+    FAILED+=("$name (empty tarball)")
+    continue
+  fi
+
   set +e
   if [ "$DRY_RUN" = true ]; then
     (cd "$REPO_ROOT/utils/$dir" && npm publish --access public --dry-run)
