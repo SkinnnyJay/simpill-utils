@@ -23,6 +23,36 @@ jobs:
           cache: "npm"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Verify tag matches package.json version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          PKG_VERSION="v$(node -p "require('./package.json').version")"
+          echo "tag=$TAG  package.json=$PKG_VERSION"
+          if [ "$TAG" != "$PKG_VERSION" ]; then
+            echo "::error::Tag $TAG does not match package.json version $PKG_VERSION."
+            echo "::error::Refusing to publish. Bump the manifest and re-tag, or delete the stray tag."
+            exit 1
+          fi
+
+      - name: Refuse to publish local file: dependencies
+        run: |
+          node -e '
+            const p = require("./package.json");
+            const specs = Object.entries({
+              ...p.dependencies,
+              ...p.peerDependencies,
+              ...p.optionalDependencies,
+            }).filter(([, v]) => String(v).startsWith("file:"));
+            if (specs.length) {
+              for (const [name, v] of specs) {
+                console.log(`::error::${name} is declared as ${v}`);
+              }
+              console.log("::error::A file: spec resolves to a dangling symlink once installed from the registry.");
+              console.log("::error::Rewrite these to a published range before tagging.");
+              process.exit(1);
+            }
+          '
+
       - name: Install dependencies
         run: npm ci
 
