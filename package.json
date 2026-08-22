@@ -47,7 +47,6 @@
     "github:topics": "node scripts/github/github-set-all-topics.js",
     "github:topics:repo": "bash scripts/github/github-set-repo-topics.sh",
     "github:repos-public": "bash scripts/github/github-set-repos-public.sh",
-    "publish": "npm publish --access public",
     "publish:all": "bash scripts/publish/publish-all.sh",
     "build": "npx tsc --noEmit",
     "typecheck": "npx tsc --noEmit",
