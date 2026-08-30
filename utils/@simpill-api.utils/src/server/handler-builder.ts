@@ -1,3 +1,4 @@
+import { ApiRouteMismatchError } from "../shared/errors";
 import type { ApiRequestContext } from "../shared/types";
 import type { RouteEntry, RouteMiddleware } from "./api-factory-types";
 import { parseWithSchema } from "./schema-parse";
@@ -36,6 +37,32 @@ export function parsePathParams(pathPattern: string, path: string): Record<strin
     const part = patternParts[i];
     if (part?.startsWith(":") && pathParts[i] !== undefined) {
       params[part.slice(1)] = decodeSegment(pathParts[i]);
+    }
+  }
+  return params;
+}
+
+/**
+ * Same extraction as parsePathParams, but throws ApiRouteMismatchError when
+ * the segment counts differ or a static segment doesn't match literally,
+ * instead of silently matching whatever positionally lines up. Opt-in: call
+ * this instead of parsePathParams where a mismatched URL/pattern pair should
+ * fail loudly (e.g. a dispatcher that resolved the wrong handler).
+ */
+export function parsePathParamsStrict(pathPattern: string, path: string): Record<string, string> {
+  const patternParts = pathPattern.split("/").filter(Boolean);
+  const pathParts = path.replace(/^\//, "").split("/").filter(Boolean);
+  if (patternParts.length !== pathParts.length) {
+    throw new ApiRouteMismatchError(pathPattern, path);
+  }
+  const params: Record<string, string> = {};
+  for (let i = 0; i < patternParts.length; i++) {
+    const part = patternParts[i];
+    const segment = pathParts[i];
+    if (part?.startsWith(":")) {
+      if (segment !== undefined) params[part.slice(1)] = decodeSegment(segment);
+    } else if (part !== segment) {
+      throw new ApiRouteMismatchError(pathPattern, path);
     }
   }
   return params;

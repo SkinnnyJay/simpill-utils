@@ -122,3 +122,23 @@ export class ApiDuplicateRouteError extends Error {
     Error.captureStackTrace?.(this, ApiDuplicateRouteError);
   }
 }
+
+/**
+ * Thrown by parsePathParamsStrict when a request URL's segment count (or a
+ * static segment) does not match the route's path pattern. parsePathParams
+ * matches positionally and silently ignores the rest on a mismatch, which
+ * means the wrong handler for a URL can still produce params that look
+ * valid. Opt into this when a caller wants that case to fail loudly instead.
+ */
+export class ApiRouteMismatchError extends Error {
+  readonly pathPattern: string;
+  readonly path: string;
+
+  constructor(pathPattern: string, path: string) {
+    super(`URL path "${path}" does not match route pattern "${pathPattern}"`);
+    this.name = "ApiRouteMismatchError";
+    this.pathPattern = pathPattern;
+    this.path = path;
+    Error.captureStackTrace?.(this, ApiRouteMismatchError);
+  }
+}
