@@ -4,6 +4,7 @@ export {
   ApiHttpError,
   ApiMissingParamError,
   ApiResponseParseError,
+  ApiRouteMismatchError,
   ApiTimeoutError,
 } from "./errors";
 export type {
@@ -22,6 +23,7 @@ export type {
   TypedHandlers,
   TypedRequestContext,
 } from "./infer";
+export type { HasPathParams, PathParams } from "./path-types";
 export type {
   ApiClient,
   ApiHandler,

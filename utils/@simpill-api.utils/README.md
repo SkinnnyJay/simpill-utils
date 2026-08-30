@@ -141,6 +141,12 @@ Everything is inferred — no call-site casts needed. **api.client()** methods t
 
 The **client** does not return a Result type. On **!res.ok** it throws **ApiHttpError** with `status`, `statusText`, `body`, `url`, `method`, and `routeKey` fields — the message stays `HTTP ${res.status}: ${text}`, so existing string matching keeps working, but you no longer have to regex the message for the status. If a 2xx response has a **non-empty** body that is not valid JSON, the client throws **ApiResponseParseError** (v1 silently coerced it to `{}`); empty bodies (204s) still parse to `{}`. If a **response** schema is set, **schema.parse(raw)** runs and throws **ZodError** on validation failure. All of these are **thrown**; catch and map to your app’s error shape (e.g. **@simpill/errors.utils**) if needed.
 
+### Path param types without a params schema
+
+If a route declares no **params** schema, its params type falls back to `Record<string, string>` — nothing infers the keys from the path. **PathParams<Path>** does that from the path literal alone: `PathParams<"/users/:id/posts/:postId">` is `{ id: string; postId: string }`. **HasPathParams<Path>** is the companion boolean check. Both are type-only (zero runtime cost); import from **@simpill/api.utils**.
+
+For request dispatch, **parsePathParams** matches a URL against a route pattern positionally and silently ignores anything that doesn't line up on a segment-count or static-segment mismatch. **parsePathParamsStrict** is a drop-in alternative with the same signature that throws **ApiRouteMismatchError** instead — useful for a dispatcher that resolved the wrong handler for a URL and would otherwise produce params that merely look valid.
+
 ### Interceptors and hooks
 
 There are no separate “interceptors.” Use **middleware** (global in **createApiFactory({ middleware })**, or per-route with **.withMiddleware({ before, after, onError })**). **before** can mutate the request context; **after** can mutate the response; **onError** runs when the handler or middleware throws. For logging, auth, or response shaping, use these hooks.

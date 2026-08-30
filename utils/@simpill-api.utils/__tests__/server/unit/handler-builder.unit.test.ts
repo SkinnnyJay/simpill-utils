@@ -5,7 +5,12 @@
 
 import { z } from "zod";
 import { createApiFactory } from "../../../src/server/api-factory";
-import { parsePathParams, parseQuery } from "../../../src/server/handler-builder";
+import {
+  parsePathParams,
+  parsePathParamsStrict,
+  parseQuery,
+} from "../../../src/server/handler-builder";
+import { ApiRouteMismatchError } from "../../../src/shared/errors";
 
 describe("parsePathParams", () => {
   it("should percent-decode path segments (round-trips what the client encodes)", () => {
@@ -19,6 +24,43 @@ describe("parsePathParams", () => {
 
   it("should keep plain segments untouched", () => {
     expect(parsePathParams("/users/:id", "/users/abc")).toEqual({ id: "abc" });
+  });
+
+  it("should silently under-match on segment-count mismatch (documents the gap parsePathParamsStrict closes)", () => {
+    expect(parsePathParams("/users/:id/posts/:postId", "/users/abc")).toEqual({ id: "abc" });
+  });
+});
+
+describe("parsePathParamsStrict", () => {
+  it("should behave like parsePathParams when the URL matches the pattern", () => {
+    expect(parsePathParamsStrict("/users/:id", "/users/john%20doe")).toEqual({ id: "john doe" });
+    expect(parsePathParamsStrict("/users/:id/posts/:postId", "/users/1/posts/2")).toEqual({
+      id: "1",
+      postId: "2",
+    });
+  });
+
+  it("should throw ApiRouteMismatchError on a segment-count mismatch", () => {
+    expect(() => parsePathParamsStrict("/users/:id/posts/:postId", "/users/abc")).toThrow(
+      ApiRouteMismatchError
+    );
+  });
+
+  it("should throw ApiRouteMismatchError when a static segment differs", () => {
+    expect(() => parsePathParamsStrict("/users/:id", "/accounts/abc")).toThrow(
+      ApiRouteMismatchError
+    );
+  });
+
+  it("should carry the pattern and path on the thrown error", () => {
+    try {
+      parsePathParamsStrict("/users/:id", "/accounts/abc");
+      throw new Error("expected parsePathParamsStrict to throw");
+    } catch (err) {
+      expect(err).toBeInstanceOf(ApiRouteMismatchError);
+      expect((err as ApiRouteMismatchError).pathPattern).toBe("/users/:id");
+      expect((err as ApiRouteMismatchError).path).toBe("/accounts/abc");
+    }
   });
 });
 
